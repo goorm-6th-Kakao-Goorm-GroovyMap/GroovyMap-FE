@@ -11,7 +11,7 @@ const locations = [
     { id: 3, name: '연습장소 1', type: 'dance', position: { lat: 37.5705, lng: 126.982 }, region: 'yongsan' },
 ];
 
-const PerformancePlace = () => {
+const PracticePlace = () => {
     const [selectedRegion, setSelectedRegion] = useState('yongsan');
     const [selectedType, setSelectedType] = useState('all');
 
@@ -84,7 +84,7 @@ const PerformancePlace = () => {
                     </div>
                 </div>
                 <header className="header mb-6">
-                    <h1 className="text-3xl font-extrabold text-purple-700">공연 장소</h1>
+                    <h1 className="text-3xl font-extrabold text-purple-700">연습 장소</h1>
                 </header>
                 <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                     <div className="flex items-center space-x-2">
@@ -124,4 +124,4 @@ const PerformancePlace = () => {
     );
 };
 
-export default PerformancePlace;
+export default PracticePlace;
