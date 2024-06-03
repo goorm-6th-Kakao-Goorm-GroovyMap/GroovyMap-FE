@@ -4,14 +4,15 @@ import Link from 'next/link';
 import Logo from '../components/Logo/Logo';
 const Sidebar = () => {
     return (
-        <aside className="sidebar">
-            <div className="logo">
+        <aside className="sidebar flex flex-col items-center px-8">
+            <div className="logo mb-28 mt-20 ">
                 <Logo />
             </div>
             <nav className="menu">
-                <ul>
+                <ul className="space-y-2 text-center">
+                    <li className="text-purple-500">Menu</li>
                     <li>
-                        <Link href="/">메인 페이지</Link>
+                        <Link href="/">홈</Link>
                     </li>
                     <li>
                         <Link href="/performance-place">공연 장소</Link>
