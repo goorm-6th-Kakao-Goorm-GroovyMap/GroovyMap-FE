@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-
+import Logo from '../components/Logo/Logo';
 const Sidebar = () => {
     return (
         <aside className="sidebar">
-            <div className="logo">GroovyMap</div>
+            <div className="logo">
+                <Logo />
+            </div>
             <nav className="menu">
                 <ul>
                     <li>
