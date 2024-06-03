@@ -12,10 +12,10 @@ const Sidebar = () => {
                         <Link href="/">메인 페이지</Link>
                     </li>
                     <li>
-                        <Link href="/performance-venues">공연 장소</Link>
+                        <Link href="/performance-place">공연 장소</Link>
                     </li>
                     <li>
-                        <Link href="/practice-venues">연습 장소</Link>
+                        <Link href="/practice-place">연습 장소</Link>
                     </li>
                     <li>
                         <Link href="#">자유게시판</Link>
