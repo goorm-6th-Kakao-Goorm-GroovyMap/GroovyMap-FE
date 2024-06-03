@@ -72,7 +72,7 @@ const PerformancePlace = () => {
         <div className="content p-6 bg-purple-50 min-h-screen">
             <div className="content flex-1 w-full max-w-4xl mx-auto">
                 <div className="flex justify-center items-center mb-6">
-                    <div className="relative w-full max-w-md">
+                    <div className="relative w-full max-w-lg">
                         <input
                             type="text"
                             className="w-full border rounded p-2 pl-10"
@@ -84,7 +84,7 @@ const PerformancePlace = () => {
                     </div>
                 </div>
                 <header className="header mb-6">
-                    <h1 className="text-2xl font-bold text-purple-700">공연 장소</h1>
+                    <h1 className="text-3xl font-black text-purple-700">공연 장소</h1>
                 </header>
                 <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                     <div className="flex items-center space-x-2">
