@@ -24,7 +24,7 @@ const Sidebar = () => {
                         <Link href="#">홍보게시판</Link>
                     </li>
                     <li>
-                        <Link href="#">팀원 모집</Link>
+                        <Link href="/Recruit">팀원 모집</Link>
                     </li>
                     <li>
                         <Link href="#">프로필</Link>
