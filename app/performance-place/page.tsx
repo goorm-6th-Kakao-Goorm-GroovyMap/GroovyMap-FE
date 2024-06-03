@@ -73,7 +73,7 @@ const PerformancePlace = () => {
         <div className="content p-6 bg-purple-50 min-h-screen">
             <div className="content flex-1 w-full max-w-4xl mx-auto">
                 <div className="flex justify-center items-center mb-6">
-                    <div className="relative w-full max-w-md">
+                    <div className="relative w-full">
                         <input
                             type="text"
                             className="w-full border rounded p-2 pl-10"
