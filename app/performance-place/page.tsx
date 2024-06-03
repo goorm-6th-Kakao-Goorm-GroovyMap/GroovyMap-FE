@@ -9,7 +9,6 @@ const locations = [
     { id: 1, name: '공연장소 1', type: 'band', position: { lat: 37.5665, lng: 126.978 }, region: 'yongsan' },
     { id: 2, name: '공연장소 2', type: 'music', position: { lat: 37.5651, lng: 126.98955 }, region: 'yongsan' },
     { id: 3, name: '연습장소 1', type: 'dance', position: { lat: 37.5705, lng: 126.982 }, region: 'yongsan' },
-    { id: 4, name: '연습장소 2', type: 'music', position: { lat: 37.561, lng: 126.982 }, region: 'gangnam' },
 ];
 
 const PerformancePlace = () => {
