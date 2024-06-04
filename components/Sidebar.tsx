@@ -11,7 +11,7 @@ const Sidebar = () => {
             </div>
             <nav className="menu">
                 <ul className="space-y-2 text-center">
-                    <li className="text-purple-500">Menu</li>
+                    <li className="text-purple-500">MENU</li>
                     <li className="hover:text-purple-400 cursor-pointer">
                         <Link href="/">홈</Link>
                     </li>

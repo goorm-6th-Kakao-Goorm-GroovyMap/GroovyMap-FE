@@ -1,30 +1,35 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { IoMdSearch } from 'react-icons/io';
-import { FaMapLocationDot } from 'react-icons/fa6';
+import axios from 'axios';
+import { IoMdSearch, IoMdClose } from 'react-icons/io';
+import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 
-interface Location {
-    id: number;
-    name: string;
-    type: 'band' | 'music' | 'dance';
-    position: { lat: number; lng: number };
-    region: 'yongsan' | 'gangnam';
-}
-
-const locations: Location[] = [
-    { id: 1, name: '공연장소 1', type: 'band', position: { lat: 37.5665, lng: 126.978 }, region: 'yongsan' },
-    { id: 2, name: '공연장소 2', type: 'music', position: { lat: 37.5651, lng: 126.98955 }, region: 'yongsan' },
-    { id: 3, name: '연습장소 1', type: 'dance', position: { lat: 37.5705, lng: 126.982 }, region: 'yongsan' },
-    { id: 4, name: '공연장소 3', type: 'band', position: { lat: 37.4979, lng: 127.0276 }, region: 'gangnam' },
+const mockPerformancePlace = [
+    {
+        id: 1,
+        name: '공연장소 1',
+        part: 'band',
+        position: { lat: 37.5665, lng: 126.978 },
+        region: 'yongsan',
+        phoneNumber: '010-1234-5678',
+        rentalFee: '50000원',
+        capacity: '100명',
+        description: '밴드 공연을 위한 장소입니다.',
+    },
+    {
+        id: 2,
+        name: '공연장소 2',
+        part: 'music',
+        position: { lat: 37.5651, lng: 126.98955 },
+        region: 'yongsan',
+        phoneNumber: '010-9876-5432',
+        rentalFee: '60000원',
+        capacity: '150명',
+        description: '음악 공연을 위한 장소입니다.',
+    },
 ];
-
-const regionCoordinates = {
-    yongsan: { lat: 37.5326, lng: 126.9901 },
-    gangnam: { lat: 37.4979, lng: 127.0276 },
-    all: { lat: 37.5665, lng: 126.978 },
-};
 
 const markerImages = {
     band: '/guitar.svg',
@@ -35,14 +40,27 @@ const markerImages = {
 
 const PerformancePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'yongsan' | 'gangnam'>('all');
-    const [selectedType, setSelectedType] = useState<'all' | 'band' | 'music' | 'dance'>('all');
+    const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'music' | 'dance'>('all');
+    const [performancePlaces, setPerformancePlaces] = useState(mockPerformancePlace);
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState(mockPerformancePlace);
     const [map, setMap] = useState<any>(null);
+    const [selectedPlace, setSelectedPlace] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const filteredLocations = locations.filter(
-        (location) =>
-            (selectedRegion === 'all' || location.region === selectedRegion) &&
-            (selectedType === 'all' || location.type === selectedType)
-    );
+    useEffect(() => {
+        const filtered = performancePlaces.filter(
+            (place) =>
+                (selectedRegion === 'all' || place.region === selectedRegion) &&
+                (selectedPart === 'all' || place.part === selectedPart)
+        );
+        setFilteredPerformancePlaces(filtered);
+    }, [selectedRegion, selectedPart, performancePlaces]);
+
+    const fetchPlaceDetails = (postId: number) => {
+        const place = mockPerformancePlace.find((p) => p.id === postId);
+        setSelectedPlace(place);
+        setIsModalOpen(true);
+    };
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -65,14 +83,14 @@ const PerformancePlace: React.FC = () => {
         if (map) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
-            filteredLocations.forEach((location) => {
-                const markerPosition = new window.kakao.maps.LatLng(location.position.lat, location.position.lng);
+            filteredPerformancePlaces.forEach((place) => {
+                const markerPosition = new window.kakao.maps.LatLng(place.position.lat, place.position.lng);
                 bounds.extend(markerPosition);
 
                 const markerImage = new window.kakao.maps.MarkerImage(
-                    location.type === 'band'
+                    place.part === 'band'
                         ? markerImages.band
-                        : location.type === 'music'
+                        : place.part === 'music'
                           ? markerImages.music
                           : markerImages.dance,
                     new window.kakao.maps.Size(24, 35),
@@ -85,7 +103,7 @@ const PerformancePlace: React.FC = () => {
                 });
 
                 const infowindow = new window.kakao.maps.InfoWindow({
-                    content: `<div style="padding:5px;">${location.name}</div>`,
+                    content: `<div style="padding:5px;">${place.name}</div>`,
                 });
 
                 window.kakao.maps.event.addListener(marker, 'mouseover', () => {
@@ -96,6 +114,10 @@ const PerformancePlace: React.FC = () => {
                     infowindow.close();
                 });
 
+                window.kakao.maps.event.addListener(marker, 'click', () => {
+                    fetchPlaceDetails(place.id);
+                });
+
                 marker.setMap(map);
             });
 
@@ -103,7 +125,7 @@ const PerformancePlace: React.FC = () => {
                 map.setBounds(bounds);
             }
         }
-    }, [map, filteredLocations]);
+    }, [map, filteredPerformancePlaces]);
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -141,8 +163,8 @@ const PerformancePlace: React.FC = () => {
                             <label className="font-bold mr-2">유형</label>
                             <select
                                 className="border-none p-2 bg-white"
-                                value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value as 'all' | 'band' | 'music' | 'dance')}
+                                value={selectedPart}
+                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'band' | 'music' | 'dance')}
                             >
                                 <option value="all">전체</option>
                                 <option value="band">밴드</option>
@@ -153,11 +175,11 @@ const PerformancePlace: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         <button className="bg-purple-700 text-white py-2 px-4 rounded-full">
-                            <FaMapLocationDot />
+                            <FaMapMarkerAlt />
                         </button>
                     </div>
                 </div>
-                <div id="map" className="w-full h-96">
+                <div id="map" className="w-full h-96 relative z-0">
                     <Map
                         center={{ lat: 37.5665, lng: 126.978 }}
                         style={{ width: '100%', height: '100%' }}
@@ -165,15 +187,15 @@ const PerformancePlace: React.FC = () => {
                         onCreate={setMap}
                     >
                         <MarkerClusterer>
-                            {filteredLocations.map((location) => (
+                            {filteredPerformancePlaces.map((place) => (
                                 <MapMarker
-                                    key={location.id}
-                                    position={location.position}
+                                    key={place.id}
+                                    position={place.position}
                                     image={{
                                         src:
-                                            location.type === 'band'
+                                            place.part === 'band'
                                                 ? markerImages.band
-                                                : location.type === 'music'
+                                                : place.part === 'music'
                                                   ? markerImages.music
                                                   : markerImages.dance,
                                         size: {
@@ -187,6 +209,7 @@ const PerformancePlace: React.FC = () => {
                                             },
                                         },
                                     }}
+                                    onClick={() => fetchPlaceDetails(place.id)} // 마커 클릭 시 상세 정보 가져오기
                                 />
                             ))}
                         </MarkerClusterer>
@@ -194,6 +217,113 @@ const PerformancePlace: React.FC = () => {
                         <ZoomControl position="RIGHT" />
                     </Map>
                 </div>
+                <div className="mt-6">
+                    <h2 className="text-2xl font-bold mb-4">공연 장소 목록</h2>
+                    <ul className="space-y-4">
+                        {filteredPerformancePlaces.map((place) => (
+                            <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-semibold">{place.name}</h3>
+                                        <p>지역: {place.region}</p>
+                                        <p>
+                                            위치: {place.position.lat}, {place.position.lng}
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => fetchPlaceDetails(place.id)} // 상세 정보를 가져오는 함수 호출
+                                        className="bg-purple-700 text-white py-2 px-4 rounded-full"
+                                    >
+                                        상세 정보
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                {isModalOpen && selectedPlace && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                        <div className="bg-white p-6 rounded-lg w-1/2 relative">
+                            <div className="relative h-56 w-full sm:h-52">
+                                <img
+                                    src={
+                                        selectedPlace.part === 'band'
+                                            ? '/images/band.jpg'
+                                            : selectedPlace.part === 'music'
+                                              ? '/images/music.jpg'
+                                              : '/images/dance.jpg'
+                                    }
+                                    alt={selectedPlace.name}
+                                    className="object-cover w-full h-full rounded-lg"
+                                />
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="absolute right-2 top-2 text-white bg-black rounded-full p-2"
+                                    aria-label="닫기"
+                                >
+                                    <IoMdClose size={20} />
+                                </button>
+                            </div>
+                            <div className="p-4">
+                                <h2 className="text-xl font-bold mb-4">{selectedPlace.name}</h2>
+                                <span className="break-keep rounded-sm bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
+                                    {selectedPlace.part}
+                                </span>
+                                <div className="my-2 flex w-full items-center justify-start gap-3">
+                                    <button
+                                        className="bg-purple-700 text-white py-2 px-4 rounded-full"
+                                        onClick={() => {
+                                            window.open(
+                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.position.lat},${selectedPlace.position.lng}`,
+                                                '_blank'
+                                            );
+                                        }}
+                                    >
+                                        길찾기
+                                    </button>
+                                    <button
+                                        className="bg-blue-500 text-white py-2 px-4 rounded-full"
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(selectedPlace.address);
+                                            alert('주소가 복사되었습니다.');
+                                        }}
+                                    >
+                                        주소 복사
+                                    </button>
+                                </div>
+                                <hr className="w-90 my-4 h-px bg-gray-300" />
+                                <div className="my-4 flex flex-col gap-4">
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaMapPin size={16} className="text-gray-400" />
+                                        <span>{selectedPlace.address}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaClock size={14} className="text-gray-400" />
+                                        <span>개방 시간: {selectedPlace.openingHours}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaPhoneAlt size={15} className="text-gray-400" />
+                                        <span>{selectedPlace.phoneNumber || '-'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaTag size={17} className="text-gray-400" />
+                                        <span>대관료: {selectedPlace.rentalFee}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaTag size={17} className="text-gray-400" />
+                                        <span>수용 인원: {selectedPlace.capacity}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="mt-4 bg-purple-700 text-white py-2 px-4 rounded-full"
+                                >
+                                    닫기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
