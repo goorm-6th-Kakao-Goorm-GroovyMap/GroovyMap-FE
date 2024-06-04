@@ -1,19 +1,42 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { IoMdSearch } from 'react-icons/io';
-import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
+import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 
-const locations = [
+interface Location {
+    id: number;
+    name: string;
+    type: 'band' | 'music' | 'dance';
+    position: { lat: number; lng: number };
+    region: 'yongsan' | 'gangnam';
+}
+
+const locations: Location[] = [
     { id: 1, name: '공연장소 1', type: 'band', position: { lat: 37.5665, lng: 126.978 }, region: 'yongsan' },
     { id: 2, name: '공연장소 2', type: 'music', position: { lat: 37.5651, lng: 126.98955 }, region: 'yongsan' },
     { id: 3, name: '연습장소 1', type: 'dance', position: { lat: 37.5705, lng: 126.982 }, region: 'yongsan' },
+    { id: 4, name: '공연장소 3', type: 'band', position: { lat: 37.4979, lng: 127.0276 }, region: 'gangnam' },
 ];
 
-const PerformancePlace = () => {
-    const [selectedRegion, setSelectedRegion] = useState('yongsan');
-    const [selectedType, setSelectedType] = useState('all');
+const regionCoordinates = {
+    yongsan: { lat: 37.5326, lng: 126.9901 },
+    gangnam: { lat: 37.4979, lng: 127.0276 },
+    all: { lat: 37.5665, lng: 126.978 },
+};
+
+const markerImages = {
+    band: '/guitar.svg',
+    music: '/guitar.svg',
+    dance: '/guitar.svg',
+    default: '/guitar.svg',
+};
+
+const PerformancePlace: React.FC = () => {
+    const [selectedRegion, setSelectedRegion] = useState<'all' | 'yongsan' | 'gangnam'>('all');
+    const [selectedType, setSelectedType] = useState<'all' | 'band' | 'music' | 'dance'>('all');
+    const [map, setMap] = useState<any>(null);
 
     const filteredLocations = locations.filter(
         (location) =>
@@ -23,7 +46,7 @@ const PerformancePlace = () => {
 
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false&libraries=clusterer`;
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
@@ -32,41 +55,55 @@ const PerformancePlace = () => {
                     level: 5,
                 };
                 const map = new window.kakao.maps.Map(mapContainer, mapOption);
-
-                filteredLocations.forEach((location) => {
-                    const markerPosition = new window.kakao.maps.LatLng(location.position.lat, location.position.lng);
-                    const markerImage = new window.kakao.maps.MarkerImage(
-                        location.type === 'band'
-                            ? '/path/to/band-icon.svg'
-                            : location.type === 'music'
-                              ? '/path/to/music-icon.svg'
-                              : '/path/to/dance-icon.svg', // 각 타입에 맞는 아이콘 설정
-                        new window.kakao.maps.Size(24, 35), // 아이콘 크기
-                        { offset: new window.kakao.maps.Point(12, 35) } // 아이콘 위치
-                    );
-                    const marker = new window.kakao.maps.Marker({
-                        position: markerPosition,
-                        image: markerImage,
-                    });
-
-                    const infowindow = new window.kakao.maps.InfoWindow({
-                        content: `<div style="padding:5px;">${location.name}</div>`,
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseover', () => {
-                        infowindow.open(map, marker);
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseout', () => {
-                        infowindow.close();
-                    });
-
-                    marker.setMap(map);
-                });
+                setMap(map);
             });
         };
         document.head.appendChild(script);
-    }, [selectedRegion, selectedType]);
+    }, []);
+
+    useEffect(() => {
+        if (map) {
+            const bounds = new window.kakao.maps.LatLngBounds();
+
+            filteredLocations.forEach((location) => {
+                const markerPosition = new window.kakao.maps.LatLng(location.position.lat, location.position.lng);
+                bounds.extend(markerPosition);
+
+                const markerImage = new window.kakao.maps.MarkerImage(
+                    location.type === 'band'
+                        ? markerImages.band
+                        : location.type === 'music'
+                          ? markerImages.music
+                          : markerImages.dance,
+                    new window.kakao.maps.Size(24, 35),
+                    { offset: new window.kakao.maps.Point(12, 35) }
+                );
+
+                const marker = new window.kakao.maps.Marker({
+                    position: markerPosition,
+                    image: markerImage,
+                });
+
+                const infowindow = new window.kakao.maps.InfoWindow({
+                    content: `<div style="padding:5px;">${location.name}</div>`,
+                });
+
+                window.kakao.maps.event.addListener(marker, 'mouseover', () => {
+                    infowindow.open(map, marker);
+                });
+
+                window.kakao.maps.event.addListener(marker, 'mouseout', () => {
+                    infowindow.close();
+                });
+
+                marker.setMap(map);
+            });
+
+            if (!bounds.isEmpty()) {
+                map.setBounds(bounds);
+            }
+        }
+    }, [map, filteredLocations]);
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -92,7 +129,8 @@ const PerformancePlace = () => {
                             <label className="font-bold mr-2">지역</label>
                             <select
                                 className="border-none p-2 bg-white"
-                                onChange={(e) => setSelectedRegion(e.target.value)}
+                                value={selectedRegion}
+                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'yongsan' | 'gangnam')}
                             >
                                 <option value="all">전체</option>
                                 <option value="yongsan">용산구</option>
@@ -103,7 +141,8 @@ const PerformancePlace = () => {
                             <label className="font-bold mr-2">유형</label>
                             <select
                                 className="border-none p-2 bg-white"
-                                onChange={(e) => setSelectedType(e.target.value)}
+                                value={selectedType}
+                                onChange={(e) => setSelectedType(e.target.value as 'all' | 'band' | 'music' | 'dance')}
                             >
                                 <option value="all">전체</option>
                                 <option value="band">밴드</option>
@@ -118,7 +157,43 @@ const PerformancePlace = () => {
                         </button>
                     </div>
                 </div>
-                <div id="map" className="w-full h-96"></div>
+                <div id="map" className="w-full h-96">
+                    <Map
+                        center={{ lat: 37.5665, lng: 126.978 }}
+                        style={{ width: '100%', height: '100%' }}
+                        level={5}
+                        onCreate={setMap}
+                    >
+                        <MarkerClusterer>
+                            {filteredLocations.map((location) => (
+                                <MapMarker
+                                    key={location.id}
+                                    position={location.position}
+                                    image={{
+                                        src:
+                                            location.type === 'band'
+                                                ? markerImages.band
+                                                : location.type === 'music'
+                                                  ? markerImages.music
+                                                  : markerImages.dance,
+                                        size: {
+                                            width: 24,
+                                            height: 35,
+                                        },
+                                        options: {
+                                            offset: {
+                                                x: 12,
+                                                y: 35,
+                                            },
+                                        },
+                                    }}
+                                />
+                            ))}
+                        </MarkerClusterer>
+                        <MapTypeControl position="BOTTOMLEFT" />
+                        <ZoomControl position="RIGHT" />
+                    </Map>
+                </div>
             </div>
         </div>
     );

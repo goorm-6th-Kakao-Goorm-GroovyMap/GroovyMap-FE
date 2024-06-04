@@ -19,7 +19,7 @@ export default function RootLayout({
                 <div className="main-layout flex flex-row h-full relative">
                     {/* 메뉴 아이콘 */}
                     <div className="block md:hidden p-4">
-                        <FaBars size={24} onClick={() => setSidebarOpen(!sidebarOpen)} />
+                        <FaBars size={22} onClick={() => setSidebarOpen(!sidebarOpen)} />
                     </div>
                     {/* 사이드바 */}
                     <div
