@@ -1,11 +1,76 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import { FaRegEdit } from 'react-icons/fa'
 import { FaMapLocationDot } from 'react-icons/fa6'
 
+const areas: Record<string, { name: string; lat: number; lng: number }> = {
+    seoul: { name: '서울 전체', lat: 37.5665, lng: 126.978 },
+    yongsan: { name: '용산구', lat: 37.5326, lng: 126.9906 },
+    gangnam: { name: '강남구', lat: 37.4979, lng: 127.0276 },
+    jongno: { name: '종로구', lat: 37.5729, lng: 126.9793 },
+    //나머지 서울 구단위로 추가하기
+}
+
+declare global {
+    interface Window {
+        kakao: any
+    } //후에 따로 빼주기
+}
+
 export default function PromotionPlace() {
+    const [showMap, setShowMap] = useState(false) //지도버튼
+    const [selectedArea, setSelectedArea] = useState('seoul') //지역기본설정
+    const mapRef = useRef<any>(null)
+
+    const handleMapButtonClick = () => {
+        setShowMap(!showMap)
+    }
+
+    const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedArea(e.target.value)
+    }
+
+    useEffect(() => {
+        if (showMap) {
+            if (!mapRef.current) {
+                const script = document.createElement('script')
+                script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false`
+                script.async = true
+                document.head.appendChild(script)
+
+                script.onload = () => {
+                    window.kakao.maps.load(() => {
+                        const container = document.getElementById('map')
+                        const options = {
+                            center: new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng),
+                            level: 7,
+                        }
+                        const kakaoMap = new window.kakao.maps.Map(container, options)
+                        mapRef.current = kakaoMap
+                    })
+                }
+
+                return () => {
+                    document.head.removeChild(script)
+                }
+            } else {
+                const moveLatLon = new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng)
+                mapRef.current.setCenter(moveLatLon)
+            }
+        }
+    }, [showMap, selectedArea])
+
+    useEffect(() => {
+        if (mapRef.current && !showMap) {
+            mapRef.current = null
+        }
+    }, [showMap])
+
     return (
-        <main className="main-container flex min-h-screen flex-col items-center p-6">
-            <div className="content flex-1 w-full max-w-4xl">
+        <main className="flex min-h-screen flex-col items-center p-6">
+            <div className="flex-1 w-full max-w-4xl">
                 {/* 검색창 */}
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full max-w-md">
@@ -19,74 +84,53 @@ export default function PromotionPlace() {
                         </div>
                     </div>
                 </div>
-                {/* 메뉴이름*/}
-                <header className="header mb-6">
+                {/* 메뉴이름 */}
+                <header className="mb-6">
                     <h1 className="text-2xl font-bold text-purple-700">홍보게시판</h1>
                 </header>
                 {/* 게시판 필터링부분 */}
                 <section className="mb-6">
                     <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                         <div className="flex items-center space-x-2">
-                            <div
-                                className="flex items-center border rounded-lg p-2 bg-white"
-                                style={{ borderRadius: '10px' }}
-                            >
+                            <div className="flex items-center border rounded-lg p-2 bg-white">
                                 <label className="font-bold mr-2">지역</label>
-                                <select className="border-none p-2 bg-white">
-                                    <option value="전체">전체</option>
-                                    <option value="강남구">강남구</option>
-                                    <option value="강동구">강동구</option>
-                                    <option value="강북구">강북구</option>
-                                    <option value="강서구">강서구</option>
-                                    <option value="관악구">관악구</option>
-                                    <option value="광진구">광진구</option>
-                                    <option value="구로구">구로구</option>
-                                    <option value="금천구">금천구</option>
-                                    <option value="노원구">노원구</option>
-                                    <option value="도봉구">도봉구</option>
-                                    <option value="동대문구">동대문구</option>
-                                    <option value="동작구">동작구</option>
-                                    <option value="마포구">마포구</option>
-                                    <option value="서대문구">서대문구</option>
-                                    <option value="서초구">서초구</option>
-                                    <option value="성동구">성동구</option>
-                                    <option value="성북구">성북구</option>
-                                    <option value="송파구">송파구</option>
-                                    <option value="양천구">양천구</option>
-                                    <option value="영등포구">영등포구</option>
-                                    <option value="용산구">용산구</option>
-                                    <option value="은평구">은평구</option>
-                                    <option value="종로구">종로구</option>
-                                    <option value="중구">중구</option>
-                                    <option value="중랑구">중랑구</option>
+                                <select
+                                    className="border-none p-2 bg-white"
+                                    value={selectedArea}
+                                    onChange={handleAreaChange}
+                                >
+                                    {Object.keys(areas).map((key) => (
+                                        <option key={key} value={key}>
+                                            {areas[key].name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
-                            <div
-                                className="flex items-center border rounded-lg p-2 bg-white"
-                                style={{ borderRadius: '10px' }}
-                            >
-                                <label className="font-bold mr-2">분야</label>
+                            <div className="flex items-center border rounded-lg p-2 bg-white">
+                                <label className="font-bold mr-2">유형</label>
                                 <select className="border-none p-2 bg-white">
-                                    <option value="">전체</option>
-                                    <option value="음악">음악</option>
-                                    <option value="연극">연극</option>
-                                    <option value="댄스">댄스</option>
-                                    <option value="미술">미술</option>
-                                    <option value="영화">영화</option>
+                                    <option value="all">전체</option>
+                                    <option value="band">밴드</option>
+                                    <option value="music">음악</option>
+                                    <option value="dance">춤</option>
                                 </select>
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <button className="bg-purple-700 text-white py-2 px-4">
+                            {/* 지도 버튼 */}
+                            <button className="bg-purple-700 text-white py-2 px-4" onClick={handleMapButtonClick}>
                                 <FaMapLocationDot />
                             </button>
+                            {/* 게시글 작성 버튼 */}
                             <button className="bg-purple-700 text-white py-2 px-4">
                                 <FaRegEdit />
                             </button>
                         </div>
                     </div>
-                    <div className="border p-4">
-                        {/* 여기에 게시판 내용을 추가하세요 */}
+                    {/* 지도 표시 부분 */}
+                    {showMap && <div className="w-full h-96 border" id="map"></div>}
+                    {/* 게시판 내용 */}
+                    <div className="border p-4 mb-6">
                         <p>게시판 내용</p>
                     </div>
                 </section>
