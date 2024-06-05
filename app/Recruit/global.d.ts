@@ -4,7 +4,7 @@ declare namespace kakao.maps {
     }
 
     class Map {
-        constructor(container: HTMLElement | null, options: MapOptions); // 여기서 HTMLElement를 HTMLElement | null로 변경
+        constructor(container: HTMLElement | null, options: MapOptions);
     }
 
     interface MapOptions {
