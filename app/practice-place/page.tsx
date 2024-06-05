@@ -44,8 +44,8 @@ const markerImages = {
 const PracticePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'mapo' | 'gangnam'>('all');
     const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'dance'>('all');
-    const [performancePlaces, setPerformancePlaces] = useState(mockPracticePlace);
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState(mockPracticePlace);
+    const [practicePlaces, setPracticePlaces] = useState(mockPracticePlace);
+    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState(mockPracticePlace);
     const [map, setMap] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,16 +65,16 @@ const PracticePlace: React.FC = () => {
     });
 
     useEffect(() => {
-        const filtered = performancePlaces.filter(
+        const filtered = practicePlaces.filter(
             (place) =>
                 (selectedRegion === 'all' || place.region === selectedRegion) &&
                 (selectedPart === 'all' || place.part === selectedPart)
         );
-        setFilteredPerformancePlaces(filtered);
-    }, [selectedRegion, selectedPart, performancePlaces]);
+        setFilteredPracticePlaces(filtered);
+    }, [selectedRegion, selectedPart, practicePlaces]);
 
     const fetchPlaceDetails = (postId: number) => {
-        const place = performancePlaces.find((p) => p.id === postId);
+        const place = practicePlaces.find((p) => p.id === postId);
         setSelectedPlace(place);
         setIsModalOpen(true);
     };
@@ -85,7 +85,7 @@ const PracticePlace: React.FC = () => {
     };
 
     const handleAddPlaceSubmit = () => {
-        const newId = performancePlaces.length + 1;
+        const newId = practicePlaces.length + 1;
         const place = {
             ...newPlace,
             id: newId,
@@ -94,7 +94,7 @@ const PracticePlace: React.FC = () => {
                 lng: parseFloat(newPlace.lng),
             },
         };
-        setPerformancePlaces((prev) => [...prev, place]);
+        setPracticePlaces((prev) => [...prev, place]);
         setIsAddModalOpen(false);
         setNewPlace({
             name: '',
@@ -124,7 +124,6 @@ const PracticePlace: React.FC = () => {
                 const map = new window.kakao.maps.Map(mapContainer, mapOption);
                 setMap(map);
 
-                // 스카이뷰 컨트롤 추가
                 const mapTypeControl = new window.kakao.maps.MapTypeControl();
                 map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
             });
@@ -136,7 +135,7 @@ const PracticePlace: React.FC = () => {
         if (map) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
-            filteredPerformancePlaces.forEach((place) => {
+            filteredPracticePlaces.forEach((place) => {
                 const markerPosition = new window.kakao.maps.LatLng(place.position.lat, place.position.lng);
                 bounds.extend(markerPosition);
 
@@ -174,7 +173,7 @@ const PracticePlace: React.FC = () => {
                 map.setBounds(bounds);
             }
         }
-    }, [map, filteredPerformancePlaces]);
+    }, [map, filteredPracticePlaces]);
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -241,7 +240,7 @@ const PracticePlace: React.FC = () => {
                         onCreate={setMap}
                     >
                         <MarkerClusterer>
-                            {filteredPerformancePlaces.map((place) => (
+                            {filteredPracticePlaces.map((place) => (
                                 <MapMarker
                                     key={place.id}
                                     position={place.position}
@@ -260,7 +259,7 @@ const PracticePlace: React.FC = () => {
                 </div>
                 <div className="mt-6">
                     <ul className="space-y-4">
-                        {filteredPerformancePlaces.map((place) => (
+                        {filteredPracticePlaces.map((place) => (
                             <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
                                 <div className="flex justify-between items-center">
                                     <div>

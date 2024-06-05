@@ -37,7 +37,7 @@ const mockPerformancePlace = [
 
 const markerImages = {
     band: '/guitar.svg',
-    dance: '/dance.svg',
+    dance: '/guitar.svg',
     default: '/guitar.svg',
 };
 
@@ -63,6 +63,8 @@ const PerformancePlace: React.FC = () => {
         performanceHours: '',
         description: '',
     });
+    const [address, setAddress] = useState('');
+    const [searchResult, setSearchResult] = useState<any>(null);
 
     useEffect(() => {
         const filtered = performancePlaces.filter(
@@ -109,6 +111,26 @@ const PerformancePlace: React.FC = () => {
             performanceHours: '',
             description: '',
         });
+    };
+
+    const handleAddressSearch = async () => {
+        try {
+            const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
+                headers: { Authorization: `KakaoAK e9ca0e0d122c181bb1caaee9e4ee526a` },
+            });
+            const result = response.data.documents[0];
+            if (result) {
+                setSearchResult(result);
+                setNewPlace((prev) => ({
+                    ...prev,
+                    lat: result.y,
+                    lng: result.x,
+                    address: result.address.address_name,
+                }));
+            }
+        } catch (error) {
+            console.error('Error fetching address:', error);
+        }
     };
 
     useEffect(() => {
@@ -173,8 +195,19 @@ const PerformancePlace: React.FC = () => {
             if (!bounds.isEmpty()) {
                 map.setBounds(bounds);
             }
+
+            if (searchResult) {
+                const markerPosition = new window.kakao.maps.LatLng(searchResult.y, searchResult.x);
+
+                const marker = new window.kakao.maps.Marker({
+                    position: markerPosition,
+                    map: map,
+                });
+
+                map.setCenter(markerPosition);
+            }
         }
-    }, [map, filteredPerformancePlaces]);
+    }, [map, filteredPerformancePlaces, searchResult]);
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -360,99 +393,108 @@ const PerformancePlace: React.FC = () => {
                 )}
                 {isAddModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-1/2 relative">
+                        <div className="bg-white p-6 rounded-lg w-2/3 relative">
                             <h2 className="text-xl font-bold mb-4">공연 장소 추가</h2>
                             <div className="flex flex-col gap-4">
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={newPlace.name}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="공연 장소 이름"
-                                    className="border p-2 rounded"
-                                />
-                                <select
-                                    name="part"
-                                    value={newPlace.part}
-                                    onChange={handleAddPlaceChange}
-                                    className="border p-2 rounded"
-                                >
-                                    <option value="band">밴드</option>
-                                    <option value="dance">춤</option>
-                                </select>
-                                <input
-                                    type="text"
-                                    name="lat"
-                                    value={newPlace.lat}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="위도"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="lng"
-                                    value={newPlace.lng}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="경도"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="region"
-                                    value={newPlace.region}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="지역"
-                                    className="border p-2 rounded"
-                                />
+                                <div id="searchMap" className="w-full h-48 mb-4 relative z-0">
+                                    <Map
+                                        center={{ lat: 37.5665, lng: 126.978 }}
+                                        style={{ width: '100%', height: '100%' }}
+                                        level={5}
+                                        onCreate={setMap}
+                                    >
+                                        {searchResult && (
+                                            <MapMarker
+                                                position={{
+                                                    lat: parseFloat(searchResult.y),
+                                                    lng: parseFloat(searchResult.x),
+                                                }}
+                                            />
+                                        )}
+                                    </Map>
+                                </div>
                                 <input
                                     type="text"
                                     name="address"
-                                    value={newPlace.address}
-                                    onChange={handleAddPlaceChange}
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
                                     placeholder="주소"
                                     className="border p-2 rounded"
                                 />
-                                <input
-                                    type="text"
-                                    name="phoneNumber"
-                                    value={newPlace.phoneNumber}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="전화번호"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="rentalFee"
-                                    value={newPlace.rentalFee}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="대관료"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="capacity"
-                                    value={newPlace.capacity}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="수용 인원"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="performanceHours"
-                                    value={newPlace.performanceHours}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="공연 가능 시간"
-                                    className="border p-2 rounded"
-                                />
-                                <input
-                                    type="text"
-                                    name="description"
-                                    value={newPlace.description}
-                                    onChange={handleAddPlaceChange}
-                                    placeholder="설명"
-                                    className="border p-2 rounded"
-                                />
-                                <div className="flex justify-end space-x-2">
+                                <button
+                                    onClick={handleAddressSearch}
+                                    className="bg-blue-500 text-white py-2 px-4 rounded-full mb-4"
+                                >
+                                    주소 검색
+                                </button>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={newPlace.name}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="공연 장소 이름"
+                                        className="border p-2 rounded"
+                                    />
+                                    <select
+                                        name="part"
+                                        value={newPlace.part}
+                                        onChange={handleAddPlaceChange}
+                                        className="border p-2 rounded"
+                                    >
+                                        <option value="band">밴드</option>
+                                        <option value="dance">춤</option>
+                                    </select>
+                                    <input
+                                        type="text"
+                                        name="region"
+                                        value={newPlace.region}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="지역"
+                                        className="border p-2 rounded"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="phoneNumber"
+                                        value={newPlace.phoneNumber}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="전화번호"
+                                        className="border p-2 rounded"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="rentalFee"
+                                        value={newPlace.rentalFee}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="대관료"
+                                        className="border p-2 rounded"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="capacity"
+                                        value={newPlace.capacity}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="수용 인원"
+                                        className="border p-2 rounded"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="performanceHours"
+                                        value={newPlace.performanceHours}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="공연 가능 시간"
+                                        className="border p-2 rounded"
+                                    />
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        value={newPlace.description}
+                                        onChange={handleAddPlaceChange}
+                                        placeholder="설명"
+                                        className="border p-2 rounded"
+                                    />
+                                </div>
+                                <div className="flex justify-end space-x-2 mt-4">
                                     <button
                                         onClick={() => setIsAddModalOpen(false)}
                                         className="bg-gray-500 text-white py-2 px-4 rounded-full"
