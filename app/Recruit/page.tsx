@@ -73,7 +73,7 @@ const Recruit_page: React.FC = () => {
                 </div>
                 {/* 메뉴이름*/}
                 <header className="header mb-6">
-                    <h1 className="text-2xl font-bold text-purple-700">홍보게시판</h1>
+                    <h1 className="text-2xl font-bold text-purple-700">팀원모집 게시판</h1>
                 </header>
                 {/* 게시판 필터링부분 */}
                 <section className="mb-6">
