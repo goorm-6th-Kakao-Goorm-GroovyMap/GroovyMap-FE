@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import './globals.scss';
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';

@@ -6,7 +6,7 @@ import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 
-const initialPerformancePlaces = [
+const mockPerformancePlace = [
     {
         id: 1,
         name: '홍대 거리',
@@ -44,8 +44,8 @@ const markerImages = {
 const PerformancePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'mapo' | 'gangnam'>('all');
     const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'dance'>('all');
-    const [performancePlaces, setPerformancePlaces] = useState(initialPerformancePlaces);
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState(initialPerformancePlaces);
+    const [performancePlaces, setPerformancePlaces] = useState(mockPerformancePlace);
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState(mockPerformancePlace);
     const [map, setMap] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<any>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -113,7 +113,7 @@ const PerformancePlace: React.FC = () => {
 
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APP_KEY&autoload=false&libraries=clusterer`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false&libraries=clusterer`;
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
@@ -259,7 +259,6 @@ const PerformancePlace: React.FC = () => {
                     </Map>
                 </div>
                 <div className="mt-6">
-                    <h2 className="text-2xl font-bold mb-4">공연 장소 목록</h2>
                     <ul className="space-y-4">
                         {filteredPerformancePlaces.map((place) => (
                             <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
