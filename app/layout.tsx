@@ -16,14 +16,14 @@ export default function RootLayout({
     return (
         <html lang="kr" className="h-full">
             <body className="h-full">
-                <div className="main-layout flex flex-row h-full relative">
+                <div className="main-layout flex h-full">
                     {/* 메뉴 아이콘 */}
                     <div className="block md:hidden p-4">
                         <FaBars size={22} onClick={() => setSidebarOpen(!sidebarOpen)} />
                     </div>
                     {/* 사이드바 */}
                     <div
-                        className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-white shadow-lg z-50`}
+                        className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out bg-white shadow-lg z-50 h-full`}
                     >
                         <Sidebar />
                     </div>
@@ -34,7 +34,7 @@ export default function RootLayout({
                         ></div>
                     )}
                     {/* 메인 콘텐츠 */}
-                    <div className="flex-grow">{children}</div>
+                    <div className="flex-grow flex flex-col">{children}</div>
                     {/* 오른쪽 사이드바 */}
                     <div className="hidden md:block h-full">
                         <RightSidebar />
