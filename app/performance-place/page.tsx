@@ -144,7 +144,7 @@ const PerformancePlace: React.FC = () => {
     // 카카오맵 api 가져오는 부분
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false&libraries=clusterer`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_API_KEY}&autoload=false&libraries=clusterer`;
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
@@ -298,7 +298,7 @@ const PerformancePlace: React.FC = () => {
         try {
             // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
             const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK e9ca0e0d122c181bb1caaee9e4ee526a` },
+                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_API_KEY}` },
             });
             const result = response.data.documents[0];
             if (result) {

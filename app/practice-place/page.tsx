@@ -39,7 +39,7 @@ const mockPracticePlace = [
     },
     {
         id: 2,
-        name: '공연 장소 이름',
+        name: '연습 장소 이름',
         part: 'DANCE',
         coordinate: { latitude: 37.4989, longitude: 127.0276 },
         region: 'GANGNAM',
@@ -48,7 +48,7 @@ const mockPracticePlace = [
         rentalFee: '무료',
         capacity: '300명',
         practiceHours: '10:00 - 22:00',
-        description: '다양한 공연과 이벤트가 열리는 장소입니다.',
+        description: '다양한 연습과 이벤트가 열리는 장소입니다.',
     },
 ];
 
@@ -144,7 +144,7 @@ const PracticePlace: React.FC = () => {
     // 카카오맵 api 가져오는 부분
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false&libraries=clusterer`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_API_KEY}&autoload=false&libraries=clusterer`;
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
@@ -353,7 +353,7 @@ const PracticePlace: React.FC = () => {
                     </div>
                 </div>
                 <header className="header mb-6">
-                    <h1 className="text-3xl font-extrabold text-purple-700">공연 장소</h1>
+                    <h1 className="text-3xl font-extrabold text-purple-700">연습 장소</h1>
                 </header>
                 <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                     <div className="flex items-center space-x-2">
@@ -428,7 +428,7 @@ const PracticePlace: React.FC = () => {
                                     <div>
                                         <h3 className="text-xl font-semibold">{place.name}</h3>
                                         <p>주소: {place.address}</p>
-                                        <p>공연 가능 시간: {place.practiceHours}</p>
+                                        <p>연습 가능 시간: {place.practiceHours}</p>
                                     </div>
                                     <button
                                         onClick={() => fetchPlaceDetails(place.id)}
@@ -497,7 +497,7 @@ const PracticePlace: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-2 align-middle">
                                         <FaClock size={14} className="text-gray-400" />
-                                        <span>공연 가능 시간: {selectedPlace.practiceHours}</span>
+                                        <span>연습 가능 시간: {selectedPlace.practiceHours}</span>
                                     </div>
                                     <div className="flex items-center gap-2 align-middle">
                                         <FaPhoneAlt size={15} className="text-gray-400" />
@@ -525,7 +525,7 @@ const PracticePlace: React.FC = () => {
                 {isAddModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                         <div className="bg-white p-6 rounded-lg w-2/3 relative">
-                            <h2 className="text-xl font-bold mb-4">공연 장소 추가</h2>
+                            <h2 className="text-xl font-bold mb-4">연습 장소 추가</h2>
                             <div className="flex flex-col gap-4">
                                 <div id="searchMap" className="w-full h-48 mb-4 relative z-0">
                                     <Map
@@ -564,7 +564,7 @@ const PracticePlace: React.FC = () => {
                                         name="name"
                                         value={newPlace.name}
                                         onChange={handleAddPlaceChange}
-                                        placeholder="공연 장소 이름"
+                                        placeholder="연습 장소 이름"
                                         className="border p-2 rounded"
                                     />
                                     <select
@@ -615,7 +615,7 @@ const PracticePlace: React.FC = () => {
                                         name="practiceHours"
                                         value={newPlace.practiceHours}
                                         onChange={handleAddPlaceChange}
-                                        placeholder="공연 가능 시간"
+                                        placeholder="연습 가능 시간"
                                         className="border p-2 rounded"
                                     />
                                     <input
