@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+// import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
@@ -10,7 +11,7 @@ import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 're
 interface Place {
     id: number;
     name: string;
-    part: 'band' | 'dance'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
+    part: 'BAND' | 'DANCE'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
     coordinate: { latitude: number; longitude: number };
     region: string;
     address: string;
@@ -21,14 +22,14 @@ interface Place {
     description: string;
 }
 
-//나중에 실제 api 가져오면 삭제
+// 나중에 실제 api 가져오면 삭제
 const mockPerformancePlace = [
     {
         id: 1,
         name: '홍대 거리',
-        part: 'band',
+        part: 'BAND',
         coordinate: { latitude: 37.5551, longitude: 126.9236 },
-        region: 'mapo',
+        region: 'MAPO',
         address: '서울특별시 마포구 홍익로 5길 20',
         phoneNumber: '02-3141-1411',
         rentalFee: '무료',
@@ -39,9 +40,9 @@ const mockPerformancePlace = [
     {
         id: 2,
         name: '공연 장소 이름',
-        part: 'dance',
+        part: 'DANCE',
         coordinate: { latitude: 37.4989, longitude: 127.0276 },
-        region: 'gangnam',
+        region: 'GANGNAM',
         address: '서울특별시 강남구 강남대로 396',
         phoneNumber: '02-555-5555',
         rentalFee: '무료',
@@ -51,18 +52,18 @@ const mockPerformancePlace = [
     },
 ];
 
-//나중에 마커 이미지 바꾸기
+// 나중에 마커 이미지 바꾸기
 const markerImages = {
-    band: '/guitar.svg',
-    dance: '/guitar.svg',
+    BAND: '/guitar.svg',
+    DANCE: '/guitar.svg',
     default: '/guitar.svg',
 };
 
 const PerformancePlace: React.FC = () => {
-    const [selectedRegion, setSelectedRegion] = useState<'all' | 'mapo' | 'gangnam'>('all'); //지역구 더 추가
-    const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'dance'>('all'); //분야 더 추가
-    const [performancePlaces, setPerformancePlaces] = useState<Place[]>(mockPerformancePlace); //실제 api 요청받을때는 삭제 후 빈 배열로 설정 useState<Place[]>([]);
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<Place[]>(mockPerformancePlace); //실제 api 요청 받을때는 삭제 후 빈 배열로 설정 useState<Place[]>([]);
+    const [selectedRegion, setSelectedRegion] = useState<'all' | 'MAPO' | 'GANGNAM'>('all'); // 지역구 더 추가
+    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE'>('all'); // 분야 더 추가
+    const [performancePlaces, setPerformancePlaces] = useState<Place[]>(mockPerformancePlace); // 실제 api 요청받을때는 삭제;
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<Place[]>(mockPerformancePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<Place[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
@@ -72,10 +73,10 @@ const PerformancePlace: React.FC = () => {
     const [searchMap, setSearchMap] = useState<any>(null);
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
 
-    //새 장소 추가해서 post 요청 보낼때 형태
+    // 새 장소 추가해서 post 요청 보낼때 형태
     const [newPlace, setNewPlace] = useState<Omit<Place, 'id'>>({
         name: '',
-        part: 'band',
+        part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
         region: '',
         address: '',
@@ -88,21 +89,49 @@ const PerformancePlace: React.FC = () => {
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
 
-    // API 데이터를 가져오는 부분 - 나중에 주석 해제
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         try {
-    //             const response = await axios.get('/performanceplace');
-    //             setPerformancePlaces(response.data);
-    //             setFilteredPerformancePlaces(response.data);
-    //         } catch (error) {
-    //             console.error('Error fetching data:', error);
-    //         }
-    //     };
-    //     fetchData();
-    // }, []);
+    // const queryClient = useQueryClient();
 
-    //지역 및 분야로 데이터 필터링 하는 부분
+    // // API 데이터를 가져오는 부분
+    // const { data: performancePlaces, isLoading } = useQuery<Place[]>(
+    //     'performancePlaces',
+    //     async () => {
+    //         const response = await axios.get('/performanceplace');
+    //         return response.data;
+    //     },
+    //     {
+    //         onSuccess: (data) => {
+    //             setFilteredPerformancePlaces(data);
+    //         },
+    //     }
+    // );
+
+    // const addPlaceMutation = useMutation(
+    //     (newPlace: Omit<Place, 'id'>) => axios.post('/performanceplace', newPlace),
+    //     {
+    //         onSuccess: (response) => {
+    //             queryClient.invalidateQueries('performancePlaces');
+    //             setFilteredPerformancePlaces((prev) => [...prev, response.data]);
+    //             setIsAddModalOpen(false);
+    //             setNewPlace({
+    //                 name: '',
+    //                 part: 'BAND',
+    //                 coordinate: { latitude: 0, longitude: 0 },
+    //                 region: '',
+    //                 address: '',
+    //                 phoneNumber: '',
+    //                 rentalFee: '',
+    //                 capacity: '',
+    //                 performanceHours: '',
+    //                 description: '',
+    //             });
+    //         },
+    //         onError: (error) => {
+    //             console.error('Error adding new place:', error);
+    //         },
+    //     }
+    // );
+
+    // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
         const filtered = performancePlaces.filter(
             (place) =>
@@ -112,7 +141,7 @@ const PerformancePlace: React.FC = () => {
         setFilteredPerformancePlaces(filtered);
     }, [selectedRegion, selectedPart, performancePlaces]);
 
-    //카카오맵 api 가져오는 부분
+    // 카카오맵 api 가져오는 부분
     useEffect(() => {
         const script = document.createElement('script');
         script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false&libraries=clusterer`;
@@ -155,7 +184,7 @@ const PerformancePlace: React.FC = () => {
     // 상세정보 페치
     const fetchPlaceDetails = (postId: number) => {
         const place = performancePlaces.find((p) => p.id === postId);
-        setSelectedPlace(place);
+        setSelectedPlace(place || null);
         setIsModalOpen(true);
     };
 
@@ -175,7 +204,7 @@ const PerformancePlace: React.FC = () => {
         }
     };
 
-    //(나중에 삭제)새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
+    // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
     const handleAddPlaceSubmit = () => {
         const newId = performancePlaces.length + 1;
         const place = {
@@ -188,7 +217,7 @@ const PerformancePlace: React.FC = () => {
         setIsAddModalOpen(false);
         setNewPlace({
             name: '',
-            part: 'band',
+            part: 'BAND',
             coordinate: { latitude: 0, longitude: 0 },
             region: '',
             address: '',
@@ -202,41 +231,12 @@ const PerformancePlace: React.FC = () => {
         updateMarkers(updatedPlaces); // 마커 업데이트
     };
 
-    // //새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
+    // // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
     // const handleAddPlaceSubmit = async () => {
-    //     const place = {
-    //         ...newPlace,
-    //     };
-
-    //     try {
-    //         const response = await axios.post('/performanceplace', place); // POST 요청 보내기
-    //         if (response.status === 201) {
-    //             const savedPlace = response.data;
-    //             const updatedPlaces = [...performancePlaces, savedPlace];
-    //             setPerformancePlaces(updatedPlaces);
-    //             setFilteredPerformancePlaces(updatedPlaces);
-    //             updateMarkers(updatedPlaces); // 마커 업데이트
-    //         }
-    //     } catch (error) {
-    //         console.error('Error adding new place:', error);
-    //     }
-
-    //     setIsAddModalOpen(false);
-    //     setNewPlace({
-    //         name: '',
-    //         part: 'band',
-    //         coordinate: { latitude: 0, longitude: 0 },
-    //         region: '',
-    //         address: '',
-    //         phoneNumber: '',
-    //         rentalFee: '',
-    //         capacity: '',
-    //         performanceHours: '',
-    //         description: '',
-    //     });
+    //     addPlaceMutation.mutate(newPlace);
     // };
 
-    const updateMarkers = (places) => {
+    const updateMarkers = (places: Place[]) => {
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
@@ -362,11 +362,12 @@ const PerformancePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
-                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'mapo' | 'gangnam')}
+                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'MAPO' | 'GANGNAM')} // 지역구 나중에 추가
                             >
                                 <option value="all">전체</option>
-                                <option value="mapo">마포구</option>
-                                <option value="gangnam">강남구</option>
+                                <option value="MAPO">마포구</option>
+                                <option value="GANGNAM">강남구</option>
+                                {/* 지역구 추가하기 */}
                             </select>
                         </div>
                         <div className="flex items-center border rounded-lg p-2 bg-white">
@@ -374,11 +375,11 @@ const PerformancePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedPart}
-                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'band' | 'dance')}
+                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'BAND' | 'DANCE')}
                             >
                                 <option value="all">전체</option>
-                                <option value="band">밴드</option>
-                                <option value="dance">춤</option>
+                                <option value="BAND">밴드</option>
+                                <option value="DANCE">춤</option>
                             </select>
                         </div>
                     </div>
@@ -446,9 +447,9 @@ const PerformancePlace: React.FC = () => {
                             <div className="relative h-56 w-full sm:h-52">
                                 <img
                                     src={
-                                        selectedPlace.part === 'band'
+                                        selectedPlace.part === 'BAND'
                                             ? 'https://source.unsplash.com/random/800x400/?band'
-                                            : 'https://source.unsplash.com/random/800x400/?dance'
+                                            : 'https://source.unsplash.com/random/800x400/?Dance'
                                     }
                                     alt={selectedPlace.name}
                                     className="object-cover w-full h-full rounded-lg"
@@ -523,7 +524,7 @@ const PerformancePlace: React.FC = () => {
                 )}
                 {isAddModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-2/3relative">
+                        <div className="bg-white p-6 rounded-lg w-2/3 relative">
                             <h2 className="text-xl font-bold mb-4">공연 장소 추가</h2>
                             <div className="flex flex-col gap-4">
                                 <div id="searchMap" className="w-full h-48 mb-4 relative z-0">
@@ -572,8 +573,8 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="band">밴드</option>
-                                        <option value="dance">춤</option>
+                                        <option value="BAND">밴드</option>
+                                        <option value="DANCE">춤</option>
                                     </select>
                                     <select
                                         name="region"
@@ -581,8 +582,9 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="mapo">마포구</option>
-                                        <option value="gangnam">강남구</option>
+                                        <option value="MAPO">마포구</option>
+                                        <option value="GANGNAM">강남구</option>
+                                        {/* 지역구 추가 */}
                                     </select>
                                     <input
                                         type="text"
