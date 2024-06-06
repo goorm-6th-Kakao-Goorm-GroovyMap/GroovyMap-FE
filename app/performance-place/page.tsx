@@ -10,7 +10,7 @@ import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 're
 interface Place {
     id: number;
     name: string;
-    part: 'band' | 'dance'; // 나중에 분야 더 추가해서 넣기
+    part: 'band' | 'dance'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
     position: { lat: number; lng: number };
     region: string;
     address: string;
@@ -51,6 +51,7 @@ const mockPerformancePlace = [
     },
 ];
 
+//나중에 마커 이미지 바꾸기
 const markerImages = {
     band: '/guitar.svg',
     dance: '/guitar.svg',
@@ -58,8 +59,8 @@ const markerImages = {
 };
 
 const PerformancePlace: React.FC = () => {
-    const [selectedRegion, setSelectedRegion] = useState<'all' | 'mapo' | 'gangnam'>('all');
-    const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'dance'>('all');
+    const [selectedRegion, setSelectedRegion] = useState<'all' | 'mapo' | 'gangnam'>('all'); //지역구 더 추가
+    const [selectedPart, setSelectedPart] = useState<'all' | 'band' | 'dance'>('all'); //분야 더 추가
     const [performancePlaces, setPerformancePlaces] = useState<Place[]>(mockPerformancePlace); //실제 api 요청받을때는 삭제 후 빈 배열로 설정 useState<Place[]>([]);
     const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<Place[]>(mockPerformancePlace); //실제 api 요청 받을때는 삭제 후 빈 배열로 설정 useState<Place[]>([]);
     const [map, setMap] = useState<any>(null);
