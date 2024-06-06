@@ -11,7 +11,7 @@ interface Place {
     id: number;
     name: string;
     part: 'band' | 'dance'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
-    position: { lat: number; lng: number };
+    coordinate: { latitude: number; longitude: number };
     region: string;
     address: string;
     phoneNumber: string;
@@ -27,7 +27,7 @@ const mockPerformancePlace = [
         id: 1,
         name: '홍대 거리',
         part: 'band',
-        position: { lat: 37.5551, lng: 126.9236 },
+        coordinate: { latitude: 37.5551, longitude: 126.9236 },
         region: 'mapo',
         address: '서울특별시 마포구 홍익로 5길 20',
         phoneNumber: '02-3141-1411',
@@ -40,7 +40,7 @@ const mockPerformancePlace = [
         id: 2,
         name: '공연 장소 이름',
         part: 'dance',
-        position: { lat: 37.4989, lng: 127.0276 },
+        coordinate: { latitude: 37.4989, longitude: 127.0276 },
         region: 'gangnam',
         address: '서울특별시 강남구 강남대로 396',
         phoneNumber: '02-555-5555',
@@ -76,7 +76,7 @@ const PerformancePlace: React.FC = () => {
     const [newPlace, setNewPlace] = useState<Omit<Place, 'id'>>({
         name: '',
         part: 'band',
-        position: { lat: 0, lng: 0 },
+        coordinate: { latitude: 0, longitude: 0 },
         region: '',
         address: '',
         phoneNumber: '',
@@ -162,11 +162,11 @@ const PerformancePlace: React.FC = () => {
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        if (name === 'lat' || name === 'lng') {
+        if (name === 'latitude' || name === 'longitude') {
             setNewPlace((prev) => ({
                 ...prev,
-                position: {
-                    ...prev.position,
+                coordinate: {
+                    ...prev.coordinate,
                     [name]: parseFloat(value), // 문자열을 숫자로 변환하여 저장
                 },
             }));
@@ -189,7 +189,7 @@ const PerformancePlace: React.FC = () => {
         setNewPlace({
             name: '',
             part: 'band',
-            position: { lat: 0, lng: 0 },
+            coordinate: { latitude: 0, longitude: 0 },
             region: '',
             address: '',
             phoneNumber: '',
@@ -225,7 +225,7 @@ const PerformancePlace: React.FC = () => {
     //     setNewPlace({
     //         name: '',
     //         part: 'band',
-    //         position: { lat: 0, lng: 0 },
+    //         coordinate: { latitude: 0, longitude: 0 },
     //         region: '',
     //         address: '',
     //         phoneNumber: '',
@@ -241,8 +241,11 @@ const PerformancePlace: React.FC = () => {
             const bounds = new window.kakao.maps.LatLngBounds();
 
             const newMarkers = places.map((place) => {
-                const markerPosition = new window.kakao.maps.LatLng(place.position.lat, place.position.lng);
-                bounds.extend(markerPosition);
+                const markerCoordinate = new window.kakao.maps.LatLng(
+                    place.coordinate.latitude,
+                    place.coordinate.longitude
+                );
+                bounds.extend(markerCoordinate);
 
                 const markerImage = new window.kakao.maps.MarkerImage(
                     markerImages[place.part] || markerImages.default,
@@ -251,7 +254,7 @@ const PerformancePlace: React.FC = () => {
                 );
 
                 const marker = new window.kakao.maps.Marker({
-                    position: markerPosition,
+                    position: markerCoordinate,
                     image: markerImage,
                 });
 
@@ -304,17 +307,17 @@ const PerformancePlace: React.FC = () => {
                 // newPlace 상태를 업데이트
                 setNewPlace((prev) => ({
                     ...prev,
-                    position: {
-                        lat: parseFloat(result.y), // 검색 결과의 위도 값을 position.lat에 설정
-                        lng: parseFloat(result.x), // 검색 결과의 경도 값을 position.lng에 설정
+                    coordinate: {
+                        latitude: parseFloat(result.y), // 검색 결과의 위도 값을 coordinate.latitude에 설정
+                        longitude: parseFloat(result.x), // 검색 결과의 경도 값을 coordinate.longitude에 설정
                     },
                     address: result.address.address_name,
                 }));
 
                 // 마커 추가
-                const markerPosition = new window.kakao.maps.LatLng(result.y, result.x);
+                const markerCoordinate = new window.kakao.maps.LatLng(result.y, result.x);
                 const marker = new window.kakao.maps.Marker({
-                    position: markerPosition,
+                    position: markerCoordinate,
                     map: searchMap, // 검색 지도를 위한 마커 추가
                     image: new window.kakao.maps.MarkerImage(
                         markerImages[newPlace.part] || markerImages.default,
@@ -327,7 +330,7 @@ const PerformancePlace: React.FC = () => {
                 searchMarkers.forEach((marker) => marker.setMap(null));
                 setSearchMarkers([marker]);
 
-                searchMap.setCenter(markerPosition);
+                searchMap.setCenter(markerCoordinate);
             }
         } catch (error) {
             console.error('Error fetching address:', error);
@@ -402,7 +405,7 @@ const PerformancePlace: React.FC = () => {
                             {filteredPerformancePlaces.map((place) => (
                                 <MapMarker
                                     key={place.id}
-                                    position={place.position}
+                                    position={place.coordinate}
                                     image={{
                                         src: markerImages[place.part] || markerImages.default,
                                         size: { width: 24, height: 35 },
@@ -468,7 +471,7 @@ const PerformancePlace: React.FC = () => {
                                         className="bg-purple-700 text-white py-2 px-4 rounded-full"
                                         onClick={() => {
                                             window.open(
-                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.position.lat},${selectedPlace.position.lng}`,
+                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.coordinate.latitude},${selectedPlace.coordinate.longitude}`,
                                                 '_blank'
                                             );
                                         }}
