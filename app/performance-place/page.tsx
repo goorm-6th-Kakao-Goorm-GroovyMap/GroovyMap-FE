@@ -45,12 +45,13 @@ const mockPerformancePlace = [
 const markerImages = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
+    VOCAL: '/guitar.svg',
     default: '/guitar.svg',
 };
 
 const PerformancePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'MAPO' | 'GANGNAM'>('all'); // 지역구 더 추가
-    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE'>('all'); // 분야 더 추가
+    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all'); // 분야 더 추가
     const [performancePlaces, setPerformancePlaces] = useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청받을때는 삭제;
     const [filteredPerformancePlaces, setFilteredPerformancePlaces] =
         useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PerformancePlace[]>([]);
@@ -66,7 +67,7 @@ const PerformancePlace: React.FC = () => {
     // 새 장소 추가해서 post 요청 보낼때 형태
     const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
         name: '',
-        part: 'BAND',
+        part: '',
         coordinate: { latitude: 0, longitude: 0 },
         region: '',
         address: '',
@@ -78,7 +79,25 @@ const PerformancePlace: React.FC = () => {
     });
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
+    // 페이지 네이션을 위한 상태 추가함
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
+    // 페이지 변경 핸들러 추가
+    const handlePageChange = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // 데이터 필터링 및 페이지 네이션 적용
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredPerformancePlaces.slice(indexOfFirstItem, indexOfLastItem);
+
+    // 페이지 숫자 계산
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(filteredPerformancePlaces.length / itemsPerPage); i++) {
+        pageNumbers.push(i);
+    }
     //     //API 연동시 주석 해제
     //     const queryClient = useQueryClient();
 
@@ -97,7 +116,7 @@ const PerformancePlace: React.FC = () => {
     //         setIsAddModalOpen(false);
     //         setNewPlace({
     //             name: '',
-    //             part: 'BAND',
+    //             part: '',
     //             coordinate: { latitude: 0, longitude: 0 },
     //             region: '',
     //             address: '',
@@ -123,10 +142,21 @@ const PerformancePlace: React.FC = () => {
         setFilteredPerformancePlaces(filtered);
     }, [selectedRegion, selectedPart, performancePlaces]);
 
+    // 환경 변수 확인
+    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
+        throw new Error('NEXT_PUBLIC_KAKAO_MAP_API_KEY is not defined in the environment variables');
+    }
+    if (!process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
+        throw new Error('NEXT_PUBLIC_KAKAO_REST_API_KEY is not defined in the environment variables');
+    }
+    //환경 변수 api key
+    const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
+    const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
+
     // 카카오맵 api 가져오는 부분
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_API_KEY}&autoload=false&libraries=clusterer`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapApiKey}&autoload=false&libraries=clusterer`;
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
@@ -207,9 +237,15 @@ const PerformancePlace: React.FC = () => {
             Swal.fire({
                 icon: 'warning',
                 title: '필드를 입력해주세요',
-                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+                text: '공연 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
                 confirmButtonText: '확인',
                 confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                customClass: {
+                    popup: 'tailwind-swal-popup',
+                    title: 'tailwind-swal-title',
+                    content: 'tailwind-swal-content',
+                    confirmButton: 'tailwind-swal-button',
+                },
             });
             return;
         }
@@ -225,7 +261,7 @@ const PerformancePlace: React.FC = () => {
         setIsAddModalOpen(false);
         setNewPlace({
             name: '',
-            part: 'BAND',
+            part: '',
             coordinate: { latitude: 0, longitude: 0 },
             region: '',
             address: '',
@@ -315,9 +351,27 @@ const PerformancePlace: React.FC = () => {
     // 주소 검색 후 결과 값 받아와서 위도 경도 추가
     const handleAddressSearch = async () => {
         try {
+            if (!address || address.trim() === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '주소 입력 필요',
+                    text: '주소를 입력해 주세요.',
+                    confirmButtonText: '확인',
+                    customClass: {
+                        popup: 'tailwind-swal-popup',
+                        title: 'tailwind-swal-title',
+                        content: 'tailwind-swal-content',
+                        confirmButton: 'tailwind-swal-button',
+                    },
+                });
+                return; // 주소가 빈칸이거나 null이면 함수 종료
+            }
+
+            const encodedAddress = encodeURIComponent(address);
+
             // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
             const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}` },
+                headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` },
             });
             const result = response.data.documents[0];
             if (result) {
@@ -350,9 +404,36 @@ const PerformancePlace: React.FC = () => {
                 setSearchMarkers([marker]);
 
                 searchMap.setCenter(markerCoordinate);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: '결과 없음',
+                    text: '입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.',
+                    confirmButtonText: '확인',
+                    confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                    customClass: {
+                        popup: 'tailwind-swal-popup',
+                        title: 'tailwind-swal-title',
+                        content: 'tailwind-swal-content',
+                        confirmButton: 'tailwind-swal-button',
+                    },
+                });
+                // 검색 결과가 없음을 알리는 UI
             }
         } catch (error) {
-            console.error('Error fetching address:', error);
+            Swal.fire({
+                icon: 'error',
+                title: '에러 발생',
+                text: '주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.',
+                confirmButtonText: '확인',
+                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                customClass: {
+                    popup: 'tailwind-swal-popup',
+                    title: 'tailwind-swal-title',
+                    content: 'tailwind-swal-content',
+                    confirmButton: 'tailwind-swal-button',
+                },
+            });
         }
     };
 
@@ -381,11 +462,11 @@ const PerformancePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
-                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'MAPO' | 'GANGNAM')} // 지역구 나중에 추가
+                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'MAPOGU' | 'GANGNAMGU')} // 지역구 나중에 추가
                             >
                                 <option value="all">전체</option>
-                                <option value="MAPO">마포구</option>
-                                <option value="GANGNAM">강남구</option>
+                                <option value="MAPOGU">마포구</option>
+                                <option value="GANGNAMGU">강남구</option>
                                 {/* 지역구 추가하기 */}
                             </select>
                         </div>
@@ -399,6 +480,7 @@ const PerformancePlace: React.FC = () => {
                                 <option value="all">전체</option>
                                 <option value="BAND">밴드</option>
                                 <option value="DANCE">춤</option>
+                                <option value="VOCAL">노래</option>
                             </select>
                         </div>
                     </div>
@@ -441,17 +523,19 @@ const PerformancePlace: React.FC = () => {
                 </div>
                 <div className="mt-6">
                     <ul className="space-y-4">
-                        {filteredPerformancePlaces.map((place) => (
+                        {currentItems.map((place) => (
                             <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <h3 className="text-xl font-semibold">{place.name}</h3>
-                                        <p>주소: {place.address}</p>
-                                        <p>공연 가능 시간: {place.performanceHours}</p>
+                                        <span className="rounded-ml bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
+                                            {place.part}
+                                        </span>
+                                        <h3 className="text-xl my-1 font-semibold">{place.name}</h3>
+                                        <p className="text-m text-gray-600 font-regular">{place.address}</p>
                                     </div>
                                     <button
                                         onClick={() => fetchPlaceDetails(place.id)}
-                                        className="bg-purple-700 text-white py-2 px-4 rounded-full"
+                                        className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
                                     >
                                         상세 정보
                                     </button>
@@ -459,6 +543,19 @@ const PerformancePlace: React.FC = () => {
                             </li>
                         ))}
                     </ul>
+                    <div className="flex justify-center space-x-2 mt-4">
+                        {pageNumbers.map((number) => (
+                            <button
+                                key={number}
+                                onClick={() => handlePageChange(number)}
+                                className={`py-2 px-4 rounded-full ${
+                                    currentPage === number ? 'bg-purple-700 text-white' : 'bg-gray-300 text-black'
+                                } hover:bg-purple-800 transition-colors duration-300 ease-in-out`}
+                            >
+                                {number}
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 {isModalOpen && selectedPlace && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -592,8 +689,12 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
+                                        <option value="" selected>
+                                            분야
+                                        </option>
                                         <option value="BAND">밴드</option>
                                         <option value="DANCE">춤</option>
+                                        <option value="VOCAL">노래</option>
                                     </select>
                                     <select
                                         name="region"
@@ -601,8 +702,11 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="MAPO">마포구</option>
-                                        <option value="GANGNAM">강남구</option>
+                                        <option value="" selected>
+                                            지역
+                                        </option>
+                                        <option value="MAPOGU">마포구</option>
+                                        <option value="GANGNAMGU">강남구</option>
                                         {/* 지역구 추가 */}
                                     </select>
                                     <input

@@ -18,6 +18,8 @@
     "react-kakao-maps-sdk": "^1.1.27",
     "recoil": "^0.7.7",
     "sass": "^1.77.4",
+    "sweetalert": "^2.1.2",
+    "sweetalert2": "^11.11.1",
     "use-zustand": "^0.1.0",
     "zustand": "^4.5.2"
   },

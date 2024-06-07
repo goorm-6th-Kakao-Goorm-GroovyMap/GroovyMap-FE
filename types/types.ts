@@ -2,7 +2,7 @@
 export interface PerformancePlace {
     id: number;
     name: string;
-    part: 'BAND' | 'DANCE';
+    part: string;
     coordinate: { latitude: number; longitude: number };
     region: string;
     address: string;
@@ -17,7 +17,7 @@ export interface PerformancePlace {
 export interface PracticePlace {
     id: number;
     name: string;
-    part: 'BAND' | 'DANCE';
+    part: string;
     coordinate: { latitude: number; longitude: number };
     region: string;
     address: string;

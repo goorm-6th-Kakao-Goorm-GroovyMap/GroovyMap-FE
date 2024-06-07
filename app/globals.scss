@@ -52,3 +52,20 @@ body,
 button {
     @apply cursor-pointer;
 }
+
+//공연 및 연습 장소 페이지에서 swal 알림창 커스텀 스타일링
+.tailwind-swal-popup {
+    @apply w-64 p-4; /* 너비 및 패딩 조정 */
+}
+
+.tailwind-swal-title {
+    @apply text-base font-semibold; /* 제목의 글꼴 크기 및 굵기 조정 */
+}
+
+.tailwind-swal-content {
+    @apply text-sm; /* 내용의 글꼴 크기 조정 */
+}
+
+.tailwind-swal-button {
+    @apply bg-purple-700 text-white px-4 py-2 rounded-md; /* 버튼 스타일 조정 */
+}
