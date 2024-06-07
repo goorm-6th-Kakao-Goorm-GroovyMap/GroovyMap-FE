@@ -1,4 +1,4 @@
-//공연 및 연습 장소 타입 설정
+//공연 장소 타입
 export interface PerformancePlace {
     id: number;
     name: string;
@@ -13,6 +13,7 @@ export interface PerformancePlace {
     description: string;
 }
 
+//연습장소 타입
 export interface PracticePlace {
     id: number;
     name: string;
