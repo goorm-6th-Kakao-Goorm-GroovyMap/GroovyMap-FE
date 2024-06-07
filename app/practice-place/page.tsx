@@ -4,23 +4,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 // import { useQuery, useMutation, useQueryClient } from 'react-query';
+//import { getPracticePlaces, addPracticePlac, getPracticePlaceDetails } from '../../api/placeApi/practicePlaceApi.ts;
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-
-interface Place {
-    id: number;
-    name: string;
-    part: 'BAND' | 'DANCE'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
-    coordinate: { latitude: number; longitude: number };
-    region: string;
-    address: string;
-    phoneNumber: string;
-    rentalFee: string;
-    capacity: string;
-    practiceHours: string;
-    description: string;
-}
+import type { PracticePlace } from '../../types/types';
 
 // 나중에 실제 api 가져오면 삭제
 const mockPracticePlace = [
@@ -62,11 +50,11 @@ const markerImages = {
 const PracticePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'MAPO' | 'GANGNAM'>('all'); // 지역구 더 추가
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE'>('all'); // 분야 더 추가
-    const [practicePlaces, setPracticePlaces] = useState<Place[]>(mockPracticePlace); // 실제 api 요청받을때는 삭제;
-    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<Place[]>(mockPracticePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<Place[]>([]);
+    const [practicePlaces, setPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청받을때는 삭제;
+    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
-    const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+    const [selectedPlace, setSelectedPlace] = useState<PracticePlace | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [markers, setMarkers] = useState<any[]>([]);
@@ -74,7 +62,7 @@ const PracticePlace: React.FC = () => {
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
 
     // 새 장소 추가해서 post 요청 보낼때 형태
-    const [newPlace, setNewPlace] = useState<Omit<Place, 'id'>>({
+    const [newPlace, setNewPlace] = useState<Omit<PracticePlace, 'id'>>({
         name: '',
         part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
@@ -89,47 +77,39 @@ const PracticePlace: React.FC = () => {
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
 
-    // const queryClient = useQueryClient();
+    //     //API 연동시 주석해제
+    //     const queryClient = useQueryClient();
 
     // // API 데이터를 가져오는 부분
-    // const { data: practicePlaces, isLoading } = useQuery<Place[]>(
-    //     'practicePlaces',
-    //     async () => {
-    //         const response = await axios.get('/practiceplace');
-    //         return response.data;
+    // const { data: practicePlaces, isLoading } = useQuery<PracticePlace[]>('practicePlaces', getPracticePlaces, {
+    //     onSuccess: (data) => {
+    //         setFilteredPracticePlaces(data);
     //     },
-    //     {
-    //         onSuccess: (data) => {
-    //             setFilteredPracticePlaces(data);
-    //         },
-    //     }
-    // );
+    // });
 
-    // const addPlaceMutation = useMutation(
-    //     (newPlace: Omit<Place, 'id'>) => axios.post('/practiceplace', newPlace),
-    //     {
-    //         onSuccess: (response) => {
-    //             queryClient.invalidateQueries('practicePlaces');
-    //             setFilteredPracticePlaces((prev) => [...prev, response.data]);
-    //             setIsAddModalOpen(false);
-    //             setNewPlace({
-    //                 name: '',
-    //                 part: 'BAND',
-    //                 coordinate: { latitude: 0, longitude: 0 },
-    //                 region: '',
-    //                 address: '',
-    //                 phoneNumber: '',
-    //                 rentalFee: '',
-    //                 capacity: '',
-    //                 practiceHours: '',
-    //                 description: '',
-    //             });
-    //         },
-    //         onError: (error) => {
-    //             console.error('Error adding new place:', error);
-    //         },
-    //     }
-    // );
+    // // 새로운 장소 추가하는 부분
+    // const addPlaceMutation = useMutation<Place, Error, Omit<PracticePlace, 'id'>>(addPracticePlace, {
+    //     onSuccess: (data) => {
+    //         queryClient.invalidateQueries('practicePlaces');
+    //         setFilteredPracticePlaces((prev) => [...prev, data]);
+    //         setIsAddModalOpen(false);
+    //         setNewPlace({
+    //             name: '',
+    //             part: 'BAND',
+    //             coordinate: { latitude: 0, longitude: 0 },
+    //             region: '',
+    //             address: '',
+    //             phoneNumber: '',
+    //             rentalFee: '',
+    //             capacity: '',
+    //             practiceHours: '',
+    //             description: '',
+    //         });
+    //     },
+    //     onError: (error) => {
+    //         console.error('Error adding new place:', error);
+    //     },
+    // });
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
@@ -188,6 +168,20 @@ const PracticePlace: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    // //API 연동시 주석해제
+    // // 상세정보 페치
+    // const fetchPlaceDetails = (postId: number) => {
+    //     useQuery(['practicePlace', postId], () => getPracticePlaceDetails(postId), {
+    //         onSuccess: (data) => {
+    //             setSelectedPlace(data);
+    //             setIsModalOpen(true);
+    //         },
+    //         onError: (error) => {
+    //             console.error('Error fetching place details:', error);
+    //         },
+    //     });
+    // };
+
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -236,7 +230,7 @@ const PracticePlace: React.FC = () => {
     //     addPlaceMutation.mutate(newPlace);
     // };
 
-    const updateMarkers = (places: Place[]) => {
+    const updateMarkers = (places: PracticePlace[]) => {
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 

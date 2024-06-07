@@ -3,24 +3,12 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import { useQuery, useMutation, useQueryClient } from 'react-query';
+//import { useQuery, useMutation, useQueryClient } from 'react-query';
+//import { getPerformancePlaces, addPerformancePlace, getPerformancePlaceDetails } from '../../api/placeApi/performancePlaceApi.ts';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-
-interface Place {
-    id: number;
-    name: string;
-    part: 'BAND' | 'DANCE'; // 나중에 option에 분야 더 추가해서 넣고 드롭다운 메뉴도 추가해줘야 함
-    coordinate: { latitude: number; longitude: number };
-    region: string;
-    address: string;
-    phoneNumber: string;
-    rentalFee: string;
-    capacity: string;
-    performanceHours: string;
-    description: string;
-}
+import type { PerformancePlace } from '../../types/types';
 
 // 나중에 실제 api 가져오면 삭제
 const mockPerformancePlace = [
@@ -62,11 +50,12 @@ const markerImages = {
 const PerformancePlace: React.FC = () => {
     const [selectedRegion, setSelectedRegion] = useState<'all' | 'MAPO' | 'GANGNAM'>('all'); // 지역구 더 추가
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE'>('all'); // 분야 더 추가
-    const [performancePlaces, setPerformancePlaces] = useState<Place[]>(mockPerformancePlace); // 실제 api 요청받을때는 삭제;
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<Place[]>(mockPerformancePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<Place[]>([]);
+    const [performancePlaces, setPerformancePlaces] = useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청받을때는 삭제;
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] =
+        useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PerformancePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
-    const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+    const [selectedPlace, setSelectedPlace] = useState<PerformancePlace | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [markers, setMarkers] = useState<any[]>([]);
@@ -74,7 +63,7 @@ const PerformancePlace: React.FC = () => {
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
 
     // 새 장소 추가해서 post 요청 보낼때 형태
-    const [newPlace, setNewPlace] = useState<Omit<Place, 'id'>>({
+    const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
         name: '',
         part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
@@ -89,47 +78,39 @@ const PerformancePlace: React.FC = () => {
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
 
-    // const queryClient = useQueryClient();
+    //     //API 연동시 주석 해제
+    //     const queryClient = useQueryClient();
 
-    // // API 데이터를 가져오는 부분
-    // const { data: performancePlaces, isLoading } = useQuery<Place[]>(
-    //     'performancePlaces',
-    //     async () => {
-    //         const response = await axios.get('/performanceplace');
-    //         return response.data;
+    // // 전체 공연 장소 정보 가져옴
+    // const { data: performancePlaces, isLoading } = useQuery<PerformancePlace[]>('performancePlaces', getPerformancePlaces, {
+    //     onSuccess: (data) => {
+    //         setFilteredPerformancePlaces(data);
     //     },
-    //     {
-    //         onSuccess: (data) => {
-    //             setFilteredPerformancePlaces(data);
-    //         },
-    //     }
-    // );
+    // });
 
-    // const addPlaceMutation = useMutation(
-    //     (newPlace: Omit<Place, 'id'>) => axios.post('/performanceplace', newPlace),
-    //     {
-    //         onSuccess: (response) => {
-    //             queryClient.invalidateQueries('performancePlaces');
-    //             setFilteredPerformancePlaces((prev) => [...prev, response.data]);
-    //             setIsAddModalOpen(false);
-    //             setNewPlace({
-    //                 name: '',
-    //                 part: 'BAND',
-    //                 coordinate: { latitude: 0, longitude: 0 },
-    //                 region: '',
-    //                 address: '',
-    //                 phoneNumber: '',
-    //                 rentalFee: '',
-    //                 capacity: '',
-    //                 performanceHours: '',
-    //                 description: '',
-    //             });
-    //         },
-    //         onError: (error) => {
-    //             console.error('Error adding new place:', error);
-    //         },
-    //     }
-    // );
+    // // 새로운 장소 저장하고 추가하는 부분
+    // const addPlaceMutation = useMutation<Place, Error, Omit<Place, 'id'>>(addPerformancePlace, {
+    //     onSuccess: (data) => {
+    //         queryClient.invalidateQueries('performancePlaces');
+    //         setFilteredPerformancePlaces((prev) => [...prev, data]);
+    //         setIsAddModalOpen(false);
+    //         setNewPlace({
+    //             name: '',
+    //             part: 'BAND',
+    //             coordinate: { latitude: 0, longitude: 0 },
+    //             region: '',
+    //             address: '',
+    //             phoneNumber: '',
+    //             rentalFee: '',
+    //             capacity: '',
+    //             performanceHours: '',
+    //             description: '',
+    //         });
+    //     },
+    //     onError: (error) => {
+    //         console.error('Error adding new place:', error);
+    //     },
+    // });
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
@@ -181,12 +162,26 @@ const PerformancePlace: React.FC = () => {
         }
     }, [map, filteredPerformancePlaces]);
 
-    // 상세정보 페치
+    // 상세정보 페치(나중에 삭제)
     const fetchPlaceDetails = (postId: number) => {
         const place = performancePlaces.find((p) => p.id === postId);
         setSelectedPlace(place || null);
         setIsModalOpen(true);
     };
+
+    // //API 연동시 주석해제
+    // // 특정 게시물의 상세정보 가져오기
+    // const fetchPlaceDetails = (postId: number) => {
+    //     useQuery(['performancePlace', postId], () => getPerformancePlaceDetails(postId), {
+    //         onSuccess: (data) => {
+    //             setSelectedPlace(data);
+    //             setIsModalOpen(true);
+    //         },
+    //         onError: (error) => {
+    //             console.error('Error fetching place details:', error);
+    //         },
+    //     });
+    // };
 
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -206,6 +201,22 @@ const PerformancePlace: React.FC = () => {
 
     // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
     const handleAddPlaceSubmit = () => {
+        // // 유효성 검사
+        // if (
+        //     !newPlace.name ||
+        //     !newPlace.part ||
+        //     !newPlace.region ||
+        //     !newPlace.address ||
+        //     !newPlace.phoneNumber ||
+        //     !newPlace.rentalFee ||
+        //     !newPlace.capacity ||
+        //     !newPlace.performanceHours ||
+        //     !newPlace.description
+        // ) {
+        //     alert('모든 필드를 입력해주세요.');
+        //     return;
+        // }
+
         const newId = performancePlaces.length + 1;
         const place = {
             ...newPlace,
@@ -236,7 +247,7 @@ const PerformancePlace: React.FC = () => {
     //     addPlaceMutation.mutate(newPlace);
     // };
 
-    const updateMarkers = (places: Place[]) => {
+    const updateMarkers = (places: PerformancePlace[]) => {
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
