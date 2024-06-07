@@ -18,7 +18,7 @@ const mockPracticePlace = [
         name: '홍대 거리',
         part: 'BAND',
         coordinate: { latitude: 37.5551, longitude: 126.9236 },
-        region: 'MAPO',
+        region: 'MAPOGU',
         address: '서울특별시 마포구 홍익로 5길 20',
         phoneNumber: '02-3141-1411',
         rentalFee: '무료',
@@ -31,7 +31,7 @@ const mockPracticePlace = [
         name: '연습 장소 이름',
         part: 'DANCE',
         coordinate: { latitude: 37.4989, longitude: 127.0276 },
-        region: 'GANGNAM',
+        region: 'GANGNAMGU',
         address: '서울특별시 강남구 강남대로 396',
         phoneNumber: '02-555-5555',
         rentalFee: '무료',
@@ -50,7 +50,31 @@ const markerImages = {
 };
 
 const PracticePlace: React.FC = () => {
-    const [selectedRegion, setSelectedRegion] = useState<'all' | 'MAPO' | 'GANGNAM'>('all'); // 지역구 더 추가
+    const [selectedRegion, setSelectedRegion] = useState<
+        | 'ALL'
+        | 'GANGNAMGU'
+        | 'GANGDONGGU'
+        | 'GANGBUKGU'
+        | 'GANGSEOGU'
+        | 'GEUMCHEONGU'
+        | 'GUROGU'
+        | 'DOBONGGU'
+        | 'DONGDAEMUNGU'
+        | 'DONGJAKGU'
+        | 'MAPOGU'
+        | 'SEODAEMUNGU'
+        | 'SEOCHOGU'
+        | 'SEONGDONGGU'
+        | 'SEONGBUKGU'
+        | 'SONGPA'
+        | 'YANGCHEONGU'
+        | 'YEONGDEUNGPOGU'
+        | 'YONGSANGU'
+        | 'EUNPYEONGGU'
+        | 'JONGNOGU'
+        | 'JUNGGU'
+        | 'JUNGNANGGU'
+    >('ALL');
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all'); // 분야 더 추가
     const [practicePlaces, setPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청받을때는 삭제;
     const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PracticePlace[]>([]);
@@ -133,14 +157,13 @@ const PracticePlace: React.FC = () => {
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
-        const filtered = practicePlaces.filter(
-            (place) =>
-                (selectedRegion === 'all' || place.region === selectedRegion) &&
-                (selectedPart === 'all' || place.part === selectedPart)
-        );
+        const filtered = practicePlaces.filter((place) => {
+            const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
+            const partMatch = selectedPart === 'all' || place.part === selectedPart;
+            return regionMatch && partMatch;
+        });
         setFilteredPracticePlaces(filtered);
     }, [selectedRegion, selectedPart, practicePlaces]);
-
     // 환경 변수 확인
     if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
         throw new Error('NEXT_PUBLIC_KAKAO_MAP_API_KEY is not defined in the environment variables');
@@ -461,11 +484,59 @@ const PracticePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
-                                onChange={(e) => setSelectedRegion(e.target.value as 'all' | 'MAPO' | 'GANGNAM')} // 지역구 나중에 추가
+                                onChange={(e) =>
+                                    setSelectedRegion(
+                                        e.target.value as
+                                            | 'ALL'
+                                            | 'GANGNAMGU'
+                                            | 'GANGDONGGU'
+                                            | 'GANGBUKGU'
+                                            | 'GANGSEOGU'
+                                            | 'GEUMCHEONGU'
+                                            | 'GUROGU'
+                                            | 'DOBONGGU'
+                                            | 'DONGDAEMUNGU'
+                                            | 'DONGJAKGU'
+                                            | 'MAPOGU'
+                                            | 'SEODAEMUNGU'
+                                            | 'SEOCHOGU'
+                                            | 'SEONGDONGGU'
+                                            | 'SEONGBUKGU'
+                                            | 'SONGPA'
+                                            | 'YANGCHEONGU'
+                                            | 'YEONGDEUNGPOGU'
+                                            | 'YONGSANGU'
+                                            | 'EUNPYEONGGU'
+                                            | 'JONGNOGU'
+                                            | 'JUNGGU'
+                                            | 'JUNGNANGGU'
+                                    )
+                                }
                             >
-                                <option value="all">전체</option>
-                                <option value="MAPO">마포구</option>
-                                <option value="GANGNAM">강남구</option>
+                                <option value="ALL">전체</option>
+                                <option value="GANGNAMGU">강남구</option>
+                                <option value="GANGDONGGU">강동구</option>
+                                <option value="GANGBUKGU">강북구</option>
+                                <option value="GANGSEOGU">강서구</option>
+                                <option value="GEUMCHEONGU">금천구</option>
+                                <option value="GUROGU">구로구</option>
+                                <option value="GEUMCHEONGU">금천구</option>
+                                <option value="DOBONGGU">도봉구</option>
+                                <option value="DONGDAEMUNGU">동대문구</option>
+                                <option value="DONGJAKGU">동작구</option>
+                                <option value="MAPOGU">마포구</option>
+                                <option value="SEODAEMUNGU">서대문구</option>
+                                <option value="SEOCHOGU">서초구</option>
+                                <option value="SEONGDONGGU">성동구</option>
+                                <option value="SEONGBUKGU">성북구</option>
+                                <option value="SONGPA">송파구</option>
+                                <option value="YANGCHEONGU">양천구</option>
+                                <option value="YEONGDEUNGPOGU">영등포구</option>
+                                <option value="YONGSANGU">용산구</option>
+                                <option value="EUNPYEONGGU">은평구</option>
+                                <option value="JONGNOGU">종로구</option>
+                                <option value="JUNGGU">중구</option>
+                                <option value="JUNGNANGGU">중랑구</option>
                                 {/* 지역구 추가하기 */}
                             </select>
                         </div>
@@ -704,8 +775,29 @@ const PracticePlace: React.FC = () => {
                                         <option value="" selected>
                                             지역
                                         </option>
-                                        <option value="MAPOGU">마포구</option>
                                         <option value="GANGNAMGU">강남구</option>
+                                        <option value="GANGDONGGU">강동구</option>
+                                        <option value="GANGBUKGU">강북구</option>
+                                        <option value="GANGSEOGU">강서구</option>
+                                        <option value="GEUMCHEONGU">금천구</option>
+                                        <option value="GUROGU">구로구</option>
+                                        <option value="GEUMCHEONGU">금천구</option>
+                                        <option value="DOBONGGU">도봉구</option>
+                                        <option value="DONGDAEMUNGU">동대문구</option>
+                                        <option value="DONGJAKGU">동작구</option>
+                                        <option value="MAPOGU">마포구</option>
+                                        <option value="SEODAEMUNGU">서대문구</option>
+                                        <option value="SEOCHOGU">서초구</option>
+                                        <option value="SEONGDONGGU">성동구</option>
+                                        <option value="SEONGBUKGU">성북구</option>
+                                        <option value="SONGPA">송파구</option>
+                                        <option value="YANGCHEONGU">양천구</option>
+                                        <option value="YEONGDEUNGPOGU">영등포구</option>
+                                        <option value="YONGSANGU">용산구</option>
+                                        <option value="EUNPYEONGGU">은평구</option>
+                                        <option value="JONGNOGU">종로구</option>
+                                        <option value="JUNGGU">중구</option>
+                                        <option value="JUNGNANGGU">중랑구</option>
                                         {/* 지역구 추가 */}
                                     </select>
                                     <input
