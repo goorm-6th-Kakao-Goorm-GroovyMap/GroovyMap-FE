@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 //import { useQuery, useMutation, useQueryClient } from 'react-query';
 //import { getPerformancePlaces, addPerformancePlace, getPerformancePlaceDetails } from '../../api/placeApi/performancePlaceApi.ts';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
@@ -201,21 +202,17 @@ const PerformancePlace: React.FC = () => {
 
     // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
     const handleAddPlaceSubmit = () => {
-        // // 유효성 검사
-        // if (
-        //     !newPlace.name ||
-        //     !newPlace.part ||
-        //     !newPlace.region ||
-        //     !newPlace.address ||
-        //     !newPlace.phoneNumber ||
-        //     !newPlace.rentalFee ||
-        //     !newPlace.capacity ||
-        //     !newPlace.performanceHours ||
-        //     !newPlace.description
-        // ) {
-        //     alert('모든 필드를 입력해주세요.');
-        //     return;
-        // }
+        // 유효성 검사
+        if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
+            Swal.fire({
+                icon: 'warning',
+                title: '필드를 입력해주세요',
+                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+                confirmButtonText: '확인',
+                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+            });
+            return;
+        }
 
         const newId = performancePlaces.length + 1;
         const place = {
@@ -244,6 +241,17 @@ const PerformancePlace: React.FC = () => {
 
     // // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
     // const handleAddPlaceSubmit = async () => {
+    // // 유효성 검사
+    // if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
+    //     Swal.fire({
+    //         icon: 'warning',
+    //         title: '필드를 입력해주세요',
+    //         text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+    //         confirmButtonText: '확인',
+    //         confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+    //     });
+    //     return;
+    // }
     //     addPlaceMutation.mutate(newPlace);
     // };
 
@@ -309,7 +317,7 @@ const PerformancePlace: React.FC = () => {
         try {
             // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
             const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_API_KEY}` },
+                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}` },
             });
             const result = response.data.documents[0];
             if (result) {

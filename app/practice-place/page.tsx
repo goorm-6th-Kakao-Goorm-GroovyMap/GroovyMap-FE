@@ -3,7 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// import { useQuery, useMutation, useQueryClient } from 'react-query';
+import Swal from 'sweetalert2';
+//import { useQuery, useMutation, useQueryClient } from 'react-query';
 //import { getPracticePlaces, addPracticePlac, getPracticePlaceDetails } from '../../api/placeApi/practicePlaceApi.ts;
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
@@ -87,7 +88,7 @@ const PracticePlace: React.FC = () => {
     //     },
     // });
 
-    // // 새로운 장소 추가하는 부분
+    // // 새로운 장소 저장하고 추가하는 부분
     // const addPlaceMutation = useMutation<Place, Error, Omit<PracticePlace, 'id'>>(addPracticePlace, {
     //     onSuccess: (data) => {
     //         queryClient.invalidateQueries('practicePlaces');
@@ -169,7 +170,7 @@ const PracticePlace: React.FC = () => {
     };
 
     // //API 연동시 주석해제
-    // // 상세정보 페치
+    // //특정 게시물의 상세정보 가져오기
     // const fetchPlaceDetails = (postId: number) => {
     //     useQuery(['practicePlace', postId], () => getPracticePlaceDetails(postId), {
     //         onSuccess: (data) => {
@@ -200,6 +201,18 @@ const PracticePlace: React.FC = () => {
 
     // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
     const handleAddPlaceSubmit = () => {
+        // 유효성 검사
+        if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
+            Swal.fire({
+                icon: 'warning',
+                title: '필드를 입력해주세요',
+                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+                confirmButtonText: '확인',
+                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+            });
+            return;
+        }
+
         const newId = practicePlaces.length + 1;
         const place = {
             ...newPlace,
@@ -225,8 +238,19 @@ const PracticePlace: React.FC = () => {
         updateMarkers(updatedPlaces); // 마커 업데이트
     };
 
-    // // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
-    // const handleAddPlaceSubmit = async () => {
+    //     // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
+    // const handleAddPlaceSubmit = () => {
+    //     // 유효성 검사
+    //     if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
+    //         Swal.fire({
+    //             icon: 'warning',
+    //             title: '필드를 입력해주세요',
+    //             text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+    //             confirmButtonText: '확인',
+    //             confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+    //         });
+    //         return;
+    //     }
     //     addPlaceMutation.mutate(newPlace);
     // };
 
@@ -292,7 +316,7 @@ const PracticePlace: React.FC = () => {
         try {
             // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
             const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK e9ca0e0d122c181bb1caaee9e4ee526a` },
+                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}` },
             });
             const result = response.data.documents[0];
             if (result) {
@@ -421,8 +445,7 @@ const PracticePlace: React.FC = () => {
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h3 className="text-xl font-semibold">{place.name}</h3>
-                                        <p>주소: {place.address}</p>
-                                        <p>연습 가능 시간: {place.practiceHours}</p>
+                                        <p>{place.address}</p>
                                     </div>
                                     <button
                                         onClick={() => fetchPlaceDetails(place.id)}
