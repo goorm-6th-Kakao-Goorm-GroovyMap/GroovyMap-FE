@@ -4,45 +4,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-//import { useQuery, useMutation, useQueryClient } from 'react-query';
-//import { getPerformancePlaces, addPerformancePlace, getPerformancePlaceDetails } from '../../api/placeApi/performancePlaceApi.ts';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    getPerformancePlaces,
+    addPerformancePlace,
+    getPerformancePlaceDetails,
+} from '../../api/placeApi/performancePlaceApi';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 import type { PerformancePlace } from '../../types/types';
 
-// 나중에 실제 api 가져오면 삭제
-const mockPerformancePlace = [
-    {
-        id: 1,
-        name: '홍대 거리',
-        part: 'BAND',
-        coordinate: { latitude: 37.5551, longitude: 126.9236 },
-        region: 'MAPOGU',
-        address: '서울특별시 마포구 홍익로 5길 20',
-        phoneNumber: '02-3141-1411',
-        rentalFee: '무료',
-        capacity: '200명',
-        performanceHours: '12:00 - 22:00',
-        description: '홍대에서 가장 유명한 버스킹 장소.',
-    },
-    {
-        id: 2,
-        name: '공연 장소 이름',
-        part: 'DANCE',
-        coordinate: { latitude: 37.4989, longitude: 127.0276 },
-        region: 'GANGNAMGU',
-        address: '서울특별시 강남구 강남대로 396',
-        phoneNumber: '02-555-5555',
-        rentalFee: '무료',
-        capacity: '300명',
-        performanceHours: '10:00 - 22:00',
-        description: '다양한 공연과 이벤트가 열리는 장소입니다.',
-    },
-];
-
 // 나중에 마커 이미지 바꾸기
-const markerImages = {
+const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
     VOCAL: '/guitar.svg',
@@ -76,9 +50,7 @@ const PerformancePlace: React.FC = () => {
         | 'JUNGNANGGU'
     >('ALL');
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all'); // 분야 더 추가
-    const [performancePlaces, setPerformancePlaces] = useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청받을때는 삭제;
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] =
-        useState<PerformancePlace[]>(mockPerformancePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PerformancePlace[]>([]);
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<PerformancePlace[]>([]); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PerformancePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<PerformancePlace | null>(null);
@@ -87,6 +59,7 @@ const PerformancePlace: React.FC = () => {
     const [markers, setMarkers] = useState<any[]>([]);
     const [searchMap, setSearchMap] = useState<any>(null);
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
+    const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
     // 새 장소 추가해서 post 요청 보낼때 형태
     const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
@@ -122,48 +95,62 @@ const PerformancePlace: React.FC = () => {
     for (let i = 1; i <= Math.ceil(filteredPerformancePlaces.length / itemsPerPage); i++) {
         pageNumbers.push(i);
     }
-    //     //API 연동시 주석 해제
-    //     const queryClient = useQueryClient();
 
-    // // 전체 공연 장소 정보 가져옴
-    // const { data: performancePlaces, isLoading } = useQuery<PerformancePlace[]>('performancePlaces', getPerformancePlaces, {
-    //     onSuccess: (data) => {
-    //         setFilteredPerformancePlaces(data);
-    //     },
-    // });
+    //API 연동시 주석 해제
+    const queryClient = useQueryClient();
 
-    // // 새로운 장소 저장하고 추가하는 부분
-    // const addPlaceMutation = useMutation<Place, Error, Omit<Place, 'id'>>(addPerformancePlace, {
-    //     onSuccess: (data) => {
-    //         queryClient.invalidateQueries('performancePlaces');
-    //         setFilteredPerformancePlaces((prev) => [...prev, data]);
-    //         setIsAddModalOpen(false);
-    //         setNewPlace({
-    //             name: '',
-    //             part: '',
-    //             coordinate: { latitude: 0, longitude: 0 },
-    //             region: '',
-    //             address: '',
-    //             phoneNumber: '',
-    //             rentalFee: '',
-    //             capacity: '',
-    //             performanceHours: '',
-    //             description: '',
-    //         });
-    //     },
-    //     onError: (error) => {
-    //         console.error('Error adding new place:', error);
-    //     },
-    // });
+    // 전체 공연 장소 정보 가져옴
+    const {
+        data: performancePlaces,
+        isLoading,
+        isError,
+        error,
+    } = useQuery<PerformancePlace[]>({
+        queryKey: ['performancePlaces'],
+        queryFn: getPerformancePlaces,
+    });
+
+    useEffect(() => {
+        if (performancePlaces) {
+            setFilteredPerformancePlaces(performancePlaces);
+        }
+    }, [performancePlaces]);
+
+    // 새로운 장소 저장하고 추가하는 부분
+    const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
+        mutationFn: addPerformancePlace,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
+            setFilteredPerformancePlaces((prev) => [...prev, data]);
+            setIsAddModalOpen(false);
+            setNewPlace({
+                name: '',
+                part: '',
+                coordinate: { latitude: 0, longitude: 0 },
+                region: '',
+                address: '',
+                phoneNumber: '',
+                rentalFee: '',
+                capacity: '',
+                performanceHours: '',
+                description: '',
+            });
+        },
+        onError: (error) => {
+            console.error('Error adding new place:', error);
+        },
+    });
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
-        const filtered = performancePlaces.filter((place) => {
-            const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
-            const partMatch = selectedPart === 'all' || place.part === selectedPart;
-            return regionMatch && partMatch;
-        });
-        setFilteredPerformancePlaces(filtered);
+        if (performancePlaces) {
+            const filtered = performancePlaces.filter((place) => {
+                const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
+                const partMatch = selectedPart === 'all' || place.part === selectedPart;
+                return regionMatch && partMatch;
+            });
+            setFilteredPerformancePlaces(filtered);
+        }
     }, [selectedRegion, selectedPart, performancePlaces]);
 
     // 환경 변수 확인
@@ -184,28 +171,31 @@ const PerformancePlace: React.FC = () => {
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
-                const mapOption = {
-                    center: new window.kakao.maps.LatLng(37.5665, 126.978),
-                    level: 5,
-                };
-                const map = new window.kakao.maps.Map(mapContainer, mapOption);
-                setMap(map);
+                if (mapContainer) {
+                    // mapContainer가 null이 아닌지 확인
+                    const mapOption = {
+                        center: new window.kakao.maps.LatLng(37.5665, 126.978),
+                        level: 5,
+                    };
+                    const map = new window.kakao.maps.Map(mapContainer, mapOption);
+                    setMap(map);
 
-                // 스카이뷰 컨트롤 추가
-                const mapTypeControl = new window.kakao.maps.MapTypeControl();
-                map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
+                    // 스카이뷰 컨트롤 추가
+                    const mapTypeControl = new window.kakao.maps.MapTypeControl();
+                    map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
 
-                // 줌 컨트롤 추가
-                const zoomControl = new window.kakao.maps.ZoomControl();
-                map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
+                    // 줌 컨트롤 추가
+                    const zoomControl = new window.kakao.maps.ZoomControl();
+                    map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
 
-                // 클러스터러 생성 및 설정
-                const clusterer = new window.kakao.maps.MarkerClusterer({
-                    map: map,
-                    averageCenter: true,
-                    minLevel: 10, // 클러스터 할 최소 줌 레벨
-                });
-                setClusterer(clusterer);
+                    // 클러스터러 생성 및 설정
+                    const clusterer = new window.kakao.maps.MarkerClusterer({
+                        map: map,
+                        averageCenter: true,
+                        minLevel: 10, // 클러스터 할 최소 줌 레벨
+                    });
+                    setClusterer(clusterer);
+                }
             });
         };
         document.head.appendChild(script);
@@ -217,26 +207,17 @@ const PerformancePlace: React.FC = () => {
         }
     }, [map, filteredPerformancePlaces]);
 
-    // 상세정보 페치(나중에 삭제)
-    const fetchPlaceDetails = (postId: number) => {
-        const place = performancePlaces.find((p) => p.id === postId);
-        setSelectedPlace(place || null);
-        setIsModalOpen(true);
+    //API 연동시 주석해제
+    //특정 게시물의 상세정보 비동기로 가져오기
+    const fetchPlaceDetails = async (postId: number) => {
+        try {
+            const data = await getPerformancePlaceDetails(postId);
+            setSelectedPlace(data);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
     };
-
-    // //API 연동시 주석해제
-    // // 특정 게시물의 상세정보 가져오기
-    // const fetchPlaceDetails = (postId: number) => {
-    //     useQuery(['performancePlace', postId], () => getPerformancePlaceDetails(postId), {
-    //         onSuccess: (data) => {
-    //             setSelectedPlace(data);
-    //             setIsModalOpen(true);
-    //         },
-    //         onError: (error) => {
-    //             console.error('Error fetching place details:', error);
-    //         },
-    //     });
-    // };
 
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -254,66 +235,21 @@ const PerformancePlace: React.FC = () => {
         }
     };
 
-    // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
-    const handleAddPlaceSubmit = () => {
+    // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
+    const handleAddPlaceSubmit = async () => {
         // 유효성 검사
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
             Swal.fire({
                 icon: 'warning',
                 title: '필드를 입력해주세요',
-                text: '공연 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
                 confirmButtonText: '확인',
                 confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-                customClass: {
-                    popup: 'tailwind-swal-popup',
-                    title: 'tailwind-swal-title',
-                    content: 'tailwind-swal-content',
-                    confirmButton: 'tailwind-swal-button',
-                },
             });
             return;
         }
-
-        const newId = performancePlaces.length + 1;
-        const place = {
-            ...newPlace,
-            id: newId,
-        };
-        const updatedPlaces = [...performancePlaces, place];
-        setPerformancePlaces(updatedPlaces);
-        setFilteredPerformancePlaces(updatedPlaces);
-        setIsAddModalOpen(false);
-        setNewPlace({
-            name: '',
-            part: '',
-            coordinate: { latitude: 0, longitude: 0 },
-            region: '',
-            address: '',
-            phoneNumber: '',
-            rentalFee: '',
-            capacity: '',
-            performanceHours: '',
-            description: '',
-        });
-
-        updateMarkers(updatedPlaces); // 마커 업데이트
+        addPlaceMutation.mutate(newPlace);
     };
-
-    // // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
-    // const handleAddPlaceSubmit = async () => {
-    // // 유효성 검사
-    // if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
-    //     Swal.fire({
-    //         icon: 'warning',
-    //         title: '필드를 입력해주세요',
-    //         text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
-    //         confirmButtonText: '확인',
-    //         confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-    //     });
-    //     return;
-    // }
-    //     addPlaceMutation.mutate(newPlace);
-    // };
 
     const updateMarkers = (places: PerformancePlace[]) => {
         if (map && clusterer) {
@@ -384,7 +320,7 @@ const PerformancePlace: React.FC = () => {
                     customClass: {
                         popup: 'tailwind-swal-popup',
                         title: 'tailwind-swal-title',
-                        content: 'tailwind-swal-content',
+                        htmlContainer: 'tailwind-swal-content',
                         confirmButton: 'tailwind-swal-button',
                     },
                 });
@@ -438,7 +374,7 @@ const PerformancePlace: React.FC = () => {
                     customClass: {
                         popup: 'tailwind-swal-popup',
                         title: 'tailwind-swal-title',
-                        content: 'tailwind-swal-content',
+                        htmlContainer: 'tailwind-swal-content',
                         confirmButton: 'tailwind-swal-button',
                     },
                 });
@@ -454,7 +390,7 @@ const PerformancePlace: React.FC = () => {
                 customClass: {
                     popup: 'tailwind-swal-popup',
                     title: 'tailwind-swal-title',
-                    content: 'tailwind-swal-content',
+                    htmlContainer: 'tailwind-swal-content',
                     confirmButton: 'tailwind-swal-button',
                 },
             });

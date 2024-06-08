@@ -4,45 +4,15 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-//import { useQuery, useMutation, useQueryClient } from 'react-query';
-//import { getPracticePlaces, addPracticePlac, getPracticePlaceDetails } from '../../api/placeApi/practicePlaceApi.ts;
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '../../api/placeApi/practicePlaceApi';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 import type { PracticePlace } from '../../types/types';
 
-// 나중에 실제 api 가져오면 삭제
-const mockPracticePlace = [
-    {
-        id: 1,
-        name: '홍대 거리',
-        part: 'BAND',
-        coordinate: { latitude: 37.5551, longitude: 126.9236 },
-        region: 'MAPOGU',
-        address: '서울특별시 마포구 홍익로 5길 20',
-        phoneNumber: '02-3141-1411',
-        rentalFee: '무료',
-        capacity: '200명',
-        practiceHours: '12:00 - 22:00',
-        description: '홍대에서 가장 유명한 버스킹 장소.',
-    },
-    {
-        id: 2,
-        name: '연습 장소 이름',
-        part: 'DANCE',
-        coordinate: { latitude: 37.4989, longitude: 127.0276 },
-        region: 'GANGNAMGU',
-        address: '서울특별시 강남구 강남대로 396',
-        phoneNumber: '02-555-5555',
-        rentalFee: '무료',
-        capacity: '300명',
-        practiceHours: '10:00 - 22:00',
-        description: '다양한 연습과 이벤트가 열리는 장소입니다.',
-    },
-];
-
 // 나중에 마커 이미지 바꾸기
-const markerImages = {
+const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
     VOCAL: '/guitar.svg',
@@ -76,8 +46,7 @@ const PracticePlace: React.FC = () => {
         | 'JUNGNANGGU'
     >('ALL');
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all'); // 분야 더 추가
-    const [practicePlaces, setPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청받을때는 삭제;
-    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>(mockPracticePlace); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PracticePlace[]>([]);
+    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<PracticePlace | null>(null);
@@ -121,49 +90,63 @@ const PracticePlace: React.FC = () => {
     for (let i = 1; i <= Math.ceil(filteredPracticePlaces.length / itemsPerPage); i++) {
         pageNumbers.push(i);
     }
-    //     //API 연동시 주석해제
-    //     const queryClient = useQueryClient();
+    //API 연동시 주석해제
+    const queryClient = useQueryClient();
 
-    // // API 데이터를 가져오는 부분
-    // const { data: practicePlaces, isLoading } = useQuery<PracticePlace[]>('practicePlaces', getPracticePlaces, {
-    //     onSuccess: (data) => {
-    //         setFilteredPracticePlaces(data);
-    //     },
-    // });
+    //전체 연습 장소 가져옴
+    const {
+        data: practicePlaces,
+        isLoading,
+        isError,
+        error,
+    } = useQuery<PracticePlace[], Error>({
+        queryKey: ['practicePlaces'],
+        queryFn: getPracticePlaces,
+    });
 
-    // // 새로운 장소 저장하고 추가하는 부분
-    // const addPlaceMutation = useMutation<Place, Error, Omit<PracticePlace, 'id'>>(addPracticePlace, {
-    //     onSuccess: (data) => {
-    //         queryClient.invalidateQueries('practicePlaces');
-    //         setFilteredPracticePlaces((prev) => [...prev, data]);
-    //         setIsAddModalOpen(false);
-    //         setNewPlace({
-    //             name: '',
-    //             part: '',
-    //             coordinate: { latitude: 0, longitude: 0 },
-    //             region: '',
-    //             address: '',
-    //             phoneNumber: '',
-    //             rentalFee: '',
-    //             capacity: '',
-    //             practiceHours: '',
-    //             description: '',
-    //         });
-    //     },
-    //     onError: (error) => {
-    //         console.error('Error adding new place:', error);
-    //     },
-    // });
+    useEffect(() => {
+        if (practicePlaces) {
+            setFilteredPracticePlaces(practicePlaces);
+        }
+    }, [practicePlaces]);
+
+    //새로운 장소 저장하고 추가하는 부분
+    const addPlaceMutation = useMutation<PracticePlace, Error, Omit<PracticePlace, 'id'>>({
+        mutationFn: addPracticePlace,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['practicePlaces'] });
+            setFilteredPracticePlaces((prev) => [...prev, data]);
+            setIsAddModalOpen(false);
+            setNewPlace({
+                name: '',
+                part: '',
+                coordinate: { latitude: 0, longitude: 0 },
+                region: '',
+                address: '',
+                phoneNumber: '',
+                rentalFee: '',
+                capacity: '',
+                practiceHours: '',
+                description: '',
+            });
+        },
+        onError: (error) => {
+            console.error('Error adding new place:', error);
+        },
+    });
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
-        const filtered = practicePlaces.filter((place) => {
-            const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
-            const partMatch = selectedPart === 'all' || place.part === selectedPart;
-            return regionMatch && partMatch;
-        });
-        setFilteredPracticePlaces(filtered);
+        if (practicePlaces) {
+            const filtered = practicePlaces.filter((place) => {
+                const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
+                const partMatch = selectedPart === 'all' || place.part === selectedPart;
+                return regionMatch && partMatch;
+            });
+            setFilteredPracticePlaces(filtered);
+        }
     }, [selectedRegion, selectedPart, practicePlaces]);
+
     // 환경 변수 확인
     if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
         throw new Error('NEXT_PUBLIC_KAKAO_MAP_API_KEY is not defined in the environment variables');
@@ -182,28 +165,31 @@ const PracticePlace: React.FC = () => {
         script.onload = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
-                const mapOption = {
-                    center: new window.kakao.maps.LatLng(37.5665, 126.978),
-                    level: 5,
-                };
-                const map = new window.kakao.maps.Map(mapContainer, mapOption);
-                setMap(map);
+                if (mapContainer) {
+                    // mapContainer가 null이 아닌지 확인
+                    const mapOption = {
+                        center: new window.kakao.maps.LatLng(37.5665, 126.978),
+                        level: 5,
+                    };
+                    const map = new window.kakao.maps.Map(mapContainer, mapOption);
+                    setMap(map);
 
-                // 스카이뷰 컨트롤 추가
-                const mapTypeControl = new window.kakao.maps.MapTypeControl();
-                map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
+                    // 스카이뷰 컨트롤 추가
+                    const mapTypeControl = new window.kakao.maps.MapTypeControl();
+                    map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
 
-                // 줌 컨트롤 추가
-                const zoomControl = new window.kakao.maps.ZoomControl();
-                map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
+                    // 줌 컨트롤 추가
+                    const zoomControl = new window.kakao.maps.ZoomControl();
+                    map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
 
-                // 클러스터러 생성 및 설정
-                const clusterer = new window.kakao.maps.MarkerClusterer({
-                    map: map,
-                    averageCenter: true,
-                    minLevel: 10, // 클러스터 할 최소 줌 레벨
-                });
-                setClusterer(clusterer);
+                    // 클러스터러 생성 및 설정
+                    const clusterer = new window.kakao.maps.MarkerClusterer({
+                        map: map,
+                        averageCenter: true,
+                        minLevel: 10, // 클러스터 할 최소 줌 레벨
+                    });
+                    setClusterer(clusterer);
+                }
             });
         };
         document.head.appendChild(script);
@@ -215,26 +201,17 @@ const PracticePlace: React.FC = () => {
         }
     }, [map, filteredPracticePlaces]);
 
-    // 상세정보 페치
-    const fetchPlaceDetails = (postId: number) => {
-        const place = practicePlaces.find((p) => p.id === postId);
-        setSelectedPlace(place || null);
-        setIsModalOpen(true);
+    //API 연동시 주석해제
+    //특정 게시물의 상세정보 비동기로 가져오기
+    const fetchPlaceDetails = async (postId: number) => {
+        try {
+            const data = await getPracticePlaceDetails(postId);
+            setSelectedPlace(data);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
     };
-
-    // //API 연동시 주석해제
-    // //특정 게시물의 상세정보 가져오기
-    // const fetchPlaceDetails = (postId: number) => {
-    //     useQuery(['practicePlace', postId], () => getPracticePlaceDetails(postId), {
-    //         onSuccess: (data) => {
-    //             setSelectedPlace(data);
-    //             setIsModalOpen(true);
-    //         },
-    //         onError: (error) => {
-    //             console.error('Error fetching place details:', error);
-    //         },
-    //     });
-    // };
 
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -252,7 +229,7 @@ const PracticePlace: React.FC = () => {
         }
     };
 
-    // (나중에 삭제) 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(Mock up)
+    // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
     const handleAddPlaceSubmit = () => {
         // 유효성 검사
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
@@ -262,56 +239,11 @@ const PracticePlace: React.FC = () => {
                 text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
                 confirmButtonText: '확인',
                 confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-                customClass: {
-                    popup: 'tailwind-swal-popup',
-                    title: 'tailwind-swal-title',
-                    content: 'tailwind-swal-content',
-                    confirmButton: 'tailwind-swal-button',
-                },
             });
             return;
         }
-
-        const newId = practicePlaces.length + 1;
-        const place = {
-            ...newPlace,
-            id: newId,
-        };
-        const updatedPlaces = [...practicePlaces, place];
-        setPracticePlaces(updatedPlaces);
-        setFilteredPracticePlaces(updatedPlaces);
-        setIsAddModalOpen(false);
-        setNewPlace({
-            name: '',
-            part: '',
-            coordinate: { latitude: 0, longitude: 0 },
-            region: '',
-            address: '',
-            phoneNumber: '',
-            rentalFee: '',
-            capacity: '',
-            practiceHours: '',
-            description: '',
-        });
-
-        updateMarkers(updatedPlaces); // 마커 업데이트
+        addPlaceMutation.mutate(newPlace);
     };
-
-    //     // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
-    // const handleAddPlaceSubmit = () => {
-    //     // 유효성 검사
-    //     if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
-    //         Swal.fire({
-    //             icon: 'warning',
-    //             title: '필드를 입력해주세요',
-    //             text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
-    //             confirmButtonText: '확인',
-    //             confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-    //         });
-    //         return;
-    //     }
-    //     addPlaceMutation.mutate(newPlace);
-    // };
 
     const updateMarkers = (places: PracticePlace[]) => {
         if (map && clusterer) {
@@ -382,7 +314,7 @@ const PracticePlace: React.FC = () => {
                     customClass: {
                         popup: 'tailwind-swal-popup',
                         title: 'tailwind-swal-title',
-                        content: 'tailwind-swal-content',
+                        htmlContainer: 'tailwind-swal-content',
                         confirmButton: 'tailwind-swal-button',
                     },
                 });
@@ -436,7 +368,7 @@ const PracticePlace: React.FC = () => {
                     customClass: {
                         popup: 'tailwind-swal-popup',
                         title: 'tailwind-swal-title',
-                        content: 'tailwind-swal-content',
+                        htmlContainer: 'tailwind-swal-content',
                         confirmButton: 'tailwind-swal-button',
                     },
                 });
@@ -452,7 +384,7 @@ const PracticePlace: React.FC = () => {
                 customClass: {
                     popup: 'tailwind-swal-popup',
                     title: 'tailwind-swal-title',
-                    content: 'tailwind-swal-content',
+                    htmlContainer: 'tailwind-swal-content',
                     confirmButton: 'tailwind-swal-button',
                 },
             });
