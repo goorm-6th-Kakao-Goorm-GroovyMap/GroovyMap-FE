@@ -1,32 +1,26 @@
-//공연 장소 타입
-export interface PerformancePlace {
-    id: number;
-    name: string;
-    part: string;
-    coordinate: { latitude: number; longitude: number };
-    region: string;
-    address: string;
-    phoneNumber?: string;
-    rentalFee?: string;
-    capacity?: string;
-    performanceHours?: string;
-    description?: string;
+interface Coordinate {
+    latitude: number;
+    longitude: number;
 }
 
-//연습장소 타입
-export interface PracticePlace {
-    id: number;
+interface PlaceBase {
     name: string;
-    address: string;
-    part: string;
-    coordinate: {
-        latitude: number;
-        longitude: number;
-    };
+    part: 'BAND' | 'DANCE' | 'VOCAL';
+    coordinate: Coordinate;
     region: string;
-    phoneNumber?: string;
-    rentalFee?: string;
-    capacity?: string;
-    practiceHours?: string;
-    description?: string;
+    address: string;
+    phoneNumber: string;
+    rentalFee: string;
+    capacity: string;
+    description: string;
+}
+
+export interface PerformancePlace extends PlaceBase {
+    id?: number;
+    performanceHours: string;
+}
+
+export interface PracticePlace extends PlaceBase {
+    id?: number;
+    practiceHours: string;
 }

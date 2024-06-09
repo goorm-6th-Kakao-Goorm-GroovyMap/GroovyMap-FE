@@ -1,21 +1,21 @@
 /* eslint-disable @next/next/no-img-element */ // 이미지 src 넣을 때 에러 수정하기 위해 추가
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { IoMdSearch, IoMdClose } from 'react-icons/io';
+import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
+import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
+import { v4 as uuidv4 } from 'uuid'; // UUID import
 import {
     getPerformancePlaces,
     addPerformancePlace,
     getPerformancePlaceDetails,
-} from '../../api/placeApi/performancePlaceApi';
-import { IoMdSearch, IoMdClose } from 'react-icons/io';
-import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
-import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-import type { PerformancePlace } from '../../types/types';
+} from '@/api/placeApi/performancePlaceApi';
+import type { PerformancePlace } from '@/types/types';
 
-// 나중에 마커 이미지 바꾸기
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
@@ -49,8 +49,8 @@ const PerformancePlace: React.FC = () => {
         | 'JUNGGU'
         | 'JUNGNANGGU'
     >('ALL');
-    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all'); // 분야 더 추가
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<PerformancePlace[]>([]); // 실제 api 요청 받을때는 빈 배열로 설정 useState<PerformancePlace[]>([]);
+    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
+    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<PerformancePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<PerformancePlace | null>(null);
@@ -59,12 +59,11 @@ const PerformancePlace: React.FC = () => {
     const [markers, setMarkers] = useState<any[]>([]);
     const [searchMap, setSearchMap] = useState<any>(null);
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
-    const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
-
-    // 새 장소 추가해서 post 요청 보낼때 형태
+    const [address, setAddress] = useState('');
+    const [searchResult, setSearchResult] = useState<any>(null);
     const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
         name: '',
-        part: '',
+        part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
         region: '',
         address: '',
@@ -74,38 +73,16 @@ const PerformancePlace: React.FC = () => {
         performanceHours: '',
         description: '',
     });
-    const [address, setAddress] = useState('');
-    const [searchResult, setSearchResult] = useState<any>(null);
-    // 페이지 네이션을 위한 상태 추가함
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
-
-    // 페이지 변경 핸들러 추가
-    const handlePageChange = (pageNumber: number) => {
-        setCurrentPage(pageNumber);
-    };
-
-    // 데이터 필터링 및 페이지 네이션 적용
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredPerformancePlaces.slice(indexOfFirstItem, indexOfLastItem);
-
-    // 페이지 숫자 계산
-    const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(filteredPerformancePlaces.length / itemsPerPage); i++) {
-        pageNumbers.push(i);
-    }
-
-    //API 연동시 주석 해제
     const queryClient = useQueryClient();
 
-    // 전체 공연 장소 정보 가져옴
     const {
         data: performancePlaces,
         isLoading,
         isError,
         error,
-    } = useQuery<PerformancePlace[]>({
+    } = useQuery<PerformancePlace[], Error>({
         queryKey: ['performancePlaces'],
         queryFn: getPerformancePlaces,
     });
@@ -116,7 +93,6 @@ const PerformancePlace: React.FC = () => {
         }
     }, [performancePlaces]);
 
-    // 새로운 장소 저장하고 추가하는 부분
     const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
         mutationFn: addPerformancePlace,
         onSuccess: (data) => {
@@ -125,7 +101,7 @@ const PerformancePlace: React.FC = () => {
             setIsAddModalOpen(false);
             setNewPlace({
                 name: '',
-                part: '',
+                part: 'BAND',
                 coordinate: { latitude: 0, longitude: 0 },
                 region: '',
                 address: '',
@@ -135,13 +111,29 @@ const PerformancePlace: React.FC = () => {
                 performanceHours: '',
                 description: '',
             });
+            Swal.fire({
+                icon: 'success',
+                title: '장소가 추가되었습니다',
+                text: '새로운 공연 장소가 성공적으로 추가되었습니다.',
+                confirmButtonText: '확인',
+                confirmButtonColor: '#8c00ff',
+            });
         },
         onError: (error) => {
             console.error('Error adding new place:', error);
         },
     });
 
-    // 지역 및 분야로 데이터 필터링 하는 부분
+    const fetchPlaceDetails = useCallback(async (postId: number) => {
+        try {
+            const data = await getPerformancePlaceDetails(postId);
+            setSelectedPlace(data);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
+    }, []);
+
     useEffect(() => {
         if (performancePlaces) {
             const filtered = performancePlaces.filter((place) => {
@@ -153,18 +145,13 @@ const PerformancePlace: React.FC = () => {
         }
     }, [selectedRegion, selectedPart, performancePlaces]);
 
-    // 환경 변수 확인
-    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
-        throw new Error('NEXT_PUBLIC_KAKAO_MAP_API_KEY is not defined in the environment variables');
+    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
+        throw new Error('Kakao API keys are not defined in the environment variables');
     }
-    if (!process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
-        throw new Error('NEXT_PUBLIC_KAKAO_REST_API_KEY is not defined in the environment variables');
-    }
-    //환경 변수 api key
+
     const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
     const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 
-    // 카카오맵 api 가져오는 부분
     useEffect(() => {
         const script = document.createElement('script');
         script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapApiKey}&autoload=false&libraries=clusterer`;
@@ -172,7 +159,6 @@ const PerformancePlace: React.FC = () => {
             window.kakao.maps.load(() => {
                 const mapContainer = document.getElementById('map');
                 if (mapContainer) {
-                    // mapContainer가 null이 아닌지 확인
                     const mapOption = {
                         center: new window.kakao.maps.LatLng(37.5665, 126.978),
                         level: 5,
@@ -180,26 +166,23 @@ const PerformancePlace: React.FC = () => {
                     const map = new window.kakao.maps.Map(mapContainer, mapOption);
                     setMap(map);
 
-                    // 스카이뷰 컨트롤 추가
                     const mapTypeControl = new window.kakao.maps.MapTypeControl();
                     map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
 
-                    // 줌 컨트롤 추가
                     const zoomControl = new window.kakao.maps.ZoomControl();
                     map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
 
-                    // 클러스터러 생성 및 설정
                     const clusterer = new window.kakao.maps.MarkerClusterer({
                         map: map,
                         averageCenter: true,
-                        minLevel: 10, // 클러스터 할 최소 줌 레벨
+                        minLevel: 10,
                     });
                     setClusterer(clusterer);
                 }
             });
         };
         document.head.appendChild(script);
-    }, []);
+    }, [kakaoMapApiKey]);
 
     useEffect(() => {
         if (map) {
@@ -207,19 +190,6 @@ const PerformancePlace: React.FC = () => {
         }
     }, [map, filteredPerformancePlaces]);
 
-    //API 연동시 주석해제
-    //특정 게시물의 상세정보 비동기로 가져오기
-    const fetchPlaceDetails = async (postId: number) => {
-        try {
-            const data = await getPerformancePlaceDetails(postId);
-            setSelectedPlace(data);
-            setIsModalOpen(true);
-        } catch (error) {
-            console.error('Error fetching place details:', error);
-        }
-    };
-
-    // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name === 'latitude' || name === 'longitude') {
@@ -227,7 +197,7 @@ const PerformancePlace: React.FC = () => {
                 ...prev,
                 coordinate: {
                     ...prev.coordinate,
-                    [name]: parseFloat(value), // 문자열을 숫자로 변환하여 저장
+                    [name]: parseFloat(value),
                 },
             }));
         } else {
@@ -235,30 +205,87 @@ const PerformancePlace: React.FC = () => {
         }
     };
 
-    // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
-    const handleAddPlaceSubmit = async () => {
-        // 유효성 검사
+    const handleAddPlaceSubmit = () => {
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
             Swal.fire({
                 icon: 'warning',
                 title: '필드를 입력해주세요',
-                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
+                text: '공연 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
                 confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                confirmButtonColor: '#8c00ff',
             });
             return;
         }
         addPlaceMutation.mutate(newPlace);
     };
 
-    const updateMarkers = (places: PerformancePlace[]) => {
+    useEffect(() => {
+        if (map && clusterer) {
+            const bounds = new window.kakao.maps.LatLngBounds();
+            const newMarkers = filteredPerformancePlaces
+                .map((place) => {
+                    const latitude = place.coordinate?.latitude;
+                    const longitude = place.coordinate?.longitude;
+
+                    if (latitude !== undefined && longitude !== undefined && place.id !== undefined) {
+                        const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
+                        bounds.extend(markerCoordinate);
+
+                        const markerImage = new window.kakao.maps.MarkerImage(
+                            markerImages[place.part] || markerImages.default,
+                            new window.kakao.maps.Size(24, 35),
+                            { offset: new window.kakao.maps.Point(12, 35) }
+                        );
+
+                        const marker = new window.kakao.maps.Marker({
+                            position: markerCoordinate,
+                            image: markerImage,
+                        });
+
+                        const infowindow = new window.kakao.maps.InfoWindow({
+                            content: `<div style="padding:5px;">${place.name}</div>`,
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'mouseover', () => {
+                            infowindow.open(map, marker);
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'mouseout', () => {
+                            infowindow.close();
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'click', () => {
+                            fetchPlaceDetails(place.id as number);
+                        });
+
+                        marker.setMap(map);
+                        return marker;
+                    }
+                })
+                .filter((marker) => marker !== undefined); // undefined가 아닌 마커들만 필터링
+
+            setMarkers((prevMarkers) => {
+                prevMarkers.forEach((marker) => marker?.setMap(null));
+                return newMarkers;
+            });
+
+            clusterer?.clear();
+            clusterer?.addMarkers(newMarkers);
+
+            if (!bounds.isEmpty()) {
+                map?.setBounds(bounds);
+            }
+        }
+    }, [map, clusterer, filteredPerformancePlaces, fetchPlaceDetails]);
+
+    const updateMarkers = (places: PracticePlace[]) => {
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
             const newMarkers = places.map((place) => {
                 const markerCoordinate = new window.kakao.maps.LatLng(
-                    place.coordinate.latitude,
-                    place.coordinate.longitude
+                    place.coordinate?.latitude,
+                    place.coordinate?.longitude
                 );
                 bounds.extend(markerCoordinate);
 
@@ -286,7 +313,10 @@ const PerformancePlace: React.FC = () => {
                 });
 
                 window.kakao.maps.event.addListener(marker, 'click', () => {
-                    fetchPlaceDetails(place.id);
+                    setSelectedPlace(place);
+                    setIsModalOpen(true);
+                    fetchPlaceDetails(place.id as number); // fetchPlaceDetails 함수 호출
+                    window.location.href = `/practiceplace/${place.id}`;
                 });
 
                 marker.setMap(map); // 마커를 지도에 추가
@@ -295,20 +325,19 @@ const PerformancePlace: React.FC = () => {
             });
 
             setMarkers((prevMarkers) => {
-                prevMarkers.forEach((marker) => marker.setMap(null)); // 이전 마커 제거
+                prevMarkers.forEach((marker) => marker?.setMap(null)); // 이전 마커 제거
                 return newMarkers;
             });
 
-            clusterer.clear(); // 이전 마커 클러스터 제거
-            clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
+            clusterer?.clear(); // 이전 마커 클러스터 제거
+            clusterer?.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
 
             if (!bounds.isEmpty()) {
-                map.setBounds(bounds);
+                map?.setBounds(bounds);
             }
         }
     };
 
-    // 주소 검색 후 결과 값 받아와서 위도 경도 추가
     const handleAddressSearch = async () => {
         try {
             if (!address || address.trim() === '') {
@@ -360,17 +389,17 @@ const PerformancePlace: React.FC = () => {
                 });
 
                 // 이전 검색 마커 제거
-                searchMarkers.forEach((marker) => marker.setMap(null));
+                searchMarkers.forEach((marker) => marker?.setMap(null));
                 setSearchMarkers([marker]);
 
-                searchMap.setCenter(markerCoordinate);
+                searchMap?.setCenter(markerCoordinate);
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: '결과 없음',
                     text: '입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.',
                     confirmButtonText: '확인',
-                    confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                    confirmButtonColor: '#8c00ff',
                     customClass: {
                         popup: 'tailwind-swal-popup',
                         title: 'tailwind-swal-title',
@@ -386,7 +415,7 @@ const PerformancePlace: React.FC = () => {
                 title: '에러 발생',
                 text: '주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.',
                 confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
+                confirmButtonColor: '#8c00ff',
                 customClass: {
                     popup: 'tailwind-swal-popup',
                     title: 'tailwind-swal-title',
@@ -396,6 +425,19 @@ const PerformancePlace: React.FC = () => {
             });
         }
     };
+
+    const handlePageChange = (pageNumber: number) => {
+        setCurrentPage(pageNumber);
+    };
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredPerformancePlaces.slice(indexOfFirstItem, indexOfLastItem);
+
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(filteredPerformancePlaces.length / itemsPerPage); i++) {
+        pageNumbers.push(i);
+    }
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -423,32 +465,7 @@ const PerformancePlace: React.FC = () => {
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
                                 onChange={(e) =>
-                                    setSelectedRegion(
-                                        e.target.value as
-                                            | 'ALL'
-                                            | 'GANGNAMGU'
-                                            | 'GANGDONGGU'
-                                            | 'GANGBUKGU'
-                                            | 'GANGSEOGU'
-                                            | 'GEUMCHEONGU'
-                                            | 'GUROGU'
-                                            | 'DOBONGGU'
-                                            | 'DONGDAEMUNGU'
-                                            | 'DONGJAKGU'
-                                            | 'MAPOGU'
-                                            | 'SEODAEMUNGU'
-                                            | 'SEOCHOGU'
-                                            | 'SEONGDONGGU'
-                                            | 'SEONGBUKGU'
-                                            | 'SONGPA'
-                                            | 'YANGCHEONGU'
-                                            | 'YEONGDEUNGPOGU'
-                                            | 'YONGSANGU'
-                                            | 'EUNPYEONGGU'
-                                            | 'JONGNOGU'
-                                            | 'JUNGGU'
-                                            | 'JUNGNANGGU'
-                                    )
+                                    setSelectedRegion(e.target.value as 'ALL' | 'GANGNAMGU' | 'MAPOGU' | 'GANGDONGGU')
                                 }
                             >
                                 <option value="ALL">전체</option>
@@ -475,7 +492,6 @@ const PerformancePlace: React.FC = () => {
                                 <option value="JONGNOGU">종로구</option>
                                 <option value="JUNGGU">중구</option>
                                 <option value="JUNGNANGGU">중랑구</option>
-                                {/* 지역구 추가하기 */}
                             </select>
                         </div>
                         <div className="flex items-center border rounded-lg p-2 bg-white">
@@ -483,7 +499,7 @@ const PerformancePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedPart}
-                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'BAND' | 'DANCE')}
+                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'BAND' | 'DANCE' | 'VOCAL')}
                             >
                                 <option value="all">전체</option>
                                 <option value="BAND">밴드</option>
@@ -512,19 +528,37 @@ const PerformancePlace: React.FC = () => {
                         onCreate={setMap}
                     >
                         <MarkerClusterer>
-                            {filteredPerformancePlaces.map((place) => (
-                                <MapMarker
-                                    key={place.id}
-                                    position={place.coordinate}
-                                    image={{
-                                        src: markerImages[place.part] || markerImages.default,
-                                        size: { width: 24, height: 35 },
-                                        options: { offset: { x: 12, y: 35 } },
-                                    }}
-                                    onClick={() => fetchPlaceDetails(place.id)}
-                                />
-                            ))}
+                            {Array.isArray(filteredPerformancePlaces) &&
+                                filteredPerformancePlaces
+                                    .map((place) => {
+                                        const latitude = place.coordinate?.latitude;
+                                        const longitude = place.coordinate?.longitude;
+
+                                        if (
+                                            latitude !== undefined &&
+                                            longitude !== undefined &&
+                                            place.id !== undefined
+                                        ) {
+                                            return (
+                                                <MapMarker
+                                                    key={uuidv4()}
+                                                    position={{ lat: latitude, lng: longitude }}
+                                                    image={{
+                                                        src: markerImages[place.part] || markerImages.default,
+                                                        size: { width: 24, height: 35 },
+                                                        options: { offset: { x: 12, y: 35 } },
+                                                    }}
+                                                    onClick={() => fetchPlaceDetails(place.id as number)}
+                                                />
+                                            );
+                                        } else {
+                                            console.error('Missing coordinates or id:', place);
+                                            return null;
+                                        }
+                                    })
+                                    .filter((marker) => marker !== null)}
                         </MarkerClusterer>
+
                         <MapTypeControl position="TOPRIGHT" />
                         <ZoomControl position="RIGHT" />
                     </Map>
@@ -532,7 +566,7 @@ const PerformancePlace: React.FC = () => {
                 <div className="mt-6">
                     <ul className="space-y-4">
                         {currentItems.map((place) => (
-                            <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
+                            <li key={uuidv4()} className="border p-4 rounded-lg bg-white shadow-md">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <span className="rounded-ml bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
@@ -542,7 +576,14 @@ const PerformancePlace: React.FC = () => {
                                         <p className="text-m text-gray-600 font-regular">{place.address}</p>
                                     </div>
                                     <button
-                                        onClick={() => fetchPlaceDetails(place.id)}
+                                        // onClick 핸들러에서 place.id가 undefined가 아닌지 확인
+                                        onClick={() => {
+                                            if (place.id !== undefined) {
+                                                fetchPlaceDetails(place.id);
+                                            } else {
+                                                console.error('Place id is undefined:', place);
+                                            }
+                                        }}
                                         className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
                                     >
                                         상세 정보
@@ -554,7 +595,7 @@ const PerformancePlace: React.FC = () => {
                     <div className="flex justify-center space-x-2 mt-4">
                         {pageNumbers.map((number) => (
                             <button
-                                key={number}
+                                key={uuidv4()}
                                 onClick={() => handlePageChange(number)}
                                 className={`py-2 px-4 rounded-full ${
                                     currentPage === number ? 'bg-purple-700 text-white' : 'bg-gray-300 text-black'
@@ -567,7 +608,7 @@ const PerformancePlace: React.FC = () => {
                 </div>
                 {isModalOpen && selectedPlace && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-1/2 relative">
+                        <div className="bg-white p-6 rounded-lg w-1/3 relative">
                             <div className="relative h-56 w-full sm:h-52">
                                 <img
                                     src={
@@ -580,7 +621,7 @@ const PerformancePlace: React.FC = () => {
                                 />
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="absolute right-2 top-2 text-white bg-black rounded-full p-2"
+                                    className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
                                     aria-label="닫기"
                                 >
                                     <IoMdClose size={20} />
@@ -636,12 +677,6 @@ const PerformancePlace: React.FC = () => {
                                         <span>수용 인원: {selectedPlace.capacity}</span>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="mt-4 bg-purple-700 text-white py-2 px-4 rounded-full"
-                                >
-                                    닫기
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -660,6 +695,7 @@ const PerformancePlace: React.FC = () => {
                                     >
                                         {searchResult && (
                                             <MapMarker
+                                                key={searchResult.address_name} // 고유한 값을 key로 사용
                                                 position={{
                                                     lat: parseFloat(searchResult.y),
                                                     lng: parseFloat(searchResult.x),
@@ -697,9 +733,7 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="" selected>
-                                            분야
-                                        </option>
+                                        <option value="">전체</option>
                                         <option value="BAND">밴드</option>
                                         <option value="DANCE">춤</option>
                                         <option value="VOCAL">노래</option>
@@ -710,9 +744,7 @@ const PerformancePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="" selected>
-                                            지역
-                                        </option>
+                                        <option value="">전체</option>
                                         <option value="GANGNAMGU">강남구</option>
                                         <option value="GANGDONGGU">강동구</option>
                                         <option value="GANGBUKGU">강북구</option>
@@ -736,6 +768,7 @@ const PerformancePlace: React.FC = () => {
                                         <option value="JONGNOGU">종로구</option>
                                         <option value="JUNGGU">중구</option>
                                         <option value="JUNGNANGGU">중랑구</option>
+                                        {/* 지역구 추가 */}
                                     </select>
                                     <input
                                         type="text"

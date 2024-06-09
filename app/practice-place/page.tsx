@@ -1,15 +1,17 @@
 /* eslint-disable @next/next/no-img-element */ // 이미지 src 넣을 때 에러 수정하기 위해 추가
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '../../api/placeApi/practicePlaceApi';
+import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/placeApi/practicePlaceApi';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-import type { PracticePlace } from '../../types/types';
+import type { PracticePlace } from '@/types/types';
+import { v4 as uuidv4 } from 'uuid'; // UUID import
 
 // 나중에 마커 이미지 바꾸기
 const markerImages: { [key: string]: string } = {
@@ -20,6 +22,9 @@ const markerImages: { [key: string]: string } = {
 };
 
 const PracticePlace: React.FC = () => {
+    const params = useParams();
+    const router = useRouter();
+    const { id } = params;
     const [selectedRegion, setSelectedRegion] = useState<
         | 'ALL'
         | 'GANGNAMGU'
@@ -59,7 +64,7 @@ const PracticePlace: React.FC = () => {
     // 새 장소 추가해서 post 요청 보낼때 형태
     const [newPlace, setNewPlace] = useState<Omit<PracticePlace, 'id'>>({
         name: '',
-        part: '',
+        part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
         region: '',
         address: '',
@@ -71,6 +76,7 @@ const PracticePlace: React.FC = () => {
     });
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
+
     // 페이지 네이션을 위한 상태 추가함
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
@@ -104,8 +110,10 @@ const PracticePlace: React.FC = () => {
         queryFn: getPracticePlaces,
     });
 
+    // 데이터 받아올때 콘솔에 출력
     useEffect(() => {
         if (practicePlaces) {
+            console.log('Fetched practice places:', practicePlaces);
             setFilteredPracticePlaces(practicePlaces);
         }
     }, [practicePlaces]);
@@ -119,7 +127,7 @@ const PracticePlace: React.FC = () => {
             setIsAddModalOpen(false);
             setNewPlace({
                 name: '',
-                part: '',
+                part: 'BAND',
                 coordinate: { latitude: 0, longitude: 0 },
                 region: '',
                 address: '',
@@ -129,11 +137,43 @@ const PracticePlace: React.FC = () => {
                 practiceHours: '',
                 description: '',
             });
+            Swal.fire({
+                icon: 'success',
+                title: '장소가 추가되었습니다',
+                text: '새로운 공연 장소가 성공적으로 추가되었습니다.',
+                confirmButtonText: '확인',
+                confirmButtonColor: '#8c00ff',
+                customClass: {
+                    popup: 'tailwind-swal-popup',
+                    title: 'tailwind-swal-title',
+                    htmlContainer: 'tailwind-swal-content',
+                    confirmButton: 'tailwind-swal-button',
+                },
+            });
         },
+
         onError: (error) => {
             console.error('Error adding new place:', error);
         },
     });
+
+    // 특정 연습 장소의 상세 정보를 가져오는 함수
+    const fetchPlaceDetails = useCallback(async (postId: number) => {
+        try {
+            const data = await getPracticePlaceDetails(postId);
+            setSelectedPlace(data);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+        }
+    }, []);
+
+    // 특정 ID가 URL 경로에 있는 경우 해당 ID로 상세 정보를 가져옴.
+    useEffect(() => {
+        if (id) {
+            fetchPlaceDetails(Number(id));
+        }
+    }, [id]);
 
     // 지역 및 분야로 데이터 필터링 하는 부분
     useEffect(() => {
@@ -148,11 +188,8 @@ const PracticePlace: React.FC = () => {
     }, [selectedRegion, selectedPart, practicePlaces]);
 
     // 환경 변수 확인
-    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY) {
-        throw new Error('NEXT_PUBLIC_KAKAO_MAP_API_KEY is not defined in the environment variables');
-    }
-    if (!process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
-        throw new Error('NEXT_PUBLIC_KAKAO_REST_API_KEY is not defined in the environment variables');
+    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
+        throw new Error('Kakao API keys are not defined in the environment variables');
     }
     //환경 변수 api key
     const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
@@ -193,25 +230,13 @@ const PracticePlace: React.FC = () => {
             });
         };
         document.head.appendChild(script);
-    }, []);
+    }, [kakaoMapApiKey]);
 
     useEffect(() => {
         if (map) {
             updateMarkers(filteredPracticePlaces);
         }
     }, [map, filteredPracticePlaces]);
-
-    //API 연동시 주석해제
-    //특정 게시물의 상세정보 비동기로 가져오기
-    const fetchPlaceDetails = async (postId: number) => {
-        try {
-            const data = await getPracticePlaceDetails(postId);
-            setSelectedPlace(data);
-            setIsModalOpen(true);
-        } catch (error) {
-            console.error('Error fetching place details:', error);
-        }
-    };
 
     // 사용자가 새로운 장소 정보 추가 입력할 때 상태 업데이트
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -229,7 +254,7 @@ const PracticePlace: React.FC = () => {
         }
     };
 
-    // 새로운 장소추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
+    // 새로운 장소 추가 플러스 버튼 누르고 추가버튼 누를때 POST 요청(실제 api)
     const handleAddPlaceSubmit = () => {
         // 유효성 검사
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
@@ -245,14 +270,73 @@ const PracticePlace: React.FC = () => {
         addPlaceMutation.mutate(newPlace);
     };
 
+    useEffect(() => {
+        if (map && clusterer) {
+            const bounds = new window.kakao.maps.LatLngBounds();
+            const newMarkers = filteredPracticePlaces
+                .map((place) => {
+                    const latitude = place.coordinate?.latitude;
+                    const longitude = place.coordinate?.longitude;
+
+                    if (latitude !== undefined && longitude !== undefined && place.id !== undefined) {
+                        const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
+                        bounds.extend(markerCoordinate);
+
+                        const markerImage = new window.kakao.maps.MarkerImage(
+                            markerImages[place.part] || markerImages.default,
+                            new window.kakao.maps.Size(24, 35),
+                            { offset: new window.kakao.maps.Point(12, 35) }
+                        );
+
+                        const marker = new window.kakao.maps.Marker({
+                            position: markerCoordinate,
+                            image: markerImage,
+                        });
+
+                        const infowindow = new window.kakao.maps.InfoWindow({
+                            content: `<div style="padding:5px;">${place.name}</div>`,
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'mouseover', () => {
+                            infowindow.open(map, marker);
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'mouseout', () => {
+                            infowindow.close();
+                        });
+
+                        window.kakao.maps.event.addListener(marker, 'click', () => {
+                            fetchPlaceDetails(place.id as number);
+                        });
+
+                        marker.setMap(map);
+                        return marker;
+                    }
+                })
+                .filter((marker) => marker !== undefined); // undefined가 아닌 마커들만 필터링
+
+            setMarkers((prevMarkers) => {
+                prevMarkers.forEach((marker) => marker?.setMap(null));
+                return newMarkers;
+            });
+
+            clusterer?.clear();
+            clusterer?.addMarkers(newMarkers);
+
+            if (!bounds.isEmpty()) {
+                map?.setBounds(bounds);
+            }
+        }
+    }, [map, clusterer, filteredPracticePlaces, fetchPlaceDetails]);
+
     const updateMarkers = (places: PracticePlace[]) => {
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
             const newMarkers = places.map((place) => {
                 const markerCoordinate = new window.kakao.maps.LatLng(
-                    place.coordinate.latitude,
-                    place.coordinate.longitude
+                    place.coordinate?.latitude,
+                    place.coordinate?.longitude
                 );
                 bounds.extend(markerCoordinate);
 
@@ -280,7 +364,10 @@ const PracticePlace: React.FC = () => {
                 });
 
                 window.kakao.maps.event.addListener(marker, 'click', () => {
-                    fetchPlaceDetails(place.id);
+                    setSelectedPlace(place);
+                    setIsModalOpen(true);
+                    fetchPlaceDetails(place.id as number); // fetchPlaceDetails 함수 호출
+                    window.location.href = `/practiceplace/${place.id}`;
                 });
 
                 marker.setMap(map); // 마커를 지도에 추가
@@ -289,12 +376,12 @@ const PracticePlace: React.FC = () => {
             });
 
             setMarkers((prevMarkers) => {
-                prevMarkers.forEach((marker) => marker.setMap(null)); // 이전 마커 제거
+                prevMarkers.forEach((marker) => marker?.setMap(null)); // 이전 마커 제거
                 return newMarkers;
             });
 
-            clusterer.clear(); // 이전 마커 클러스터 제거
-            clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
+            clusterer?.clear(); // 이전 마커 클러스터 제거
+            clusterer?.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
 
             if (!bounds.isEmpty()) {
                 map.setBounds(bounds);
@@ -354,10 +441,10 @@ const PracticePlace: React.FC = () => {
                 });
 
                 // 이전 검색 마커 제거
-                searchMarkers.forEach((marker) => marker.setMap(null));
+                searchMarkers.forEach((marker) => marker?.setMap(null));
                 setSearchMarkers([marker]);
 
-                searchMap.setCenter(markerCoordinate);
+                searchMap?.setCenter(markerCoordinate);
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -508,8 +595,8 @@ const PracticePlace: React.FC = () => {
                         <MarkerClusterer>
                             {filteredPracticePlaces.map((place) => (
                                 <MapMarker
-                                    key={place.id}
-                                    position={place.coordinate}
+                                    key={uuidv4()}
+                                    position={{ lat: place.coordinate?.latitude, lng: place.coordinate?.longitude }}
                                     image={{
                                         src: markerImages[place.part] || markerImages.default,
                                         size: { width: 24, height: 35 },
@@ -526,7 +613,7 @@ const PracticePlace: React.FC = () => {
                 <div className="mt-6">
                     <ul className="space-y-4">
                         {currentItems.map((place) => (
-                            <li key={place.id} className="border p-4 rounded-lg bg-white shadow-md">
+                            <li key={uuidv4()} className="border p-4 rounded-lg bg-white shadow-md">
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <span className="rounded-ml bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
@@ -548,7 +635,7 @@ const PracticePlace: React.FC = () => {
                     <div className="flex justify-center space-x-2 mt-4">
                         {pageNumbers.map((number) => (
                             <button
-                                key={number}
+                                key={uuidv4()}
                                 onClick={() => handlePageChange(number)}
                                 className={`py-2 px-4 rounded-full ${
                                     currentPage === number ? 'bg-purple-700 text-white' : 'bg-gray-300 text-black'
@@ -561,7 +648,7 @@ const PracticePlace: React.FC = () => {
                 </div>
                 {isModalOpen && selectedPlace && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-1/2 relative">
+                        <div className="bg-white p-6 rounded-lg w-1/3 relative">
                             <div className="relative h-56 w-full sm:h-52">
                                 <img
                                     src={
@@ -574,7 +661,7 @@ const PracticePlace: React.FC = () => {
                                 />
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="absolute right-2 top-2 text-white bg-black rounded-full p-2"
+                                    className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
                                     aria-label="닫기"
                                 >
                                     <IoMdClose size={20} />
@@ -590,7 +677,7 @@ const PracticePlace: React.FC = () => {
                                         className="bg-purple-700 text-white py-2 px-4 rounded-full"
                                         onClick={() => {
                                             window.open(
-                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.coordinate.latitude},${selectedPlace.coordinate.longitude}`,
+                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.coordinate?.latitude},${selectedPlace.coordinate?.longitude}`,
                                                 '_blank'
                                             );
                                         }}
@@ -630,12 +717,6 @@ const PracticePlace: React.FC = () => {
                                         <span>수용 인원: {selectedPlace.capacity}</span>
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="mt-4 bg-purple-700 text-white py-2 px-4 rounded-full"
-                                >
-                                    닫기
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -691,9 +772,7 @@ const PracticePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="" selected>
-                                            분야
-                                        </option>
+                                        <option value="">분야</option>
                                         <option value="BAND">밴드</option>
                                         <option value="DANCE">춤</option>
                                         <option value="VOCAL">노래</option>
@@ -704,9 +783,7 @@ const PracticePlace: React.FC = () => {
                                         onChange={handleAddPlaceChange}
                                         className="border p-2 rounded"
                                     >
-                                        <option value="" selected>
-                                            지역
-                                        </option>
+                                        <option value="">지역</option>
                                         <option value="GANGNAMGU">강남구</option>
                                         <option value="GANGDONGGU">강동구</option>
                                         <option value="GANGBUKGU">강북구</option>

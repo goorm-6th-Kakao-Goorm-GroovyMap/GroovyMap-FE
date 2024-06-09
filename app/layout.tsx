@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
 import './globals.scss';
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';
 import { FaBars } from 'react-icons/fa';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { worker } from '../src/mocks/browser';
+
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    worker.start();
+}
 
 export default function RootLayout({
     children,

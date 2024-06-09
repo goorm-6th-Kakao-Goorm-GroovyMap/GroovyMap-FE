@@ -4,8 +4,10 @@
         "allowJs": true,
         "skipLibCheck": true,
         "strict": true,
+        "typeRoots": ["./node_modules/@types", "./types"],
         "noEmit": true,
         "esModuleInterop": true,
+        "types": ["@types/node", "@types/react", "@types/react-dom", "next", "next/types/global"],
         "module": "esnext",
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
@@ -21,6 +23,6 @@
             "@/*": ["./*"]
         }
     },
-    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "global.d.ts"],
     "exclude": ["node_modules"]
 }
