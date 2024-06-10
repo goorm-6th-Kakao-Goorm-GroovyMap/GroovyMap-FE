@@ -27,7 +27,7 @@ const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack }
             </button>
             <h2 className="text-2xl font-bold mb-4">{post.title}</h2>
             <p className="mb-2">
-                작성자: {post.author} 작성일: {post.date} 조회수: {post.views}
+                작성자: {post.author} 작성일: {post.date.toFormat('yyyy-MM-dd HH:mm:ss')} 조회수: {post.views}
             </p>
             <p className="mb-2">
                 모집장소: {post.region} 모집분야: {post.position} 모집인원: {post.recruit_num}
