@@ -3,6 +3,7 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
+import router from 'next/router'
 
 interface Coordinates {
     latitude: number | null
@@ -10,7 +11,7 @@ interface Coordinates {
 }
 
 const postFormData = async (formData: FormData): Promise<any> => {
-    const response = await fetch('/promotionboard/write', {
+    const response = await fetch('https://9e26-1-241-95-127.ngrok-free.app/promotionboard/write', {
         method: 'POST',
         body: formData,
         credentials: 'include', // 쿠키포함
@@ -109,11 +110,13 @@ export default function Write() {
         formData.append('region', (e.target as any).region.value)
         formData.append('part', selectedType)
         formData.append('coordinates', JSON.stringify(coordinates))
-        formData.append('content', (e.target as any).content.value)
+        // 개행 문자를 <br> 태그로 변환하여 텍스트를 추가
+        formData.append('content', (e.target as any).content.value.replace(/\n/g, '<br>'))
 
         try {
             await mutation.mutateAsync(formData)
             alert('Form submitted successfully!')
+            router.push('/promotion-place')
         } catch (error: any) {
             alert(`Form submission failed: ${error.message}`)
         }

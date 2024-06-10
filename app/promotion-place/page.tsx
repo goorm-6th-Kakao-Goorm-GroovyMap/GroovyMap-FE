@@ -5,6 +5,7 @@ import { IoMdSearch } from 'react-icons/io'
 import { FaRegEdit } from 'react-icons/fa'
 import { FaMapLocationDot } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import PostItem from './post/postItem'
 import Modal from './post/postmodal'
 
@@ -14,7 +15,7 @@ interface Post {
     author: string
     title: string
     content: string
-    fileNames: string
+    fileNames: string[]
     region: string
     part: string
     coordinates: {
@@ -56,57 +57,81 @@ const areas: Record<string, { name: string; lat: number; lng: number }> = {
 const parts: Record<string, { name: string }> = {
     ALL: { name: '전체' },
     BAND: { name: '밴드' },
-    MUSIC: { name: '음악' },
+    VOCAL: { name: '음악' },
     DANCE: { name: '춤' },
 }
 
-const markerImages: { [key in 'BAND' | 'MUSIC' | 'DANCE']: string } = {
+const markerImages: { [key in 'BAND' | 'VOCAL' | 'DANCE']: string } = {
     BAND: '/guitar.svg',
-    MUSIC: '/guitar.svg',
+    VOCAL: '/guitar.svg',
     DANCE: '/guitar.svg',
 }
 
 declare global {
     interface Window {
         kakao: any
-    } //후에 따로 빼주기
+    }
 }
 
 export default function PromotionPlace() {
-    const [showMap, setShowMap] = useState(false) //지도버튼
-    const [selectedArea, setSelectedArea] = useState('ALL') //지역기본설정
-    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'MUSIC' | 'DANCE'>('ALL') //유형기본설정
-    const [showModal, setShowModal] = useState(false) //게시글 상세보기
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null) //게시글
-    const [posts, setPosts] = useState<Post[]>([]) // 게시글 상태
-    const [currentPage, setCurrentPage] = useState(1) // 현재 페이지
-    const postsPerPage = 9 // 페이지당 게시글 수
+    const [showMap, setShowMap] = useState(false)
+    const [selectedArea, setSelectedArea] = useState('ALL')
+    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'MUSIC' | 'DANCE'>('ALL')
+    const [showModal, setShowModal] = useState(false)
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const postsPerPage = 9
     const mapRef = useRef<any>(null)
     const router = useRouter()
+
+    const fetchPosts = async (): Promise<Post[]> => {
+        const response = await fetch('https://9e26-1-241-95-127.ngrok-free.app/promotionboard', {
+            method: 'GET',
+            headers: new Headers({
+                'ngrok-skip-browser-warning': '69420',
+            }),
+        })
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const data = await response.json()
+
+        const baseUrl = 'https://9e26-1-241-95-127.ngrok-free.app/view/'
+        return data.map((post: any) => ({
+            ...post,
+            userImage: post.userImage ? `${baseUrl}${post.userImage}` : '', // userImage 절대 경로로 설정
+            fileNames: post.fileNames.map((fileName: string) => `${baseUrl}${fileName}`), // fileNames 절대 경로로 설정
+            author: post.author || 'Anonymous', // 임시 데이터 처리
+        }))
+    }
+    const {
+        data: posts,
+        error,
+        isLoading,
+    } = useQuery<Post[], Error>({
+        queryKey: ['posts'],
+        queryFn: fetchPosts,
+    })
 
     const handleMapButtonClick = () => {
         setShowMap(!showMap)
     }
-
     const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedArea(e.target.value)
     }
-
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = e.target.value as 'ALL' | 'BAND' | 'MUSIC' | 'DANCE'
         setSelectedType(selectedValue)
     }
-
     const handlePostClick = (post: Post) => {
         setSelectedPost(post)
         setShowModal(true)
     }
-
     const handleCloseModal = () => {
         setShowModal(false)
         setSelectedPost(null)
     }
-
     const handleWriteButtonClick = () => {
         router.push('/promotion-place/write')
     }
@@ -129,7 +154,7 @@ export default function PromotionPlace() {
         posts.forEach((post) => {
             const markerPosition = new window.kakao.maps.LatLng(post.coordinates.latitude, post.coordinates.longitude)
             const markerImage = new window.kakao.maps.MarkerImage(
-                markerImages[post.part as 'BAND' | 'MUSIC' | 'DANCE'], // 타입 명시
+                markerImages[post.part as 'BAND' | 'VOCAL' | 'DANCE'],
                 new window.kakao.maps.Size(24, 35),
             )
             const marker = new window.kakao.maps.Marker({
@@ -151,7 +176,7 @@ export default function PromotionPlace() {
                 script.onload = () => {
                     window.kakao.maps.load(() => {
                         const map = initializeMap()
-                        addMarkersToMap(map, posts)
+                        addMarkersToMap(map, posts || [])
                     })
                 }
 
@@ -163,52 +188,38 @@ export default function PromotionPlace() {
                 const moveLatLon = new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng)
                 map.setCenter(moveLatLon)
                 map.setLevel(selectedArea === 'ALL' ? 8 : 4)
-                addMarkersToMap(map, posts)
+                addMarkersToMap(map, posts || [])
             }
         }
     }, [showMap, selectedArea, posts, initializeMap])
-
     useEffect(() => {
         if (mapRef.current && !showMap) {
             mapRef.current = null
         }
     }, [showMap])
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch('/promotionboard')
-                const data = await response.json()
-                const processedData = data.map((post: any) => ({
-                    ...post,
-                    userImage: post.userImage || '', // 로그인 기능 구현 전 임시 데이터
-                    author: post.author || 'Anonymous', // 로그인 기능 구현 전 임시 데이터
-                }))
-                setPosts(processedData)
-            } catch (error) {
-                console.error('Error fetching data:', error)
-            }
-        }
-        fetchData()
-    }, [])
+    if (isLoading) {
+        return <div>Loading...</div>
+    }
+    if (error) {
+        return <div>Error fetching data: {error.message}</div>
+    }
 
-    const filteredPosts = posts.filter((post) => {
+    const sortedPosts = (posts || []).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    const filteredPosts = sortedPosts.filter((post) => {
         const areaMatch = selectedArea === 'ALL' || post.region === selectedArea
         const typeMatch = selectedType === 'ALL' || post.part === selectedType
         return areaMatch && typeMatch
     })
 
-    // 현재 페이지에 해당하는 게시글 계산
     const indexOfLastPost = currentPage * postsPerPage
     const indexOfFirstPost = indexOfLastPost - postsPerPage
     const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)
-
-    // 페이지 번호 계산
     const pageNumbers = []
     for (let i = 1; i <= Math.ceil(filteredPosts.length / postsPerPage); i++) {
         pageNumbers.push(i)
     }
-
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber)
     }
@@ -216,7 +227,6 @@ export default function PromotionPlace() {
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
             <div className="content flex-1 w-full max-w-4xl mx-auto">
-                {/* 검색창 */}
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full">
                         <input
@@ -229,11 +239,9 @@ export default function PromotionPlace() {
                         </div>
                     </div>
                 </div>
-                {/* 메뉴이름 */}
                 <header className="mb-6">
                     <h1 className="text-2xl font-bold text-purple-700">홍보게시판</h1>
                 </header>
-                {/* 게시판 필터링 부분 */}
                 <section className="mb-6">
                     <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                         <div className="flex items-center space-x-2">
@@ -267,14 +275,12 @@ export default function PromotionPlace() {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            {/* 지도 버튼 */}
                             <button
                                 className="bg-purple-700 rounded-lg text-white py-2 px-4"
                                 onClick={handleMapButtonClick}
                             >
                                 <FaMapLocationDot />
                             </button>
-                            {/* 게시글 작성 버튼 */}
                             <button
                                 className="bg-purple-700 rounded-lg text-white py-2 px-4"
                                 onClick={handleWriteButtonClick}
@@ -283,29 +289,29 @@ export default function PromotionPlace() {
                             </button>
                         </div>
                     </div>
-                    {/* 지도 표시 부분 */}
                     {showMap && <div className="w-full h-96 border m-2" id="map"></div>}
-                    {/* 게시판 내용 */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {currentPosts.map((post) => (
                             <div key={post.id} onClick={() => handlePostClick(post)}>
                                 <PostItem
+                                    postId={post.id}
                                     userImage={post.userImage}
                                     userName={post.author}
                                     title={post.title}
                                     fileNames={post.fileNames}
-                                    initialLikesCount={0}
-                                    initialSavesCount={0}
+                                    initialLikesCount={post.likesCount}
+                                    initialSavesCount={post.savesCount}
                                 />
                             </div>
                         ))}
                     </div>
-                    {/* 페이지네이션 */}
                     <div className="flex justify-center mt-6">
                         {pageNumbers.map((number) => (
                             <button
                                 key={number}
-                                className={`px-3 py-1 border rounded ${currentPage === number ? 'bg-purple-700 text-white' : 'bg-white text-purple-700'}`}
+                                className={`px-3 py-1 border rounded ${
+                                    currentPage === number ? 'bg-purple-700 text-white' : 'bg-white text-purple-700'
+                                }`}
                                 onClick={() => handlePageChange(number)}
                             >
                                 {number}
