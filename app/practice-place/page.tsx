@@ -602,7 +602,13 @@ const PracticePlace: React.FC = () => {
                                         size: { width: 24, height: 35 },
                                         options: { offset: { x: 12, y: 35 } },
                                     }}
-                                    onClick={() => fetchPlaceDetails(place.id)}
+                                    onClick={() => {
+                                        if (place.id !== undefined) {
+                                            fetchPlaceDetails(place.id);
+                                        } else {
+                                            console.error('Place id is undefined:', place);
+                                        }
+                                    }}
                                 />
                             ))}
                         </MarkerClusterer>
@@ -623,7 +629,13 @@ const PracticePlace: React.FC = () => {
                                         <p className="text-m text-gray-600 font-regular">{place.address}</p>
                                     </div>
                                     <button
-                                        onClick={() => fetchPlaceDetails(place.id)}
+                                        onClick={() => {
+                                            if (place.id !== undefined) {
+                                                fetchPlaceDetails(place.id);
+                                            } else {
+                                                console.error('Place id is undefined:', place);
+                                            }
+                                        }}
                                         className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
                                     >
                                         상세 정보

@@ -7,7 +7,7 @@
         "typeRoots": ["./node_modules/@types", "./types"],
         "noEmit": true,
         "esModuleInterop": true,
-        "types": ["@types/node", "@types/react", "@types/react-dom", "next", "next/types/global"],
+        "types": ["node", "react", "react-dom", "next"],
         "module": "esnext",
         "moduleResolution": "bundler",
         "resolveJsonModule": true,

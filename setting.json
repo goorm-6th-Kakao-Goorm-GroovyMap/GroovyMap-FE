@@ -1,0 +1,8 @@
+{
+    "editor.fontSize": 14,
+    "files.autoSave": "afterDelay",
+    "emmet.includeLanguages": {
+        "postcss": "css"
+    },
+    "other.existing.settings": "values"
+}

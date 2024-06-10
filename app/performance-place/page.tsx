@@ -503,7 +503,7 @@ const PerformancePlace: React.FC = () => {
                             >
                                 <option value="all">전체</option>
                                 <option value="BAND">밴드</option>
-                                <option value="DANCE">춤</option>
+                                <option value="DANCE">댄스</option>
                                 <option value="VOCAL">노래</option>
                             </select>
                         </div>
@@ -735,7 +735,7 @@ const PerformancePlace: React.FC = () => {
                                     >
                                         <option value="">전체</option>
                                         <option value="BAND">밴드</option>
-                                        <option value="DANCE">춤</option>
+                                        <option value="DANCE">댄스</option>
                                         <option value="VOCAL">노래</option>
                                     </select>
                                     <select
