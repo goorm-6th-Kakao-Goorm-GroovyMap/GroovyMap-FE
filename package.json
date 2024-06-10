@@ -24,6 +24,7 @@
         "sweetalert": "^2.1.2",
         "sweetalert2": "^11.11.1",
         "use-zustand": "^0.1.0",
+        "uuid": "^10.0.0",
         "zustand": "^4.5.2"
     },
     "devDependencies": {
