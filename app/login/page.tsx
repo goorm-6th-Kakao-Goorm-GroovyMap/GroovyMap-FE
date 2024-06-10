@@ -3,22 +3,30 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import KakaoImg from '@/components/SocialLogin/Kakao'; // default import
+import KakaoImg from './SocialLoginLogo/Kakao'; // default import
 import Drawing from '@/components/Svg/Drawing';
-import GoogleImg from '@/components/SocialLogin/Google';
+import GoogleImg from './SocialLoginLogo/Google';
+import apiClient from '@/api/apiClient';
 
 const Login = () => {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
-    const handleEmailLogin = (event) => {
+    const handleEmailLogin = async (event) => {
         event.preventDefault();
-        // 이메일 및 비밀번호 로그인 로직 추가
-        console.log('Email:', email);
-        console.log('Password:', password);
+        try {
+            const response = await apiClient.post('/login', { email, password });
+            if (response.status === 200) {
+                // Successful login, navigate to the main page
+                router.push('/'); // Change '/main' to the actual path of your main page
+            } else {
+                console.log('Login failed:', response.data.message);
+            }
+        } catch (error) {
+            console.log('Error during login:', error);
+        }
     };
-
     const handleKakaoLogin = () => {
         const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/kakao`;
         router.push(kakaoLoginURL);
