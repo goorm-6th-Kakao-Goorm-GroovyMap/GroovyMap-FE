@@ -22,52 +22,7 @@ const PerformancePlace = () => {
             (selectedType === 'all' || location.type === selectedType)
     );
 
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=bba46f1c846d3637002085cbbabf5730&autoload=false`;
-        script.onload = () => {
-            window.kakao.maps.load(() => {
-                const mapContainer = document.getElementById('map');
-                const mapOption = {
-                    center: new window.kakao.maps.LatLng(37.5665, 126.978),
-                    level: 5,
-                };
-                const map = new window.kakao.maps.Map(mapContainer, mapOption);
-
-                filteredLocations.forEach((location) => {
-                    const markerPosition = new window.kakao.maps.LatLng(location.position.lat, location.position.lng);
-                    const markerImage = new window.kakao.maps.MarkerImage(
-                        location.type === 'band'
-                            ? '/path/to/band-icon.svg'
-                            : location.type === 'music'
-                              ? '/path/to/music-icon.svg'
-                              : '/path/to/dance-icon.svg', // 각 타입에 맞는 아이콘 설정
-                        new window.kakao.maps.Size(24, 35), // 아이콘 크기
-                        { offset: new window.kakao.maps.Point(12, 35) } // 아이콘 위치
-                    );
-                    const marker = new window.kakao.maps.Marker({
-                        position: markerPosition,
-                        image: markerImage,
-                    });
-
-                    const infowindow = new window.kakao.maps.InfoWindow({
-                        content: `<div style="padding:5px;">${location.name}</div>`,
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseover', () => {
-                        infowindow.open(map, marker);
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseout', () => {
-                        infowindow.close();
-                    });
-
-                    marker.setMap(map);
-                });
-            });
-        };
-        document.head.appendChild(script);
-    }, [selectedRegion, selectedType]);
+    //지도 추가 해야함.
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
