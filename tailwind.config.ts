@@ -15,6 +15,7 @@ const config: Config = {
             colors: {
                 white: '#FFFFFF',
                 black: '#000000',
+                kakao: '#FFEB00', // Kakao's brand color
             },
             stroke: {
                 current: 'currentColor',
