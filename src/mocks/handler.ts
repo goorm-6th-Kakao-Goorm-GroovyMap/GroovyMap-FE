@@ -13,7 +13,7 @@ const performancePlaces: PerformancePlace[] = [
         phoneNumber: '123-456-7890',
         rentalFee: '1000',
         capacity: '500',
-        practiceHours: '9am - 9pm',
+        performanceHours: '9am - 9pm',
         description: 'Description 1',
     },
     {
@@ -25,7 +25,7 @@ const performancePlaces: PerformancePlace[] = [
         phoneNumber: '098-765-4321',
         rentalFee: '2000',
         capacity: '1000',
-        practiceHours: '10am - 10pm',
+        performanceHours: '10am - 10pm',
         description: 'Description 2',
     },
     // 추가 공연 장소 데이터
