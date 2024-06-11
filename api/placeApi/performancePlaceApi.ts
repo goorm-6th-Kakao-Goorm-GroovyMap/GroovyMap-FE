@@ -19,5 +19,3 @@ export const getPerformancePlaceDetails = async (postId: number): Promise<Perfor
     const response = await apiClient.get(`/performanceplace/${postId}`);
     return response.data;
 };
-
-export default apiClient;
