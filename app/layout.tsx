@@ -1,22 +1,26 @@
-'use client';
+'use client'
 
-import './globals.scss';
-import Sidebar from '@/components/Sidebar';
-import RightSidebar from '@/components/RightSidebar';
-import { useState } from 'react';
-import { FaBars } from 'react-icons/fa';
+import './globals.scss'
+import Sidebar from '@/components/Sidebar'
+import RightSidebar from '@/components/RightSidebar'
+import { useState } from 'react'
+import { FaBars } from 'react-icons/fa'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 export default function RootLayout({
     children,
 }: Readonly<{
-    children: React.ReactNode;
+    children: React.ReactNode
 }>) {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(false)
+    // Create a query client
+    const queryClient = new QueryClient()
 
     return (
         <html lang="kr" className="h-full">
             <body className="h-full">
-                <div className="main-layout flex flex-row h-full relative">
+                <QueryClientProvider client={queryClient}>
+                    <div className="main-layout flex flex-row h-full relative">
                     {/* 메뉴 아이콘 */}
                     <div className="block md:hidden p-4">
                         <FaBars size={24} onClick={() => setSidebarOpen(!sidebarOpen)} />
@@ -40,7 +44,8 @@ export default function RootLayout({
                         <RightSidebar />
                     </div>
                 </div>
+                </QueryClientProvider>
             </body>
         </html>
-    );
+    )
 }
