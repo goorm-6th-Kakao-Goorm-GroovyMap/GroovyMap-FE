@@ -30,7 +30,7 @@ const Sidebar = () => {
                         <Link href="#">프로필</Link>
                     </li>
                     <li>
-                        <Link href="#">AI 생성</Link>
+                        <Link href="/dm">DM</Link>
                     </li>
                 </ul>
             </nav>

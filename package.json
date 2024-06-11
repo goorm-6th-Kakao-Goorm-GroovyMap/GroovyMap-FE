@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@stomp/stompjs": "^7.0.0",
     "@tanstack/react-query": "^5.40.0",
+    "@types/sockjs-client": "^1.5.4",
+    "axios": "^1.7.2",
     "luxon": "^3.4.4",
     "next": "14.2.3",
     "react": "^18",
