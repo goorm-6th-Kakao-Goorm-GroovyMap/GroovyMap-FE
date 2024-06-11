@@ -99,7 +99,7 @@ const PerformancePlace: React.FC = () => {
         mutationFn: addPerformancePlace,
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
-            setFilteredPerformancePlaces((prev) => [...prev, data]);
+            setFilteredPerformancePlaces((prev) => [...prev, data]); //백엔드에서 반환된 장소 데이터를 배열에 넣음 id를 여기서 가져오게됨.
             setIsAddModalOpen(false);
             setNewPlace({
                 name: '',
