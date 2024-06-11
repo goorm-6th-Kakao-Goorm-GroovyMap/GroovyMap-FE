@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react'
+import React, { useState, ChangeEvent, FormEvent } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,6 @@ const postFormData = async (formData: FormData): Promise<any> => {
         const response = await apiClient.post('/promotionboard/write', formData, {
             withCredentials: true,
         })
-
         return response.data
     } catch (error) {
         if (axios.isAxiosError(error)) {

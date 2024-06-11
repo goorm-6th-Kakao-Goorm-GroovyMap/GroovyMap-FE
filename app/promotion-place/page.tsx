@@ -64,7 +64,8 @@ const parts: Record<string, { name: string }> = {
     DANCE: { name: '춤' },
 }
 //유형 별로 다른 이미지 마커 사용
-const markerImages: { [key in 'BAND' | 'VOCAL' | 'DANCE']: string } = {
+const markerImages: { [key in 'ALL' | 'BAND' | 'VOCAL' | 'DANCE']: string } = {
+    ALL: '/guitar.svg',
     BAND: '/guitar.svg',
     VOCAL: '/guitar.svg',
     DANCE: '/guitar.svg',
@@ -135,10 +136,20 @@ export default function PromotionPlace() {
         setSelectedType(selectedValue)
     }
     //게시물 클릭 핸들러
-    const handlePostClick = (post: Post) => {
+    const handlePostClick = async (post: Post) => {
+        try {
+            await apiClient.get(`/promotionboard/${post.id}`, {
+                headers: {
+                    'ngrok-skip-browser-warning': '69420',
+                },
+            })
+        } catch (error: any) {
+            console.error(`Failed to update view count for post ${post.id}:`, error)
+        }
+
         setSelectedPost(post)
         setShowModal(true)
-        setShowMap(false) //지도접힘
+        setShowMap(false) // 지도 접힘
     }
     const handleCloseModal = () => {
         setShowModal(false)
@@ -163,20 +174,38 @@ export default function PromotionPlace() {
         return mapRef.current
     }, [selectedArea])
 
-    const addMarkersToMap = (map: any, posts: Post[]): void => {
-        posts.forEach((post) => {
-            const markerPosition = new window.kakao.maps.LatLng(post.coordinates.latitude, post.coordinates.longitude)
-            const markerImage = new window.kakao.maps.MarkerImage(
-                markerImages[post.part as 'BAND' | 'VOCAL' | 'DANCE'],
-                new window.kakao.maps.Size(24, 35),
-            )
-            const marker = new window.kakao.maps.Marker({
-                position: markerPosition,
-                image: markerImage,
+    const addMarkersToMap = useCallback(
+        (map: any, posts: Post[]): void => {
+            // 기존에 추가된 모든 마커 제거
+            if (map.markers) {
+                map.markers.forEach((marker: any) => marker.setMap(null))
+            }
+
+            // 새로운 마커 배열 초기화
+            map.markers = []
+
+            // 선택된 유형 필터링
+            const filteredPosts = selectedType === 'ALL' ? posts : posts.filter((post) => post.part === selectedType)
+
+            filteredPosts.forEach((post) => {
+                const markerPosition = new window.kakao.maps.LatLng(
+                    post.coordinates.latitude,
+                    post.coordinates.longitude,
+                )
+                const markerImage = new window.kakao.maps.MarkerImage(
+                    markerImages[post.part as 'BAND' | 'VOCAL' | 'DANCE'],
+                    new window.kakao.maps.Size(24, 35),
+                )
+                const marker = new window.kakao.maps.Marker({
+                    position: markerPosition,
+                    image: markerImage,
+                })
+                marker.setMap(map)
+                map.markers.push(marker) // 마커 배열에 추가
             })
-            marker.setMap(map)
-        })
-    }
+        },
+        [selectedType],
+    )
 
     useEffect(() => {
         if (showMap) {
@@ -204,7 +233,7 @@ export default function PromotionPlace() {
                 addMarkersToMap(map, posts || [])
             }
         }
-    }, [showMap, selectedArea, posts, initializeMap])
+    }, [showMap, selectedArea, selectedType, posts, initializeMap, addMarkersToMap])
 
     useEffect(() => {
         if (mapRef.current && !showMap) {
