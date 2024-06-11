@@ -1,32 +1,37 @@
 'use client'
 
-import React, { useState, ChangeEvent, FormEvent } from 'react'
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
+import apiClient from '@/api/apiClient'
+import axios from 'axios'
 
 interface Coordinates {
     latitude: number | null
     longitude: number | null
 }
 
-//백엔드 api post요청 보내기 (글쓰기작성폼데이터)
+// 백엔드 api post요청 보내기 (글쓰기작성폼데이터)
 const postFormData = async (formData: FormData): Promise<any> => {
-    const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/write', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-    })
-    if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Form submission failed: ${errorText}`)
-    }
+    try {
+        const response = await apiClient.post('/promotionboard/write', formData, {
+            withCredentials: true,
+        })
 
-    return response.json()
+        return response.data
+    } catch (error) {
+        if (axios.isAxiosError(error)) {
+            const errorText = error.response?.data || 'Unknown error'
+            throw new Error(`Form submission failed: ${errorText}`)
+        } else {
+            throw new Error(`Form submission failed: ${error}`)
+        }
+    }
 }
 
 export default function Write() {
-    const router = useRouter() // useRouter 훅 사용
+    const router = useRouter()
     const [selectedType, setSelectedType] = useState<string>('ALL')
     const [address, setAddress] = useState<string>('')
     const [fileNames, setFileNames] = useState<File[]>([])
@@ -45,7 +50,8 @@ export default function Write() {
             setFileNames(Array.from(e.target.files))
         }
     }
-    //다음 우편 서비스 이용
+
+    // 다음 우편 서비스 이용
     const loadDaumPostcode = () => {
         return new Promise<void>((resolve) => {
             const script = document.createElement('script')
@@ -56,7 +62,8 @@ export default function Write() {
             document.head.appendChild(script)
         })
     }
-    //주소를 가져와서 위도 경도로 변환
+
+    // 주소를 가져와서 위도 경도로 변환
     const convertAddressToCoordinates = async (address: string) => {
         try {
             const response = await fetch(
@@ -96,7 +103,7 @@ export default function Write() {
         mutationFn: (formData: FormData) => postFormData(formData),
     })
 
-    //폼 제출 핸들러
+    // 폼 제출 핸들러
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
 

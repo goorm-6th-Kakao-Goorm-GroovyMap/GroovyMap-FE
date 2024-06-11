@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import PostItem from './post/postItem'
 import Modal from './post/postmodal'
+import apiClient from '@/api/apiClient'
+import axios from 'axios'
 
 interface Post {
     id: number
@@ -77,7 +79,7 @@ declare global {
 export default function PromotionPlace() {
     const [showMap, setShowMap] = useState(false)
     const [selectedArea, setSelectedArea] = useState('ALL')
-    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'MUSIC' | 'DANCE'>('ALL')
+    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'VOCAL' | 'DANCE'>('ALL')
     const [showModal, setShowModal] = useState(false)
     const [selectedPost, setSelectedPost] = useState<Post | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
@@ -85,28 +87,31 @@ export default function PromotionPlace() {
     const mapRef = useRef<any>(null)
     const router = useRouter()
 
-    //fetch이용한 백엔드 api get요청
     const fetchPosts = async (): Promise<Post[]> => {
-        const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard', {
-            method: 'GET',
-            headers: new Headers({
-                'ngrok-skip-browser-warning': '69420',
-            }),
-        })
+        try {
+            const response = await apiClient.get('/promotionboard', {
+                headers: {
+                    'ngrok-skip-browser-warning': '69420',
+                },
+            })
+            let data = response.data
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+            const baseUrl = `https://19a1-1-241-95-127.ngrok-free.app/view/` // apiClient.defaults.baseURL 사용
+            return data.map((post: any) => ({
+                ...post,
+                userImage: post.userImage ? `${baseUrl}${post.userImage}` : '', // userImage 절대 경로로 설정
+                fileNames: post.fileNames.map((fileName: string) => `${baseUrl}${fileName}`), // fileNames 절대 경로로 설정
+                author: post.author || 'Anonymous', // 임시 데이터 처리
+            }))
+        } catch (error: any) {
+            if (axios.isAxiosError(error)) {
+                throw new Error(`HTTP error! status: ${error.response?.status}`)
+            } else {
+                throw new Error(`HTTP error! status: ${error.message}`)
+            }
         }
-        const data = await response.json()
-
-        const baseUrl = '${process.env.NEXT_PUBLIC_API_BASE_URL}/view/'
-        return data.map((post: any) => ({
-            ...post,
-            userImage: post.userImage ? `${baseUrl}${post.userImage}` : '', // userImage 절대 경로로 설정
-            fileNames: post.fileNames.map((fileName: string) => `${baseUrl}${fileName}`), // fileNames 절대 경로로 설정
-            author: post.author || 'Anonymous', // 임시 데이터 처리
-        }))
     }
+
     const {
         data: posts,
         error,
@@ -126,7 +131,7 @@ export default function PromotionPlace() {
     }
     //지역 드롭다운 핸들러
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = e.target.value as 'ALL' | 'BAND' | 'MUSIC' | 'DANCE'
+        const selectedValue = e.target.value as 'ALL' | 'BAND' | 'VOCAL' | 'DANCE'
         setSelectedType(selectedValue)
     }
     //게시물 클릭 핸들러

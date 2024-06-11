@@ -54,9 +54,9 @@ const PostItem: React.FC<PostItemProps> = ({
                             <Image
                                 key={index}
                                 src={fileName}
-                                alt={`media-${index}`}
+                                alt={`media-${fileName}`}
                                 layout="fill"
-                                objectFit="cover"
+                                style={{ objectFit: 'cover' }} // objectFit을 style 속성으로 적용
                                 className="rounded-lg"
                                 unoptimized
                                 priority
