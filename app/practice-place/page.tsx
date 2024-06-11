@@ -4,7 +4,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-import Swal from 'sweetalert2';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/placeApi/practicePlaceApi';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
@@ -12,6 +11,8 @@ import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 're
 import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
 import type { PracticePlace } from '@/types/types';
 import { v4 as uuidv4 } from 'uuid'; // UUID import
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // 나중에 마커 이미지 바꾸기
 const markerImages: { [key: string]: string } = {
@@ -137,23 +138,12 @@ const PracticePlace: React.FC = () => {
                 practiceHours: '',
                 description: '',
             });
-            Swal.fire({
-                icon: 'success',
-                title: '장소가 추가되었습니다',
-                text: '새로운 공연 장소가 성공적으로 추가되었습니다.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff',
-                customClass: {
-                    popup: 'tailwind-swal-popup',
-                    title: 'tailwind-swal-title',
-                    htmlContainer: 'tailwind-swal-content',
-                    confirmButton: 'tailwind-swal-button',
-                },
-            });
+            toast.success('새로운 공연 장소가 성공적으로 추가되었습니다.');
         },
 
         onError: (error) => {
             console.error('Error adding new place:', error);
+            toast.error('장소 추가에 실패했습니다. 다시 시도해 주세요.');
         },
     });
 
@@ -258,13 +248,7 @@ const PracticePlace: React.FC = () => {
     const handleAddPlaceSubmit = () => {
         // 유효성 검사
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
-            Swal.fire({
-                icon: 'warning',
-                title: '필드를 입력해주세요',
-                text: '연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-            });
+            toast.warning('연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.');
             return;
         }
         addPlaceMutation.mutate(newPlace);
@@ -393,18 +377,7 @@ const PracticePlace: React.FC = () => {
     const handleAddressSearch = async () => {
         try {
             if (!address || address.trim() === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '주소 입력 필요',
-                    text: '주소를 입력해 주세요.',
-                    confirmButtonText: '확인',
-                    customClass: {
-                        popup: 'tailwind-swal-popup',
-                        title: 'tailwind-swal-title',
-                        htmlContainer: 'tailwind-swal-content',
-                        confirmButton: 'tailwind-swal-button',
-                    },
-                });
+                toast.warning('주소를 입력해 주세요.');
                 return; // 주소가 빈칸이거나 null이면 함수 종료
             }
 
@@ -446,40 +419,17 @@ const PracticePlace: React.FC = () => {
 
                 searchMap?.setCenter(markerCoordinate);
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: '결과 없음',
-                    text: '입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.',
-                    confirmButtonText: '확인',
-                    confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-                    customClass: {
-                        popup: 'tailwind-swal-popup',
-                        title: 'tailwind-swal-title',
-                        htmlContainer: 'tailwind-swal-content',
-                        confirmButton: 'tailwind-swal-button',
-                    },
-                });
+                toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
                 // 검색 결과가 없음을 알리는 UI
             }
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: '에러 발생',
-                text: '주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff', // 색상은 필요에 따라 변경 가능
-                customClass: {
-                    popup: 'tailwind-swal-popup',
-                    title: 'tailwind-swal-title',
-                    htmlContainer: 'tailwind-swal-content',
-                    confirmButton: 'tailwind-swal-button',
-                },
-            });
+            toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
         }
     };
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
+            <ToastContainer />
             <div className="content flex-1 w-full max-w-4xl mx-auto">
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full">

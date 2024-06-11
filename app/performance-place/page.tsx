@@ -3,7 +3,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import Swal from 'sweetalert2';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
@@ -111,16 +112,11 @@ const PerformancePlace: React.FC = () => {
                 performanceHours: '',
                 description: '',
             });
-            Swal.fire({
-                icon: 'success',
-                title: '장소가 추가되었습니다',
-                text: '새로운 공연 장소가 성공적으로 추가되었습니다.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff',
-            });
+            toast.success('새로운 공연 장소가 성공적으로 추가되었습니다.');
         },
         onError: (error) => {
             console.error('Error adding new place:', error);
+            toast.error('장소 추가에 실패했습니다. 다시 시도해 주세요.');
         },
     });
 
@@ -207,13 +203,7 @@ const PerformancePlace: React.FC = () => {
 
     const handleAddPlaceSubmit = () => {
         if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
-            Swal.fire({
-                icon: 'warning',
-                title: '필드를 입력해주세요',
-                text: '공연 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff',
-            });
+            toast.warning('연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.');
             return;
         }
         addPlaceMutation.mutate(newPlace);
@@ -341,18 +331,7 @@ const PerformancePlace: React.FC = () => {
     const handleAddressSearch = async () => {
         try {
             if (!address || address.trim() === '') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: '주소 입력 필요',
-                    text: '주소를 입력해 주세요.',
-                    confirmButtonText: '확인',
-                    customClass: {
-                        popup: 'tailwind-swal-popup',
-                        title: 'tailwind-swal-title',
-                        htmlContainer: 'tailwind-swal-content',
-                        confirmButton: 'tailwind-swal-button',
-                    },
-                });
+                toast.warning('주소를 입력해 주세요.');
                 return; // 주소가 빈칸이거나 null이면 함수 종료
             }
 
@@ -394,35 +373,11 @@ const PerformancePlace: React.FC = () => {
 
                 searchMap?.setCenter(markerCoordinate);
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: '결과 없음',
-                    text: '입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.',
-                    confirmButtonText: '확인',
-                    confirmButtonColor: '#8c00ff',
-                    customClass: {
-                        popup: 'tailwind-swal-popup',
-                        title: 'tailwind-swal-title',
-                        htmlContainer: 'tailwind-swal-content',
-                        confirmButton: 'tailwind-swal-button',
-                    },
-                });
+                toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
                 // 검색 결과가 없음을 알리는 UI
             }
         } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: '에러 발생',
-                text: '주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.',
-                confirmButtonText: '확인',
-                confirmButtonColor: '#8c00ff',
-                customClass: {
-                    popup: 'tailwind-swal-popup',
-                    title: 'tailwind-swal-title',
-                    htmlContainer: 'tailwind-swal-content',
-                    confirmButton: 'tailwind-swal-button',
-                },
-            });
+            toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
         }
     };
 
@@ -441,6 +396,7 @@ const PerformancePlace: React.FC = () => {
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
+            <ToastContainer />
             <div className="content flex-1 w-full max-w-4xl mx-auto">
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full">
