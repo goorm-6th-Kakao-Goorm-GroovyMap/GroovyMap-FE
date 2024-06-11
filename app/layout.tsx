@@ -9,6 +9,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { worker } from '../src/mocks/browser';
 import { RecoilRoot } from 'recoil'; //상태관리
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     worker.start();
@@ -24,7 +26,7 @@ export default function RootLayout({
 
     return (
         <html lang="kr" className="h-full">
-            <body className="h-full">
+            <body className="h-full overflow-x-hidden">
                 <RecoilRoot>
                     <QueryClientProvider client={queryClient}>
                         <div className="main-layout flex h-full">
@@ -52,6 +54,7 @@ export default function RootLayout({
                             </div>
                         </div>
                         <ReactQueryDevtools initialIsOpen={false} />
+                        <ToastContainer />
                     </QueryClientProvider>
                 </RecoilRoot>
             </body>

@@ -1,21 +1,13 @@
 'use client';
 
 import React, { useMemo, useState, ChangeEvent } from 'react';
-import {
-    Button,
-    Input,
-    Modal,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    useDisclosure,
-} from '@nextui-org/react';
+import { Button, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@nextui-org/react';
 import axios, { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import { useMutation, UseMutationOptions, useQuery } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import confetti from 'canvas-confetti';
+import { toast } from 'react-toastify';
 
 // 타입 설정
 interface FormData {
@@ -52,8 +44,6 @@ const Signup = () => {
         nickname: '',
         certificationCode: '',
     });
-    const [msg, setMsg] = useState('');
-    const { isOpen, onOpen, onClose } = useDisclosure();
     const router = useRouter();
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -93,25 +83,30 @@ const Signup = () => {
         return isNicknameValid && isPasswordValid && isPasswordSame && formData.certificationCode;
     }, [isNicknameValid, isPasswordValid, isPasswordSame, formData.certificationCode]);
 
+    //토스트 창
+    const showToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+        toast(message, { type });
+    };
+
     const sendEmailCodeMutation = useMutation({
         mutationFn: async () => {
             const response = await apiClient.post('/register/send-certification', { email: formData.email });
             return response.data;
         },
         onSuccess: () => {
-            setMsg('이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.');
-            onOpen();
+            showToast('이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.', 'success');
         },
         onError: (error: any) => {
             if (axios.isAxiosError(error) && error.response) {
                 const errorResponse = error.response.data;
                 if (errorResponse.status === 4003) {
-                    setMsg('이미 가입된 유저 이메일입니다. 다른 이메일을 사용해주세요.');
+                    showToast('이미 가입된 유저 이메일입니다. 다른 이메일을 사용해주세요.', 'error');
                 } else {
-                    setMsg('이메일 인증 요청에 실패했습니다.');
+                    showToast('이메일 인증 요청에 실패했습니다.', 'error');
                 }
+            } else {
+                showToast('이메일 인증 요청에 실패했습니다.', 'error');
             }
-            onOpen();
         },
     });
 
@@ -124,12 +119,10 @@ const Signup = () => {
             return response.data;
         },
         onSuccess: () => {
-            setMsg('이메일 인증에 성공했습니다!');
-            onOpen();
+            showToast('이메일 인증에 성공했습니다!', 'success');
         },
         onError: (error: any) => {
-            setMsg('이메일 인증에 실패했습니다.');
-            onOpen();
+            showToast('이메일 인증에 실패했습니다.', 'error');
         },
     });
 
@@ -139,12 +132,10 @@ const Signup = () => {
             return response.data;
         },
         onSuccess: () => {
-            setMsg('사용 가능한 닉네임입니다.');
-            onOpen();
+            showToast('사용 가능한 닉네임입니다.', 'success');
         },
         onError: () => {
-            setMsg('이미 사용 중인 닉네임입니다.');
-            onOpen();
+            showToast('이미 사용 중인 닉네임입니다.', 'error');
         },
     });
 
@@ -158,29 +149,26 @@ const Signup = () => {
             return response.data;
         },
         onSuccess: () => {
-            setMsg('회원가입에 성공했습니다!');
-            onOpen();
+            showToast('회원가입에 성공했습니다!', 'success');
             confetti({
                 particleCount: 100,
                 spread: 160,
             });
+            router.push('/login');
         },
         onError: (error: any) => {
             if (error instanceof AxiosError) {
                 const message = error.response?.data?.message || '회원가입에 실패했습니다.';
-                setMsg(message);
-                onOpen();
+                showToast(message, 'error');
             } else {
-                setMsg('알 수 없는 오류가 발생했습니다.');
-                onOpen();
+                showToast('알 수 없는 오류가 발생했습니다.', 'error');
             }
         },
     });
 
     const handleSendEmailCode = () => {
         if (!formData.email) {
-            setMsg('이메일을 입력해 주세요.');
-            onOpen();
+            showToast('이메일을 입력해 주세요.', 'warning');
             return;
         }
         sendEmailCodeMutation.mutate();
@@ -188,13 +176,11 @@ const Signup = () => {
 
     const handleValidateEmailCode = () => {
         if (!formData.email) {
-            setMsg('이메일을 입력해 주세요.');
-            onOpen();
+            showToast('이메일을 입력해 주세요.', 'warning');
             return;
         }
         if (!formData.certificationCode) {
-            setMsg('인증 코드를 입력해 주세요.');
-            onOpen();
+            showToast('인증 코드를 입력해 주세요.', 'warning');
             return;
         }
         validateEmailMutation.mutate();
@@ -202,8 +188,7 @@ const Signup = () => {
 
     const handleCheckNickname = () => {
         if (!formData.nickname) {
-            setMsg('닉네임을 입력해 주세요.');
-            onOpen();
+            showToast('닉네임을 입력해 주세요.', 'warning');
             return;
         }
         checkNicknameMutation.mutate();
@@ -211,8 +196,7 @@ const Signup = () => {
 
     const handleSignup = () => {
         if (!canSignUp) {
-            setMsg('입력 정보를 확인해주세요.');
-            onOpen();
+            showToast('입력 정보를 확인해주세요.', 'warning');
             return;
         }
         signupMutation.mutate();
@@ -328,24 +312,6 @@ const Signup = () => {
                     </div>
                 </div>
             </div>
-            <Modal isOpen={isOpen} onClose={onClose} aria-labelledby="modal-title" width="400px">
-                <ModalHeader>
-                    <h3 id="modal-title" className="text-xl font-semibold">
-                        회원가입
-                    </h3>
-                </ModalHeader>
-                <ModalBody>
-                    <p>{msg}</p>
-                </ModalBody>
-                <ModalFooter>
-                    <button
-                        className="bg-purple-500 text-white py-2 px-4 rounded-lg hover:bg-purple-600 transition"
-                        onClick={onClose}
-                    >
-                        확인
-                    </button>
-                </ModalFooter>
-            </Modal>
         </>
     );
 };
