@@ -1,7 +1,8 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import Logo from '../components/Logo/Logo'
+import Link from 'next/link';
+import Logo from '../components/Logo/Logo';
+
 const Sidebar = () => {
     return (
         <aside className="sidebar flex flex-col items-center px-10">

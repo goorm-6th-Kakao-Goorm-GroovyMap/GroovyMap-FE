@@ -24,35 +24,23 @@
 }
 
 * {
-    font-family: 'Pretendard-Regular', sans-serif;
+    font-family: 'Pretendard', sans-serif;
 }
 
-:root {
-    // --foreground-rgb: 0, 0, 0;
-    // --background-start-rgb: 214, 219, 220;
-    // --background-end-rgb: 255, 255, 255;
+html,
+body,
+#__next {
+    @apply h-full m-0;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        // --foreground-rgb: 255, 255, 255;
-        // --background-start-rgb: 0, 0, 0;
-        // --background-end-rgb: 0, 0, 0;
-    }
+.main-layout {
+    @apply flex h-full;
 }
 
-body {
-    // color: rgb(var(--foreground-rgb));
-    // background: linear-gradient(
-    //     to bottom,
-    //     transparent,
-    //     rgb(var(--background-end-rgb))
-    //   )
-    //   rgb(var(--background-start-rgb));
+.content {
+    @apply flex-grow p-6 overflow-y-auto;
 }
 
-@layer utilities {
-    .text-balance {
-        text-wrap: balance;
-    }
+button {
+    @apply cursor-pointer;
 }
