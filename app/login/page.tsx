@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import KakaoImg from './SocialLoginLogo/Kakao'; // default import
@@ -9,7 +9,9 @@ import GoogleImg from './SocialLoginLogo/Google';
 import apiClient from '@/api/apiClient';
 import { useMutation } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
+import confetti from 'canvas-confetti';
 import { userState } from '@/recoil/state/loginState';
+import { toast } from 'react-toastify';
 
 const Login = () => {
     const router = useRouter();
@@ -34,11 +36,16 @@ const Login = () => {
         },
         onSuccess: (data) => {
             setUser(data.user); //리코일에서 가져온 유저 정보 넘겨주고 메인으로 이동
+            toast.success('로그인에 성공했습니다!');
+            confetti({
+                particleCount: 100,
+                spread: 160,
+            });
             router.push('/');
         },
         onError: (error) => {
             console.log('Error during login:', error);
-            alert('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.');
+            toast.error('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.');
         },
     });
 
