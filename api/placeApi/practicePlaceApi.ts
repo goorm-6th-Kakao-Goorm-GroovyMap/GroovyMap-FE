@@ -4,12 +4,8 @@ import type { PracticePlace } from '../../types/types';
 // 전체 연습 장소 정보를 가져오는 함수
 export const getPracticePlaces = async (): Promise<PracticePlace[]> => {
     const response = await apiClient.get('/practiceplace');
-    // API 응답이 배열인지 확인
-    if (Array.isArray(response.data)) {
-        return response.data;
-    } else {
-        throw new Error('API 응답이 배열이 아닙니다.');
-    }
+    console.log('API 응답 데이터:', response.data); // API 응답 데이터 로그 출력
+    return response.data;
 };
 
 // 하나의 연습 장소 정보를 저장하는 함수

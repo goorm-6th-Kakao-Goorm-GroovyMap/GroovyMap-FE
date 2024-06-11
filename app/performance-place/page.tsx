@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */ // 이미지 src 넣을 때 에러 수정하기 위해 추가
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -15,7 +15,7 @@ import {
     addPerformancePlace,
     getPerformancePlaceDetails,
 } from '@/api/placeApi/performancePlaceApi';
-import type { PerformancePlace } from '@/types/types';
+import type { PerformancePlace, PerformancePlaceResponse } from '@/types/types';
 
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
@@ -79,41 +79,62 @@ const PerformancePlace: React.FC = () => {
     const queryClient = useQueryClient();
 
     const {
-        data: performancePlaces,
+        data: performancePlacesData,
         isLoading,
         isError,
         error,
-    } = useQuery<PerformancePlace[], Error>({
+    } = useQuery<PerformancePlaceResponse, Error>({
         queryKey: ['performancePlaces'],
         queryFn: getPerformancePlaces,
     });
 
-    //실행시 데이터 가져옴
-    useEffect(() => {
-        if (performancePlaces) {
-            setFilteredPerformancePlaces(performancePlaces);
-        }
-    }, [performancePlaces]);
+    const placesList = useMemo(() => performancePlacesData?.performancePlacePosts || [], [performancePlacesData]);
 
-    const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
+    useEffect(() => {
+        if (placesList) {
+            setFilteredPerformancePlaces(placesList);
+        }
+    }, [placesList]);
+
+    const addPlaceMutation = useMutation<number, Error, Omit<PerformancePlace, 'id'>>({
         mutationFn: addPerformancePlace,
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
-            setFilteredPerformancePlaces((prev) => [...prev, data]); //백엔드에서 반환된 장소 데이터를 배열에 넣음 id를 여기서 가져오게됨.
-            setIsAddModalOpen(false);
-            setNewPlace({
-                name: '',
-                part: 'BAND',
-                coordinate: { latitude: 0, longitude: 0 },
-                region: '',
-                address: '',
-                phoneNumber: '',
-                rentalFee: '',
-                capacity: '',
-                performanceHours: '',
-                description: '',
-            });
-            toast.success('새로운 공연 장소가 성공적으로 추가되었습니다.');
+        onSuccess: async (id) => {
+            if (id === undefined) {
+                console.error('Returned ID is undefined.');
+                toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
+                return;
+            }
+
+            try {
+                // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
+                const newPlaceDetails = await getPerformancePlaceDetails(id);
+
+                queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
+                setFilteredPerformancePlaces((prev) => {
+                    if (Array.isArray(prev)) {
+                        return [...prev, newPlaceDetails];
+                    } else {
+                        return [newPlaceDetails];
+                    }
+                }); // 새로운 장소 데이터를 배열에 추가
+                setIsAddModalOpen(false);
+                setNewPlace({
+                    name: '',
+                    part: 'BAND',
+                    coordinate: { latitude: 0, longitude: 0 },
+                    region: '',
+                    address: '',
+                    phoneNumber: '',
+                    rentalFee: '',
+                    capacity: '',
+                    performanceHours: '',
+                    description: '',
+                });
+                toast.success('새로운 공연 장소가 성공적으로 추가되었습니다.');
+            } catch (error) {
+                console.error('Error fetching new place details:', error);
+                toast.error('새로운 장소를 추가하는데 실패했습니다.');
+            }
         },
         onError: (error) => {
             console.error('Error adding new place:', error);
@@ -132,15 +153,15 @@ const PerformancePlace: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (performancePlaces) {
-            const filtered = performancePlaces.filter((place) => {
+        if (placesList && Array.isArray(placesList)) {
+            const filtered = placesList.filter((place) => {
                 const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
                 const partMatch = selectedPart === 'all' || place.part === selectedPart;
                 return regionMatch && partMatch;
             });
             setFilteredPerformancePlaces(filtered);
         }
-    }, [selectedRegion, selectedPart, performancePlaces]);
+    }, [selectedRegion, selectedPart, placesList]);
 
     if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
         throw new Error('Kakao API keys are not defined in the environment variables');
@@ -183,7 +204,11 @@ const PerformancePlace: React.FC = () => {
 
     useEffect(() => {
         if (map) {
-            updateMarkers(filteredPerformancePlaces);
+            if (Array.isArray(filteredPerformancePlaces)) {
+                updateMarkers(filteredPerformancePlaces);
+            } else {
+                console.error('filteredPerformancePlaces is not an array:', filteredPerformancePlaces);
+            }
         }
     }, [map, filteredPerformancePlaces]);
 
@@ -211,7 +236,7 @@ const PerformancePlace: React.FC = () => {
     };
 
     useEffect(() => {
-        if (map && clusterer) {
+        if (map && clusterer && Array.isArray(filteredPerformancePlaces)) {
             const bounds = new window.kakao.maps.LatLngBounds();
             const newMarkers = filteredPerformancePlaces
                 .map((place) => {
@@ -269,7 +294,12 @@ const PerformancePlace: React.FC = () => {
         }
     }, [map, clusterer, filteredPerformancePlaces, fetchPlaceDetails]);
 
-    const updateMarkers = (places: PracticePlace[]) => {
+    const updateMarkers = (places: PerformancePlace[]) => {
+        if (!Array.isArray(places)) {
+            console.error('places is not an array:', places);
+            return;
+        }
+
         if (map && clusterer) {
             const bounds = new window.kakao.maps.LatLngBounds();
 
@@ -307,7 +337,7 @@ const PerformancePlace: React.FC = () => {
                     setSelectedPlace(place);
                     setIsModalOpen(true);
                     fetchPlaceDetails(place.id as number); // fetchPlaceDetails 함수 호출
-                    window.location.href = `/practiceplace/${place.id}`;
+                    window.location.href = `/performanceplace/${place.id}`;
                 });
 
                 marker.setMap(map); // 마커를 지도에 추가
@@ -386,10 +416,19 @@ const PerformancePlace: React.FC = () => {
         setCurrentPage(pageNumber);
     };
 
+    // 추가: 지도 중심을 변경하는 함수
+    const handleTitleClick = (latitude: number, longitude: number) => {
+        if (map) {
+            map.setCenter(new window.kakao.maps.LatLng(latitude, longitude));
+            map.setLevel(3); // 줌 레벨 설정 (작은 숫자일수록 더 확대됨)
+        }
+    };
+
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredPerformancePlaces.slice(indexOfFirstItem, indexOfLastItem);
-
+    const currentItems = Array.isArray(filteredPerformancePlaces)
+        ? filteredPerformancePlaces.slice(indexOfFirstItem, indexOfLastItem)
+        : [];
     const pageNumbers = [];
     for (let i = 1; i <= Math.ceil(filteredPerformancePlaces.length / itemsPerPage); i++) {
         pageNumbers.push(i);
@@ -529,7 +568,14 @@ const PerformancePlace: React.FC = () => {
                                         <span className="rounded-ml bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
                                             {place.part}
                                         </span>
-                                        <h3 className="text-xl my-1 font-semibold">{place.name}</h3>
+                                        <h3
+                                            className="text-xl my-1 font-semibold cursor-pointer"
+                                            onClick={() =>
+                                                handleTitleClick(place.coordinate.latitude, place.coordinate.longitude)
+                                            }
+                                        >
+                                            {place.name}
+                                        </h3>
                                         <p className="text-m text-gray-600 font-regular">{place.address}</p>
                                     </div>
                                     <button
@@ -567,15 +613,23 @@ const PerformancePlace: React.FC = () => {
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
                         <div className="bg-white p-6 rounded-lg w-1/3 relative">
                             <div className="relative h-56 w-full sm:h-52">
-                                <img
-                                    src={
-                                        selectedPlace.part === 'BAND'
-                                            ? 'https://source.unsplash.com/random/800x400/?band'
-                                            : 'https://source.unsplash.com/random/800x400/?Dance'
-                                    }
-                                    alt={selectedPlace.name}
-                                    className="object-cover w-full h-full rounded-lg"
-                                />
+                                {selectedPlace.part === 'BAND' && (
+                                    <img src="/band.png" alt="Band" className="object-cover w-full h-full rounded-lg" />
+                                )}
+                                {selectedPlace.part === 'DANCE' && (
+                                    <img
+                                        src="/dance.png"
+                                        alt="Dance"
+                                        className="object-cover w-full h-full rounded-lg"
+                                    />
+                                )}
+                                {selectedPlace.part === 'VOCAL' && (
+                                    <img
+                                        src="/vocal.png"
+                                        alt="Vocal"
+                                        className="object-cover w-full h-full rounded-lg"
+                                    />
+                                )}
                                 <button
                                     onClick={() => setIsModalOpen(false)}
                                     className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
@@ -632,6 +686,10 @@ const PerformancePlace: React.FC = () => {
                                     <div className="flex items-center gap-2 align-middle">
                                         <FaTag size={17} className="text-gray-400" />
                                         <span>수용 인원: {selectedPlace.capacity}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 align-middle">
+                                        <FaTag size={17} className="text-gray-400" />
+                                        <span>설명: {selectedPlace.description}</span>
                                     </div>
                                 </div>
                             </div>

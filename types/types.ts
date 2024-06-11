@@ -24,3 +24,11 @@ export interface PracticePlace extends PlaceBase {
     id?: number;
     practiceHours: string;
 }
+
+export interface PerformancePlaceResponse {
+    performancePlacePosts: PerformancePlace[];
+}
+
+export interface PracticePlaceResponse {
+    practicePlacePosts: PracticePlace[];
+}

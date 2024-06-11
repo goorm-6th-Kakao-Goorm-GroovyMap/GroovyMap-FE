@@ -8,9 +8,9 @@ export const getPerformancePlaces = async (): Promise<PerformancePlace[]> => {
     return response.data;
 };
 
-//하나의 공연 장소 정보 저장
-export const addPerformancePlace = async (place: Omit<PerformancePlace, 'id'>): Promise<PerformancePlace> => {
+export const addPerformancePlace = async (place: Omit<PerformancePlace, 'id'>): Promise<number> => {
     const response = await apiClient.post('/performanceplace', place);
+    console.log('Add Performance Place Response:', response.data); // 서버 응답 로그 출력
     return response.data;
 };
 
