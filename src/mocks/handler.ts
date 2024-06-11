@@ -29,12 +29,12 @@ export const handlers = [
         return res(ctx.status(200), ctx.json({ message: '이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.' }));
     }),
 
-    rest.post<Partial<User & { code: string }>>('/register/certificate-code', async (req, res, ctx) => {
-        const { email, code } = req.body as { email: string; code: string };
-        if (certificationCodes[email] === code) {
-            return res(ctx.status(200), ctx.json({ message: '이메일 인증에 성공했습니다!' }));
+    rest.post<Partial<User & { certificationCode: string }>>('/register/certificate-code', async (req, res, ctx) => {
+        const { email, certificationCode } = req.body as { email: string; certificationCode: string };
+        if (certificationCodes[email] === certificationCode) {
+            return res(ctx.status(200), ctx.json({ result: true, message: '이메일 인증에 성공했습니다!' }));
         }
-        return res(ctx.status(400), ctx.json({ message: '이메일 인증에 실패했습니다.' }));
+        return res(ctx.status(400), ctx.json({ result: false, message: '이메일 인증에 실패했습니다.' }));
     }),
 
     rest.post<Partial<User>>('/register/nickname-check', async (req, res, ctx) => {
@@ -51,9 +51,12 @@ export const handlers = [
             users.push({ email, password, nickname });
             // Remove certification code after successful registration
             delete certificationCodes[email];
-            return res(ctx.status(200), ctx.json({ message: '회원가입에 성공했습니다!', user: { email, nickname } }));
+            return res(
+                ctx.status(200),
+                ctx.json({ result: true, message: '회원가입에 성공했습니다!', user: { email, nickname } })
+            );
         }
-        return res(ctx.status(400), ctx.json({ message: '회원가입에 실패했습니다.' }));
+        return res(ctx.status(400), ctx.json({ result: false, message: '회원가입에 실패했습니다.' }));
     }),
 
     rest.post<Partial<User>>('/login', async (req, res, ctx) => {

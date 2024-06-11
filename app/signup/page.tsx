@@ -18,6 +18,18 @@ interface FormData {
     certificationCode: string;
 }
 
+// API 응답 타입 정의
+type ApiResponse<T> = {
+    result: boolean;
+    message?: string;
+    data?: T;
+};
+
+export interface CertificationData {
+    email: string;
+    certificationCode?: string;
+}
+
 // 이메일 유효성 검사 함수
 const validateEmailFormat = (email: string): boolean => {
     const re = /\S+@\S+\.\S+/;
@@ -43,6 +55,9 @@ const Signup = () => {
         confirmPassword: '',
         nickname: '',
         certificationCode: '',
+    });
+    const [availability, setAvailability] = useState({
+        emailVerified: false,
     });
     const router = useRouter();
 
@@ -93,8 +108,10 @@ const Signup = () => {
             const response = await apiClient.post('/register/send-certification', { email: formData.email });
             return response.data;
         },
-        onSuccess: () => {
-            showToast('이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.', 'success');
+        onSuccess: (data: ApiResponse<null>) => {
+            if (data.message) {
+                showToast(data.message, 'success');
+            }
         },
         onError: (error: any) => {
             if (axios.isAxiosError(error) && error.response) {
@@ -112,57 +129,67 @@ const Signup = () => {
 
     const validateEmailMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post('/register/certificate-code', {
+            const response = await apiClient.post<ApiResponse<CertificationData>>('/register/certificate-code', {
                 email: formData.email,
-                code: formData.certificationCode,
+                certificationCode: formData.certificationCode,
             });
             return response.data;
         },
-        onSuccess: () => {
-            showToast('이메일 인증에 성공했습니다!', 'success');
+        onSuccess: (data: ApiResponse<CertificationData>) => {
+            if (data.result) {
+                showToast('이메일 인증에 성공했습니다!', 'success');
+                setAvailability((prev) => ({ ...prev, emailVerified: true }));
+            } else {
+                showToast(data.message || '인증 코드가 잘못되었습니다.', 'error');
+            }
         },
         onError: (error: any) => {
-            showToast('이메일 인증에 실패했습니다.', 'error');
+            console.error('인증 실패:', error);
+            showToast('인증에 실패했습니다.', 'error');
         },
     });
 
     const checkNicknameMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post('/register/nickname-check', { nickname: formData.nickname });
+            const response = await apiClient.post<ApiResponse<null>>('/register/nickname-check', {
+                nickname: formData.nickname,
+            });
             return response.data;
         },
-        onSuccess: () => {
-            showToast('사용 가능한 닉네임입니다.', 'success');
+        onSuccess: (data: ApiResponse<null>) => {
+            showToast(data.message || '사용 가능한 닉네임입니다.', 'success');
         },
-        onError: () => {
+        onError: (error: any) => {
             showToast('이미 사용 중인 닉네임입니다.', 'error');
         },
     });
 
     const signupMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post('/register', {
+            const response = await apiClient.post<ApiResponse<null>>('/register', {
                 email: formData.email,
                 password: formData.password,
                 nickname: formData.nickname,
             });
             return response.data;
         },
-        onSuccess: () => {
-            showToast('회원가입에 성공했습니다!', 'success');
-            confetti({
-                particleCount: 100,
-                spread: 160,
-            });
-            router.push('/login');
+        onSuccess: (data: ApiResponse<null>) => {
+            if (data.result) {
+                showToast('회원가입에 성공했습니다!', 'success');
+                confetti({
+                    particleCount: 100,
+                    spread: 160,
+                });
+                setTimeout(() => {
+                    router.push('/login');
+                }, 2000); // 2초 후에 페이지 이동
+            } else {
+                showToast(data.message || '회원가입에 실패했습니다.', 'error');
+            }
         },
         onError: (error: any) => {
-            if (error instanceof AxiosError) {
-                const message = error.response?.data?.message || '회원가입에 실패했습니다.';
-                showToast(message, 'error');
-            } else {
-                showToast('알 수 없는 오류가 발생했습니다.', 'error');
-            }
+            console.error('회원가입 실패:', error);
+            showToast('알 수 없는 오류가 발생했습니다.', 'error');
         },
     });
 
