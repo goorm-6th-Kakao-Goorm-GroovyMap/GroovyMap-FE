@@ -36,7 +36,6 @@ const PostItem: React.FC<PostItemProps> = ({
         setSavesCount(saved ? savesCount - 1 : savesCount + 1)
     }
 
-    // 제목을 11자로 제한하고 초과 시 줄임표 추가
     const truncatedTitle = title.length > 11 ? `${title.slice(0, 11)}...` : title
 
     return (

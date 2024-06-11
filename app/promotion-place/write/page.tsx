@@ -3,18 +3,19 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react'
 import { IoMdSearch } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
-import router from 'next/router'
+import { useRouter } from 'next/router'
 
 interface Coordinates {
     latitude: number | null
     longitude: number | null
 }
 
+//백엔드 api post요청 보내기 (글쓰기작성폼데이터)
 const postFormData = async (formData: FormData): Promise<any> => {
-    const response = await fetch('https://9e26-1-241-95-127.ngrok-free.app/promotionboard/write', {
+    const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/write', {
         method: 'POST',
         body: formData,
-        credentials: 'include', // 쿠키포함
+        credentials: 'include',
     })
     if (!response.ok) {
         const errorText = await response.text()
@@ -25,6 +26,7 @@ const postFormData = async (formData: FormData): Promise<any> => {
 }
 
 export default function Write() {
+    const router = useRouter() // useRouter 훅 사용
     const [selectedType, setSelectedType] = useState<string>('ALL')
     const [address, setAddress] = useState<string>('')
     const [fileNames, setFileNames] = useState<File[]>([])
@@ -43,7 +45,7 @@ export default function Write() {
             setFileNames(Array.from(e.target.files))
         }
     }
-
+    //다음 우편 서비스 이용
     const loadDaumPostcode = () => {
         return new Promise<void>((resolve) => {
             const script = document.createElement('script')
@@ -54,7 +56,7 @@ export default function Write() {
             document.head.appendChild(script)
         })
     }
-
+    //주소를 가져와서 위도 경도로 변환
     const convertAddressToCoordinates = async (address: string) => {
         try {
             const response = await fetch(
@@ -94,6 +96,7 @@ export default function Write() {
         mutationFn: (formData: FormData) => postFormData(formData),
     })
 
+    //폼 제출 핸들러
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
 
@@ -110,7 +113,6 @@ export default function Write() {
         formData.append('region', (e.target as any).region.value)
         formData.append('part', selectedType)
         formData.append('coordinates', JSON.stringify(coordinates))
-        // 개행 문자를 <br> 태그로 변환하여 텍스트를 추가
         formData.append('content', (e.target as any).content.value.replace(/\n/g, '<br>'))
 
         try {
@@ -214,7 +216,7 @@ export default function Write() {
                         <label className="font-bold mb-2" htmlFor="fileNames">
                             미디어 업로드
                         </label>
-                        <p className="text-red-400">사진 또는 동영상 하나만 업로드 가능합니다.</p>
+                        <p className="text-red-400">사진 또는 동영상 하나만 업로드 가능합니다. (제한10MB)</p>
                         <input
                             type="file"
                             id="fileNames"

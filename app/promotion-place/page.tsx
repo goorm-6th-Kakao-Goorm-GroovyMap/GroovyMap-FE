@@ -28,6 +28,7 @@ interface Post {
     viewCount: number
 }
 
+//서울 구 단위 표시
 const areas: Record<string, { name: string; lat: number; lng: number }> = {
     ALL: { name: '서울 전체', lat: 37.5665, lng: 126.978 },
     YONGSANGU: { name: '용산구', lat: 37.5326, lng: 126.9906 },
@@ -53,14 +54,14 @@ const areas: Record<string, { name: string; lat: number; lng: number }> = {
     JUNGGU: { name: '중구', lat: 37.5633, lng: 126.9978 },
     JUNGNANGGU: { name: '중랑구', lat: 37.6063, lng: 127.0924 },
 }
-
+//유형(파트) 표시
 const parts: Record<string, { name: string }> = {
     ALL: { name: '전체' },
     BAND: { name: '밴드' },
     VOCAL: { name: '음악' },
     DANCE: { name: '춤' },
 }
-
+//유형 별로 다른 이미지 마커 사용
 const markerImages: { [key in 'BAND' | 'VOCAL' | 'DANCE']: string } = {
     BAND: '/guitar.svg',
     VOCAL: '/guitar.svg',
@@ -84,8 +85,9 @@ export default function PromotionPlace() {
     const mapRef = useRef<any>(null)
     const router = useRouter()
 
+    //fetch이용한 백엔드 api get요청
     const fetchPosts = async (): Promise<Post[]> => {
-        const response = await fetch('https://9e26-1-241-95-127.ngrok-free.app/promotionboard', {
+        const response = await fetch('${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard', {
             method: 'GET',
             headers: new Headers({
                 'ngrok-skip-browser-warning': '69420',
@@ -97,7 +99,7 @@ export default function PromotionPlace() {
         }
         const data = await response.json()
 
-        const baseUrl = 'https://9e26-1-241-95-127.ngrok-free.app/view/'
+        const baseUrl = '${process.env.NEXT_PUBLIC_API_BASE_URL}/view/'
         return data.map((post: any) => ({
             ...post,
             userImage: post.userImage ? `${baseUrl}${post.userImage}` : '', // userImage 절대 경로로 설정
@@ -114,24 +116,30 @@ export default function PromotionPlace() {
         queryFn: fetchPosts,
     })
 
+    //지도 버튼 핸들러
     const handleMapButtonClick = () => {
         setShowMap(!showMap)
     }
+    //지역 드롭다운 핸들러
     const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedArea(e.target.value)
     }
+    //지역 드롭다운 핸들러
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = e.target.value as 'ALL' | 'BAND' | 'MUSIC' | 'DANCE'
         setSelectedType(selectedValue)
     }
+    //게시물 클릭 핸들러
     const handlePostClick = (post: Post) => {
         setSelectedPost(post)
         setShowModal(true)
+        setShowMap(false) //지도접힘
     }
     const handleCloseModal = () => {
         setShowModal(false)
         setSelectedPost(null)
     }
+    //게시글 작성 버튼 핸들러
     const handleWriteButtonClick = () => {
         router.push('/promotion-place/write')
     }
@@ -192,12 +200,14 @@ export default function PromotionPlace() {
             }
         }
     }, [showMap, selectedArea, posts, initializeMap])
+
     useEffect(() => {
         if (mapRef.current && !showMap) {
             mapRef.current = null
         }
     }, [showMap])
 
+    //api 연결 확인용도
     if (isLoading) {
         return <div>Loading...</div>
     }
@@ -205,14 +215,14 @@ export default function PromotionPlace() {
         return <div>Error fetching data: {error.message}</div>
     }
 
+    //최신순으로 게시물 정렬
     const sortedPosts = (posts || []).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
     const filteredPosts = sortedPosts.filter((post) => {
         const areaMatch = selectedArea === 'ALL' || post.region === selectedArea
         const typeMatch = selectedType === 'ALL' || post.part === selectedType
         return areaMatch && typeMatch
     })
-
+    //게시글 최대 9개 이후는 페이지 넘어가기
     const indexOfLastPost = currentPage * postsPerPage
     const indexOfFirstPost = indexOfLastPost - postsPerPage
     const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)

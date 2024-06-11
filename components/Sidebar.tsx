@@ -1,15 +1,18 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-
+import Link from 'next/link'
+import Logo from '../components/Logo/Logo'
 const Sidebar = () => {
     return (
-        <aside className="sidebar">
-            <div className="logo">GroovyMap</div>
+        <aside className="sidebar flex flex-col items-center px-10">
+            <div className="logo mb-28 mt-14">
+                <Logo />
+            </div>
             <nav className="menu">
-                <ul>
+                <ul className="space-y-2 text-center">
+                    <li className="text-purple-500">Menu</li>
                     <li>
-                        <Link href="/">메인 페이지</Link>
+                        <Link href="/">홈</Link>
                     </li>
                     <li>
                         <Link href="/performance-place">공연 장소</Link>
@@ -21,7 +24,7 @@ const Sidebar = () => {
                         <Link href="#">자유게시판</Link>
                     </li>
                     <li>
-                        <Link href="#">홍보게시판</Link>
+                        <Link href="/promotion-place">홍보게시판</Link>
                     </li>
                     <li>
                         <Link href="#">팀원 모집</Link>
@@ -30,12 +33,12 @@ const Sidebar = () => {
                         <Link href="#">프로필</Link>
                     </li>
                     <li>
-                        <Link href="#">AI 생성</Link>
+                        <Link href="/alogogeneration">AI 생성</Link>
                     </li>
                 </ul>
             </nav>
         </aside>
-    );
-};
+    )
+}
 
-export default Sidebar;
+export default Sidebar

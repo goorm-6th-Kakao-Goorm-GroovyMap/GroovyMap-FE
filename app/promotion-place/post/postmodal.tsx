@@ -49,7 +49,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         setLiked(!liked)
         setLikesCount(liked ? likesCount - 1 : likesCount + 1)
         try {
-            await fetch(`https://9e26-1-241-95-127.ngrok-free.app/promotionboard/${post.id}/like`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/${post.id}/like`, {
                 method: 'POST',
             })
         } catch (error) {
@@ -61,7 +61,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         setSaved(!saved)
         setSavesCount(saved ? savesCount - 1 : savesCount + 1)
         try {
-            await fetch(`https://9e26-1-241-95-127.ngrok-free.app/promotionboard/${post.id}/save`, {
+            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/${post.id}/save`, {
                 method: 'POST',
             })
         } catch (error) {
@@ -75,8 +75,6 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         }
     }
 
-    const baseUrl = 'https://9e26-1-241-95-127.ngrok-free.app/view/'
-
     return (
         <div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
@@ -87,12 +85,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
                     {post.fileNames.length > 0 ? (
                         post.fileNames.map((fileName, index) =>
                             fileName.endsWith('.mp4') ? (
-                                <video
-                                    key={index}
-                                    src={`${baseUrl}${fileName}`}
-                                    controls
-                                    className="w-full h-full object-cover"
-                                />
+                                <video key={index} src={fileName} controls className="w-full h-full object-cover" />
                             ) : (
                                 <div key={index} className="relative w-full h-[80vh]">
                                     <Image
