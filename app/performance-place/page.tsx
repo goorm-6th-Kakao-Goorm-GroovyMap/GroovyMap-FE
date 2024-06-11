@@ -88,6 +88,7 @@ const PerformancePlace: React.FC = () => {
         queryFn: getPerformancePlaces,
     });
 
+    //실행시 데이터 가져옴
     useEffect(() => {
         if (performancePlaces) {
             setFilteredPerformancePlaces(performancePlaces);
