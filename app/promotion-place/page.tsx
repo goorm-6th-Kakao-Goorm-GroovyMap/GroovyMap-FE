@@ -97,7 +97,7 @@ export default function PromotionPlace() {
             })
             let data = response.data
 
-            const baseUrl = `https://19a1-1-241-95-127.ngrok-free.app/view/` // apiClient.defaults.baseURL 사용
+            const baseUrl = `https://19a1-1-241-95-127.ngrok-free.app/view/` // apiClient.baseURL 사용
             return data.map((post: any) => ({
                 ...post,
                 userImage: post.userImage ? `${baseUrl}${post.userImage}` : '', // userImage 절대 경로로 설정
