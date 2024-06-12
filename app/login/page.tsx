@@ -29,9 +29,12 @@ const Login = () => {
         }));
     };
 
+    //로그인 버튼 클릭시 post api 요청
     const loginMutation = useMutation({
         mutationFn: async (data: { email: string; password: string }) => {
-            const response = await apiClient.post('/login', data);
+            const response = await apiClient.post('/api/auth/login', data, {
+                withCredentials: true, // 이 옵션을 추가하여 쿠키를 포함한 요청을 허용
+            });
             return response.data;
         },
         onSuccess: (data) => {
