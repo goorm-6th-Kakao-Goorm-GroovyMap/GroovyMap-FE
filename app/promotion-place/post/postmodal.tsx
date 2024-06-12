@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { FaHeart, FaRegHeart, FaStar, FaRegStar, FaUserCircle } from 'react-icons/fa'
 import { VscFileMedia } from 'react-icons/vsc'
+import apiClient from '@/api/apiClient'
 
 interface Post {
     id: number
@@ -49,9 +50,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         setLiked(!liked)
         setLikesCount(liked ? likesCount - 1 : likesCount + 1)
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/${post.id}/like`, {
-                method: 'POST',
-            })
+            await apiClient.post(`/promotionboard/${post.id}/like`)
         } catch (error) {
             console.error('Error liking post:', error)
         }
@@ -61,9 +60,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         setSaved(!saved)
         setSavesCount(saved ? savesCount - 1 : savesCount + 1)
         try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/promotionboard/${post.id}/save`, {
-                method: 'POST',
-            })
+            await apiClient.post(`/promotionboard/${post.id}/save`)
         } catch (error) {
             console.error('Error saving post:', error)
         }
@@ -90,7 +87,7 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
                                 <div key={index} className="relative w-full h-[80vh]">
                                     <Image
                                         src={fileName}
-                                        alt={`media-${index}`}
+                                        alt={`media-${fileName}`}
                                         layout="fill"
                                         objectFit="cover"
                                         unoptimized
