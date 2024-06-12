@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     images: {
-        domains: ['9e26-1-241-95-127.ngrok-free.app'],
+        domains: ['localhost:8080', 'mk.kakaocdn.net'],
         loader: 'default',
         path: '/',
     },

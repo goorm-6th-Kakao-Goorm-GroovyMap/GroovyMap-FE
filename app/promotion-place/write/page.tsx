@@ -178,7 +178,7 @@ export default function Write() {
                             <option value="SEOCHOGU">서초구</option>
                             <option value="SEONGDONGGU">성동구</option>
                             <option value="SEONGBUKGU">성북구</option>
-                            <option value="SONGPA">송파구</option>
+                            <option value="SONGPAGU">송파구</option>
                             <option value="YANGCHEONGU">양천구</option>
                             <option value="YEONGDEUNGPOGU">영등포구</option>
                             <option value="YONGSANGU">용산구</option>

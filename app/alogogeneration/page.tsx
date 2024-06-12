@@ -44,8 +44,8 @@ const AiLogoGeneration: React.FC = () => {
                     version: 'v2.1',
                     prompt: prompt,
                     negative_prompt: negativePrompt,
-                    width: 256,
-                    height: 256,
+                    width: 768,
+                    height: 768,
                     upscale: true,
                     image_format: 'png',
                     samples: 3,
@@ -57,10 +57,8 @@ const AiLogoGeneration: React.FC = () => {
                 setIsLoading(false)
                 return
             }
-
             const result: ApiResponse = await response.json()
-            console.log('API response:', result)
-            const imageUrls = result.images.map((image) => image.image) // Extract URLs from image objects
+            const imageUrls = result.images.map((image) => image.image)
             setImages(imageUrls)
         } catch (error) {
             console.error('Error:', error)
@@ -133,11 +131,13 @@ const AiLogoGeneration: React.FC = () => {
                                     <img
                                         src={image}
                                         alt={`Generated logo ${index + 1}`}
-                                        className="w-64 h-64 object-contain mb-2"
+                                        className="w-96 h-96 object-contain mb-2"
                                     />
                                     <a
                                         href={image}
                                         download={`logo_${index + 1}.png`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="bg-purple-700 rounded-lg text-white p-2 hover:bg-white hover:text-purple-700 hover:border hover:border-purple-700"
                                     >
                                         다운로드
