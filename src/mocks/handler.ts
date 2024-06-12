@@ -1,15 +1,14 @@
-// src/mocks/handlers.ts
 import { rest } from 'msw';
-import { PerformancePlace } from '@/types/types';
-import { PracticePlace } from '@/types/types';
+import type { PerformancePlace, PracticePlace } from '@/types/types';
 
 const performancePlaces: PerformancePlace[] = [
     {
+        id: 1,
         name: 'Performance Place 1',
         part: 'BAND',
         coordinate: { latitude: 35.6895, longitude: 139.6917 },
         region: 'YONGSANGU',
-        address: '강남구',
+        address: '용산구',
         phoneNumber: '123-456-7890',
         rentalFee: '1000',
         capacity: '500',
@@ -17,6 +16,7 @@ const performancePlaces: PerformancePlace[] = [
         description: 'Description 1',
     },
     {
+        id: 2,
         name: 'Performance Place 2',
         part: 'BAND',
         coordinate: { latitude: 34.0522, longitude: -118.2437 },
@@ -28,11 +28,11 @@ const performancePlaces: PerformancePlace[] = [
         performanceHours: '10am - 10pm',
         description: 'Description 2',
     },
-    // 추가 공연 장소 데이터
 ];
 
 const practicePlaces: PracticePlace[] = [
     {
+        id: 1,
         name: 'Practice Place 1',
         part: 'BAND',
         coordinate: { latitude: 35.6895, longitude: 139.6917 },
@@ -45,6 +45,7 @@ const practicePlaces: PracticePlace[] = [
         description: 'Description 1',
     },
     {
+        id: 2,
         name: 'Practice Place 2',
         part: 'BAND',
         coordinate: { latitude: 34.0522, longitude: -118.2437 },
@@ -56,7 +57,6 @@ const practicePlaces: PracticePlace[] = [
         practiceHours: '10am - 10pm',
         description: 'Description 2',
     },
-    // 추가 연습 장소 데이터
 ];
 
 export const handlers = [
@@ -64,13 +64,11 @@ export const handlers = [
     rest.get('/performanceplace', (req, res, ctx) => {
         return res(
             ctx.status(200),
-            ctx.json(
-                performancePlaces.map((place, index) => ({
-                    id: index + 1,
-                    url: `/performanceplace/${index + 1}`,
+            ctx.json({
+                performancePlacePosts: performancePlaces.map((place) => ({
                     ...place,
-                }))
-            )
+                })),
+            })
         );
     }),
 
@@ -78,16 +76,16 @@ export const handlers = [
     rest.post<PerformancePlace>('/performanceplace', (req, res, ctx) => {
         const newPlace: PerformancePlace = {
             ...req.body,
+            id: performancePlaces.length + 1,
         };
         performancePlaces.push(newPlace);
-        const id = performancePlaces.length;
-        return res(ctx.status(201), ctx.json({ id, url: `/performanceplace/${id}`, ...newPlace }));
+        return res(ctx.status(201), ctx.json(newPlace));
     }),
 
     // 특정 공연 장소의 상세 정보를 가져옴
     rest.get('/performanceplace/:postId', (req, res, ctx) => {
         const { postId } = req.params;
-        const place = performancePlaces[parseInt(postId as string, 10) - 1];
+        const place = performancePlaces.find((place) => place.id === parseInt(postId as string, 10));
         if (!place) {
             return res(ctx.status(404), ctx.json({ error: 'Place not found' }));
         }
@@ -98,13 +96,11 @@ export const handlers = [
     rest.get('/practiceplace', (req, res, ctx) => {
         return res(
             ctx.status(200),
-            ctx.json(
-                practicePlaces.map((place, index) => ({
-                    id: index + 1,
-                    url: `/practiceplace/${index + 1}`,
+            ctx.json({
+                practicePlacePosts: practicePlaces.map((place) => ({
                     ...place,
-                }))
-            )
+                })),
+            })
         );
     }),
 
@@ -112,16 +108,16 @@ export const handlers = [
     rest.post<PracticePlace>('/practiceplace', (req, res, ctx) => {
         const newPlace: PracticePlace = {
             ...req.body,
+            id: practicePlaces.length + 1,
         };
         practicePlaces.push(newPlace);
-        const id = practicePlaces.length;
-        return res(ctx.status(201), ctx.json({ id, url: `/practiceplace/${id}`, ...newPlace }));
+        return res(ctx.status(201), ctx.json(newPlace));
     }),
 
     // 특정 연습 장소의 상세 정보를 가져옴
     rest.get('/practiceplace/:postId', (req, res, ctx) => {
         const { postId } = req.params;
-        const place = practicePlaces[parseInt(postId as string, 10) - 1];
+        const place = practicePlaces.find((place) => place.id === parseInt(postId as string, 10));
         if (!place) {
             return res(ctx.status(404), ctx.json({ error: 'Place not found' }));
         }

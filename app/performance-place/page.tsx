@@ -96,19 +96,19 @@ const PerformancePlace: React.FC = () => {
         }
     }, [placesList]);
 
-    const addPlaceMutation = useMutation<number, Error, Omit<PerformancePlace, 'id'>>({
+    const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
         mutationFn: addPerformancePlace,
-        onSuccess: async (id) => {
-            if (id === undefined) {
+        onSuccess: async (newPlace) => {
+            if (!newPlace.id) {
                 console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }
-
+    
             try {
                 // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
-                const newPlaceDetails = await getPerformancePlaceDetails(id);
-
+                const newPlaceDetails = await getPerformancePlaceDetails(newPlace.id);
+    
                 queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
                 setFilteredPerformancePlaces((prev) => {
                     if (Array.isArray(prev)) {
@@ -606,7 +606,7 @@ const PerformancePlace: React.FC = () => {
                             >
                                 {number}
                             </button>
-                        ))}
+                        ))}ㅌ
                     </div>
                 </div>
                 {isModalOpen && selectedPlace && (

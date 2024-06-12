@@ -94,8 +94,8 @@ const PracticePlace: React.FC = () => {
 
     const addPlaceMutation = useMutation<number, Error, Omit<PracticePlace, 'id'>>({
         mutationFn: addPracticePlace,
-        onSuccess: async (id) => {
-            if (id === undefined) {
+        onSuccess: async (newPlace) => {
+            if (newPlace.id=== undefined) {
                 console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
@@ -103,7 +103,7 @@ const PracticePlace: React.FC = () => {
 
             try {
                 // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
-                const newPlaceDetails = await getPracticePlaceDetails(id);
+                const newPlaceDetails = await getPracticePlaceDetails(newPlace.id);
 
                 queryClient.invalidateQueries({ queryKey: ['practicePlaces'] });
                 setFilteredPracticePlaces((prev) => {
