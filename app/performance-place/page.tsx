@@ -96,10 +96,11 @@ const PerformancePlace: React.FC = () => {
         }
     }, [placesList]);
 
+    //바디안의 배열의 id 값 가져오게 수정.
     const addPlaceMutation = useMutation<number, Error, Omit<PerformancePlace, 'id'>>({
         mutationFn: addPerformancePlace,
-        onSuccess: async (id) => {
-            if (id === undefined) {
+        onSuccess: async (newPlace) => {
+            if ( newPlace.id=== undefined) {
                 console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
@@ -107,7 +108,7 @@ const PerformancePlace: React.FC = () => {
 
             try {
                 // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
-                const newPlaceDetails = await getPerformancePlaceDetails(id);
+                const newPlaceDetails = await getPerformancePlaceDetails(newPlace.id);
 
                 queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
                 setFilteredPerformancePlaces((prev) => {
