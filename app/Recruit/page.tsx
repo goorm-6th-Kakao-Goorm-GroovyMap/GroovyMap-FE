@@ -10,6 +10,7 @@ import WritePostForm from './WritePostForm';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
 import PostContent from './Post/post';
 import { useParams } from 'next/navigation';
+import apiClient from '@/api/apiClient';
 
 const Recruit_page: React.FC = () => {
     const [isMapVisible, setIsMapVisible] = useState(false);
@@ -23,40 +24,21 @@ const Recruit_page: React.FC = () => {
     const [selectedPosition, setSelectedPosition] = useState<string>('');
     const { postId } = useParams<{ postId: string }>();
     const [locations, setLocations] = useState<Location[]>([]);
-
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const formData = new FormData();
-                formData.append('postId', postId);
-
-                const response = await fetch(`/recruitboard/${postId}`, {
-                    method: 'POST',
-                    body: formData,
-                });
-                const data = await response.json();
-                setPosts(data);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        fetchPosts();
-    }, [postId]);
+    const fetchPosts = async () => {
+        try {
+            const response = await apiClient.get(`/recruitboard`);
+            setPosts(response.data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     useEffect(() => {
         if (selectedPost !== null) {
             const fetchComments = async () => {
                 try {
-                    const formData = new FormData();
-                    formData.append('postId', selectedPost.toString());
-
-                    const response = await fetch(`/recruitboard/${selectedPost}/comment`, {
-                        method: 'POST',
-                        body: formData,
-                    });
-                    const data = await response.json();
-                    setComments((prev) => ({ ...prev, [selectedPost]: data }));
+                    const response = await apiClient.post(`/recruitboard/${selectedPost}/comment`);
+                    setComments((prev) => ({ ...prev, [selectedPost]: response.data }));
                 } catch (error) {
                     console.error(error);
                 }
@@ -84,6 +66,24 @@ const Recruit_page: React.FC = () => {
         setLocations(locations);
     }, [posts]);
 
+    const handleAddComment = async (postId: number, author: string, content: string) => {
+        try {
+            const response = await apiClient.post(`/recruitboard/${postId}/comment`, { author, content });
+
+            if (response.status === 200) {
+                const newComment = response.data;
+                setComments((prev) => ({
+                    ...prev,
+                    [postId]: [...(prev[postId] || []), newComment],
+                }));
+            } else {
+                console.error(response.statusText);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     const toggleMapVisibility = () => {
         setIsMapVisible((prev) => !prev);
     };
@@ -99,31 +99,6 @@ const Recruit_page: React.FC = () => {
 
     const handleGoBack = () => {
         setSelectedPost(null);
-    };
-
-    const handleAddComment = async (postId: number, author: string, content: string) => {
-        try {
-            const formData = new FormData();
-            formData.append('author', author);
-            formData.append('content', content);
-
-            const response = await fetch(`/recruitboard/${postId}/comment`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                const newComment = await response.json();
-                setComments((prev) => ({
-                    ...prev,
-                    [postId]: [...(prev[postId] || []), newComment],
-                }));
-            } else {
-                console.error(response.statusText);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
     };
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -222,9 +197,9 @@ const Recruit_page: React.FC = () => {
                                 >
                                     <option value="">선택 </option>
                                     {selectedField &&
-                                        FieldPositionMapping[selectedField].map((position) => (
-                                            <option key={position} value={position}>
-                                                {position}
+                                        Object.entries(FieldPositionMapping[selectedField]).map(([key, value]) => (
+                                            <option key={key} value={key}>
+                                                {value}
                                             </option>
                                         ))}
                                 </select>
@@ -252,7 +227,7 @@ const Recruit_page: React.FC = () => {
                               )
                             : isPosting && <Recruit_post posts={posts} onPostClick={handlePostClick} />}
                     </div>
-                    {isWriting && <WritePostForm postId={postId} setPosts={setPosts} />}
+                    {isWriting && <WritePostForm postId={postId} setPosts={setPosts} updatePostList={fetchPosts} />}
                 </section>
             </div>
         </main>

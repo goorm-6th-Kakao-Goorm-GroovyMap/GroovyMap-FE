@@ -12,12 +12,12 @@ export interface Post {
     title: string;
     author: string;
     content: string;
-    date: DateTime;
-    views: number;
     field: string;
-    position: string;
+    part: string;
     region: string;
-    recruit_num: number;
+    recruitNum: number;
+    date: DateTime;
+    viewCount: number;
 }
 
 export interface Location {
@@ -27,12 +27,25 @@ export interface Location {
 }
 
 export interface FieldPositionMapping {
-    [field: string]: string[];
+    [field: string]: { [position: string]: string };
 }
 export const FieldPositionMapping: FieldPositionMapping = {
-    BAND: ['기타', '베이스', '드럼', '보컬', '키보드'],
-    DANCE: ['힙합', '팝핑', '브레이킹', '기타(ETC)'],
-    VOCAL: ['힙합', '재즈', '발라드', '기타(ETC)'],
+    BAND: {
+        GUITAR: '기타',
+        BASE: '베이스',
+        DRUM: '드럼',
+        VOCAL: '보컬',
+        KEYBOARD: '키보드',
+    },
+    DANCE: {
+        ROCKING: '락킹',
+        POPPING: '팝핑',
+        BREAKING: '브레이킹',
+    },
+    VOCAL: {
+        HIPHOP: '힙합',
+        JAZZ: '재즈',
+    },
 };
 export const regionCenters: { [key: string]: { name: string; lat: number; lng: number } } = {
     SEOUL: { name: '서울 전체', lat: 37.5665, lng: 126.978 },

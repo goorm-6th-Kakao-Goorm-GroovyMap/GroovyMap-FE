@@ -2,19 +2,24 @@
 
 import React, { useState } from 'react';
 import { FieldPositionMapping, Post } from './types';
+import apiClient from '@/api/apiClient';
+import { DateTime } from 'luxon';
 
 interface WritePostFormProps {
     postId: string;
     setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
+    updatePostList: () => void;
 }
 
-const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts }) => {
+const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [region, setRegion] = useState('');
     const [field, setField] = useState('');
-    const [position, setPosition] = useState('');
+    const [part, setPart] = useState('');
     const [members, setMembers] = useState(1);
+    const [datetime, setDateTime] = useState('');
+    const [viewCount, setViewCount] = useState('');
     const [selectedField, setSelectedField] = useState<string>('');
 
     const handleMemberChange = (increment: boolean) => {
@@ -24,19 +29,36 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts }) => {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        const formData = new FormData(event.currentTarget);
-        formData.append('date', new Date().toISOString().split('T')[0]);
-        formData.append('views', '0');
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('content', content);
+        formData.append('region', region);
+        formData.append('field', field);
+        formData.append('part', part);
+        formData.append('recruitNum', members.toString());
+        formData.append('timestamp', datetime);
+        formData.append('viewCount', viewCount);
 
         try {
-            const response = await fetch(`/recruitboard/${postId}`, {
-                method: 'POST',
-                body: formData,
+            const response = await apiClient.post(`/recruitboard/write`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'ngrok-skip-browser-warning': '69420',
+                },
             });
 
-            if (response.ok) {
-                const newPost = await response.json();
+            if (response.status === 200) {
+                const newPost = response.data;
                 setPosts((prev) => [...prev, newPost]);
+                setTitle('');
+                setContent('');
+                setRegion('');
+                setField('');
+                setPart('');
+                setMembers(1);
+                setSelectedField('');
+
+                updatePostList();
             } else {
                 console.error(response.statusText);
             }
@@ -85,7 +107,6 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts }) => {
                     <option value="GANGSEOGU">강서구</option>
                     <option value="GEUMCHEONGU">금천구</option>
                     <option value="GUROGU">구로구</option>
-                    <option value="GEUMCHEONGU">금천구</option>
                     <option value="DOBONGGU">도봉구</option>
                     <option value="DONGDAEMUNGU">동대문구</option>
                     <option value="DONGJAKGU">동작구</option>
@@ -109,27 +130,27 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts }) => {
                     유형:
                 </label>
                 <select id="field" className="w-full border rounded p-2" value={field} onChange={handleFieldChange}>
-                    <option value="">전체</option>
+                    <option value="ALL">전체</option>
                     <option value="BAND">밴드</option>
                     <option value="DANCE">댄스</option>
                     <option value="VOCAL">노래</option>
                 </select>
             </div>
             <div className="mb-4">
-                <label htmlFor="field" className="block font-bold mb-1">
+                <label htmlFor="position" className="block font-bold mb-1">
                     포지션:
                 </label>
                 <select
-                    id="field"
+                    id="part"
                     className="w-full border rounded p-2"
-                    value={position}
-                    onChange={(e) => setPosition(e.target.value)}
+                    value={part}
+                    onChange={(e) => setPart(e.target.value)}
                 >
                     <option value="">선택 </option>
                     {selectedField &&
-                        FieldPositionMapping[selectedField].map((position) => (
-                            <option key={position} value={position}>
-                                {position}
+                        Object.entries(FieldPositionMapping[selectedField]).map(([key, value]) => (
+                            <option key={key} value={key}>
+                                {value}
                             </option>
                         ))}
                 </select>
