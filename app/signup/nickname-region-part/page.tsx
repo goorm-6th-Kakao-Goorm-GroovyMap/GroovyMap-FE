@@ -2,7 +2,8 @@
 
 import React, { ChangeEvent } from 'react';
 import { useRecoilState } from 'recoil';
-import { signUpState, userState } from '@/recoil/state/signupState';
+import { signUpState } from '@/recoil/state/signupState';
+import { userState } from '@/recoil/state/loginState';
 import Filter from '../components/Filter';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
@@ -101,7 +102,7 @@ const NicknameRegionPartPage: React.FC = () => {
             });
             return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             setUser(data.user);
             toast.success('회원가입에 성공했습니다!');
             confetti({

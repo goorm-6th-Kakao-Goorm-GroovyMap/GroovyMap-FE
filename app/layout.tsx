@@ -16,6 +16,8 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     worker.start();
 }
 
+const queryClient = new QueryClient();
+
 export default function RootLayout({
     children,
 }: Readonly<{

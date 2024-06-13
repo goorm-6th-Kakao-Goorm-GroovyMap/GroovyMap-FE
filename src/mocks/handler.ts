@@ -8,6 +8,10 @@ interface User {
     region?: string;
     part?: string;
     subPart?: string;
+    profileImage?: string;
+    bio?: string;
+    followers?: number;
+    following?: number;
 }
 
 const users: User[] = [
@@ -18,8 +22,22 @@ const users: User[] = [
         region: 'ALL',
         part: 'BAND',
         subPart: 'GUITAR',
+        profileImage: 'https://via.placeholder.com/150',
+        bio: 'This is a bio',
+        followers: 100,
+        following: 200,
     },
-    { email: 'newuser@example.com', password: 'password123!', nickname: 'newuser', region: 'ALL', part: 'VOCAL' },
+    {
+        email: 'newuser@example.com',
+        password: 'password123!',
+        nickname: 'newuser',
+        region: 'ALL',
+        part: 'VOCAL',
+        profileImage: 'https://via.placeholder.com/150',
+        bio: 'New user bio',
+        followers: 50,
+        following: 100,
+    },
 ];
 
 const certificationCodes: { [email: string]: string } = {};
@@ -95,5 +113,11 @@ export const handlers = [
             ctx.status(400),
             ctx.json({ message: '로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.' })
         );
+    }),
+
+    rest.get('/user/info', async (req, res, ctx) => {
+        // This is a mock user data
+        const user = users[0]; // Return the first user for demo purposes
+        return res(ctx.status(200), ctx.json(user));
     }),
 ];
