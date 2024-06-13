@@ -31,6 +31,7 @@ export interface FieldPositionMapping {
 }
 export const FieldPositionMapping: FieldPositionMapping = {
     BAND: {
+        ALL: '전체',
         GUITAR: '기타',
         BASE: '베이스',
         DRUM: '드럼',
@@ -38,13 +39,18 @@ export const FieldPositionMapping: FieldPositionMapping = {
         KEYBOARD: '키보드',
     },
     DANCE: {
+        ALL: '전체',
         ROCKING: '락킹',
         POPPING: '팝핑',
         BREAKING: '브레이킹',
     },
     VOCAL: {
+        ALL: '전체',
         HIPHOP: '힙합',
         JAZZ: '재즈',
+    },
+    ALL: {
+        ALL: '전체',
     },
 };
 export const regionCenters: { [key: string]: { name: string; lat: number; lng: number } } = {

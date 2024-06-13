@@ -23,7 +23,7 @@ const PostList: React.FC<PostListProps> = ({ posts, onPostClick }) => {
                     <tr key={post.id} onClick={() => onPostClick(post.id)} className="cursor-pointer">
                         <td className="border p-2">{post.title}</td>
                         <td className="border p-2">{post.author}</td>
-                        <td className="border p-2">{post.date.toFormat('yyyy-MM-dd HH:mm:ss')}</td>
+                        <td className="border p-2">작성일</td>
                         <td className="border p-2">{post.viewCount}</td>
                     </tr>
                 ))}

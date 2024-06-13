@@ -3,23 +3,21 @@
 import React, { useState } from 'react';
 import { FieldPositionMapping, Post } from './types';
 import apiClient from '@/api/apiClient';
-import { DateTime } from 'luxon';
 
 interface WritePostFormProps {
     postId: string;
     setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
     updatePostList: () => void;
+    toggleWriting: () => void;
 }
 
-const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList }) => {
+const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList, toggleWriting }) => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [region, setRegion] = useState('');
     const [field, setField] = useState('');
     const [part, setPart] = useState('');
     const [members, setMembers] = useState(1);
-    const [datetime, setDateTime] = useState('');
-    const [viewCount, setViewCount] = useState('');
     const [selectedField, setSelectedField] = useState<string>('');
 
     const handleMemberChange = (increment: boolean) => {
@@ -36,8 +34,8 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
         formData.append('field', field);
         formData.append('part', part);
         formData.append('recruitNum', members.toString());
-        formData.append('timestamp', datetime);
-        formData.append('viewCount', viewCount);
+        formData.append('timestamp', new Date().toISOString());
+        formData.append('viewCount', '0');
 
         try {
             const response = await apiClient.post(`/recruitboard/write`, formData, {
@@ -47,7 +45,7 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                 },
             });
 
-            if (response.status === 200) {
+            if (response.status === 201) {
                 const newPost = response.data;
                 setPosts((prev) => [...prev, newPost]);
                 setTitle('');
@@ -59,8 +57,9 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                 setSelectedField('');
 
                 updatePostList();
+                toggleWriting();
             } else {
-                console.error(response.statusText);
+                console.error('error', response.statusText);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -99,7 +98,7 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                     value={region}
                     onChange={(e) => setRegion(e.target.value)}
                 >
-                    <option value="">선택하세요</option>
+                    <option value="">선택</option>
                     <option value="ALL">전체</option>
                     <option value="GANGNAMGU">강남구</option>
                     <option value="GANGDONGGU">강동구</option>

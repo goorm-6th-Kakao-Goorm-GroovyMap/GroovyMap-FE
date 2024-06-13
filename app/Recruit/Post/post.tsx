@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { Comment, Post } from '../types';
+import { regionCenters, type Comment, type Post } from '../types';
 
 interface PostProps {
     post: Post;
@@ -27,10 +27,11 @@ const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack }
             </button>
             <h2 className="text-2xl font-bold mb-4">{post.title}</h2>
             <p className="mb-2">
-                작성자: {post.author} 작성일: {post.date.toFormat('yyyy-MM-dd HH:mm:ss')} 조회수: {post.viewCount}
+                작성자: {post.author} 조회수: {post.viewCount}
             </p>
             <p className="mb-2">
-                모집장소: {post.region} 모집분야: {post.field} 모집파트: {post.part} 모집인원: {post.recruitNum}
+                모집장소: {regionCenters[post.region].name} 모집분야: {post.field} 모집파트: {post.part} 모집인원:{' '}
+                {post.recruitNum}
             </p>
             <p className="mb-4">{post.content}</p>
             <h3 className="text-xl font-bold border-t mb-2">댓글</h3>

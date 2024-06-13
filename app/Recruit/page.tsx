@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
@@ -24,12 +24,20 @@ const Recruit_page: React.FC = () => {
     const [selectedPosition, setSelectedPosition] = useState<string>('');
     const { postId } = useParams<{ postId: string }>();
     const [locations, setLocations] = useState<Location[]>([]);
+    const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+
     const fetchPosts = async () => {
         try {
-            const response = await apiClient.get(`/recruitboard`);
-            setPosts(response.data);
+            const response = await apiClient.get('/recruitboard');
+            console.log(response.data);
+            if (response.status === 200) {
+                const data = Array.isArray(response.data) ? response.data : [];
+                setPosts(data);
+            } else {
+                console.error(response.statusText);
+            }
         } catch (error) {
-            console.error(error);
+            console.error('Error:', error);
         }
     };
 
@@ -117,6 +125,32 @@ const Recruit_page: React.FC = () => {
         setSelectedPosition(position);
     };
 
+    const filterPosts = useCallback(() => {
+        let filtered = posts;
+
+        if (selectedRegion !== 'ALL') {
+            filtered = filtered.filter((post) => post.region === selectedRegion);
+        }
+
+        if (selectedField !== 'ALL') {
+            filtered = filtered.filter((post) => post.field === selectedField);
+        }
+
+        if (selectedPosition !== 'ALL') {
+            filtered = filtered.filter((post) => post.part === selectedPosition);
+        }
+
+        setFilteredPosts(filtered);
+    }, [posts, selectedRegion, selectedField, selectedPosition]);
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    useEffect(() => {
+        filterPosts();
+    }, [posts, selectedRegion, selectedField, selectedPosition, filterPosts]);
+
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">
             <div className="content flex-1 w-full max-w-4xl">
@@ -195,7 +229,6 @@ const Recruit_page: React.FC = () => {
                                     onChange={handlePositionChange}
                                     disabled={!selectedField}
                                 >
-                                    <option value="">선택 </option>
                                     {selectedField &&
                                         Object.entries(FieldPositionMapping[selectedField]).map(([key, value]) => (
                                             <option key={key} value={key}>
@@ -225,9 +258,16 @@ const Recruit_page: React.FC = () => {
                                       goBack={handleGoBack}
                                   />
                               )
-                            : isPosting && <Recruit_post posts={posts} onPostClick={handlePostClick} />}
+                            : isPosting && <Recruit_post posts={filteredPosts} onPostClick={handlePostClick} />}
                     </div>
-                    {isWriting && <WritePostForm postId={postId} setPosts={setPosts} updatePostList={fetchPosts} />}
+                    {isWriting && (
+                        <WritePostForm
+                            postId={postId}
+                            setPosts={setPosts}
+                            updatePostList={fetchPosts}
+                            toggleWriting={toggleWriting}
+                        />
+                    )}
                 </section>
             </div>
         </main>
