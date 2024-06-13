@@ -62,6 +62,7 @@ const PerformancePlace: React.FC = () => {
     const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
     const [address, setAddress] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
+    const [showPostcodePopup, setShowPostcodePopup] = useState(false);
     const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
         name: '',
         part: 'BAND',
@@ -104,11 +105,11 @@ const PerformancePlace: React.FC = () => {
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }
-    
+
             try {
                 // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
                 const newPlaceDetails = await getPerformancePlaceDetails(newPlace.id);
-    
+
                 queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
                 setFilteredPerformancePlaces((prev) => {
                     if (Array.isArray(prev)) {
@@ -359,58 +360,106 @@ const PerformancePlace: React.FC = () => {
         }
     };
 
-    const handleAddressSearch = async () => {
-        try {
-            if (!address || address.trim() === '') {
-                toast.warning('주소를 입력해 주세요.');
-                return; // 주소가 빈칸이거나 null이면 함수 종료
-            }
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+        script.async = true;
+        document.head.appendChild(script);
 
-            const encodedAddress = encodeURIComponent(address);
+        return () => {
+            document.head.removeChild(script);
+        };
+    }, []);
 
-            // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
-            const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` },
-            });
-            const result = response.data.documents[0];
-            if (result) {
-                // 검색 결과 ui에 반영
-                setSearchResult(result);
-                // newPlace 상태를 업데이트
-                setNewPlace((prev) => ({
-                    ...prev,
-                    coordinate: {
-                        latitude: parseFloat(result.y), // 검색 결과의 위도 값을 coordinate.latitude에 설정
-                        longitude: parseFloat(result.x), // 검색 결과의 경도 값을 coordinate.longitude에 설정
-                    },
-                    address: result.address.address_name,
-                }));
+    const handlePostcodeComplete = (data: any) => {
+        const fullAddress = data.address;
+        const roadAddress = data.roadAddress || '';
+        const jibunAddress = data.jibunAddress || '';
 
-                // 마커 추가
-                const markerCoordinate = new window.kakao.maps.LatLng(result.y, result.x);
-                const marker = new window.kakao.maps.Marker({
-                    position: markerCoordinate,
-                    map: searchMap, // 검색 지도를 위한 마커 추가
-                    image: new window.kakao.maps.MarkerImage(
+        setAddress(fullAddress);
+        setNewPlace((prev) => ({
+            ...prev,
+            address: fullAddress,
+        }));
+
+        // 주소를 좌표로 변환하여 지도에 마커를 표시
+        const encodedAddress = encodeURIComponent(roadAddress || jibunAddress);
+        axios
+            .get(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodedAddress}`, {
+                headers: { Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}` },
+            })
+            .then((response) => {
+                if (response.data.documents.length > 0) {
+                    const result = response.data.documents[0];
+                    const latitude = parseFloat(result.y);
+                    const longitude = parseFloat(result.x);
+                    const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
+
+                    const markerImage = new window.kakao.maps.MarkerImage(
                         markerImages[newPlace.part] || markerImages.default,
                         new window.kakao.maps.Size(24, 35),
                         { offset: new window.kakao.maps.Point(12, 35) }
-                    ),
-                });
+                    );
 
-                // 이전 검색 마커 제거
-                searchMarkers.forEach((marker) => marker?.setMap(null));
-                setSearchMarkers([marker]);
+                    const marker = new window.kakao.maps.Marker({
+                        position: markerCoordinate,
+                        map: searchMap,
+                        image: markerImage,
+                    });
 
-                searchMap?.setCenter(markerCoordinate);
-            } else {
-                toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
-                // 검색 결과가 없음을 알리는 UI
-            }
-        } catch (error) {
-            toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
+                    searchMarkers.forEach((marker) => marker?.setMap(null));
+                    setSearchMarkers([marker]);
+
+                    searchMap?.setCenter(markerCoordinate);
+                    setNewPlace((prev) => ({
+                        ...prev,
+                        coordinate: {
+                            latitude,
+                            longitude,
+                        },
+                    }));
+                } else {
+                    toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
+                }
+            })
+            .catch((error) => {
+                toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
+            });
+
+        setShowPostcodePopup(false);
+    };
+
+    const handleAddressSearch = () => {
+        setShowPostcodePopup(true);
+    };
+
+    const closePostcodePopup = () => {
+        setShowPostcodePopup(false);
+        const postcodePopupElement = document.getElementById('postcode-popup');
+        if (postcodePopupElement) {
+            postcodePopupElement.remove();
         }
     };
+
+    useEffect(() => {
+        if (showPostcodePopup) {
+            const popupElement = document.createElement('div');
+            popupElement.id = 'postcode-popup';
+            document.body.appendChild(popupElement);
+
+            new window.daum.Postcode({
+                oncomplete: handlePostcodeComplete,
+                onclose: closePostcodePopup, // 팝업이 닫힐 때 상태 업데이트
+            }).open();
+
+            return () => {
+                const postcodePopupElement = document.getElementById('postcode-popup');
+                if (postcodePopupElement) {
+                    postcodePopupElement.remove();
+                }
+            };
+        }
+    }, [showPostcodePopup]);
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -606,7 +655,8 @@ const PerformancePlace: React.FC = () => {
                             >
                                 {number}
                             </button>
-                        ))}ㅌ
+                        ))}
+                        ㅌ
                     </div>
                 </div>
                 {isModalOpen && selectedPlace && (
@@ -733,6 +783,15 @@ const PerformancePlace: React.FC = () => {
                                 >
                                     주소 검색
                                 </button>
+
+                                {showPostcodePopup && (
+                                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+                                        <div className="bg-white p-6 rounded-lg w-1/3 relative">
+                                            <div id="postcode-popup" />
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-4">
                                     <input
                                         type="text"

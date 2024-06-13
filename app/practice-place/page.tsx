@@ -6,13 +6,16 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { IoMdSearch, IoMdClose } from 'react-icons/io';
-import { FaMapMarkerAlt, FaMapPin, FaClock, FaPhoneAlt, FaTag, FaPlus } from 'react-icons/fa';
-import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-import { v4 as uuidv4 } from 'uuid'; // UUID import
+import { IoMdSearch } from 'react-icons/io';
+import { FaPlus } from 'react-icons/fa';
 import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/placeApi/practicePlaceApi';
 import type { PracticePlace, PracticePlaceResponse } from '@/types/types';
+import PracticePlaceList from './components/PracticePlaceList';
+import PracticePlaceMap from './components/PracticePlaceMap';
+import PracticePlaceDetailsModal from './components/PracticePlaceDetailsModal';
+import AddPracticePlaceModal from './components/AddPracticePlaceModal';
 
+//지도 분야별 마커 이미지
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
@@ -20,7 +23,41 @@ const markerImages: { [key: string]: string } = {
     default: '/guitar.svg',
 };
 
+//지역별 위 경도
+const regionCoordinates: { [key: string]: { latitude: number; longitude: number } } = {
+    ALL: { latitude: 37.5665, longitude: 126.978 },
+    GANGNAMGU: { latitude: 37.5172, longitude: 127.0473 },
+    GANGDONGGU: { latitude: 37.5301, longitude: 127.1237 },
+    GANGBUKGU: { latitude: 37.6396, longitude: 127.0257 },
+    GANGSEOGU: { latitude: 37.551, longitude: 126.8495 },
+    GEUMCHEONGU: { latitude: 37.4563, longitude: 126.8958 },
+    GUROGU: { latitude: 37.4955, longitude: 126.8876 },
+    DOBONGGU: { latitude: 37.6659, longitude: 127.0318 },
+    DONGDAEMUNGU: { latitude: 37.5743, longitude: 127.0398 },
+    DONGJAKGU: { latitude: 37.5124, longitude: 126.9394 },
+    MAPOGU: { latitude: 37.566, longitude: 126.901 },
+    SEODAEMUNGU: { latitude: 37.5793, longitude: 126.9368 },
+    SEOCHOGU: { latitude: 37.4836, longitude: 127.0327 },
+    SEONGDONGGU: { latitude: 37.5613, longitude: 127.0384 },
+    SEONGBUKGU: { latitude: 37.5894, longitude: 127.0167 },
+    SONGPA: { latitude: 37.5145, longitude: 127.1056 },
+    YANGCHEONGU: { latitude: 37.5165, longitude: 126.8661 },
+    YEONGDEUNGPOGU: { latitude: 37.5244, longitude: 126.929 },
+    YONGSANGU: { latitude: 37.5326, longitude: 126.99 },
+    EUNPYEONGGU: { latitude: 37.6176, longitude: 126.9227 },
+    JONGNOGU: { latitude: 37.5725, longitude: 126.978 },
+    JUNGGU: { latitude: 37.5641, longitude: 126.9979 },
+    JUNGNANGGU: { latitude: 37.6063, longitude: 127.093 },
+};
+
 const PracticePlace: React.FC = () => {
+    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
+        throw new Error('Kakao API keys are not defined in the environment variables');
+    }
+
+    const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
+    const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
+
     const [selectedRegion, setSelectedRegion] = useState<
         | 'ALL'
         | 'GANGNAMGU'
@@ -47,17 +84,15 @@ const PracticePlace: React.FC = () => {
         | 'JUNGNANGGU'
     >('ALL');
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
+    const [markers, setMarkers] = useState<any[]>([]);
     const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [selectedPlace, setSelectedPlace] = useState<PracticePlace | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [markers, setMarkers] = useState<any[]>([]);
-    const [searchMap, setSearchMap] = useState<any>(null);
-    const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
     const [address, setAddress] = useState('');
-    const [searchResult, setSearchResult] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
     const [newPlace, setNewPlace] = useState<Omit<PracticePlace, 'id'>>({
         name: '',
         part: 'BAND',
@@ -70,16 +105,10 @@ const PracticePlace: React.FC = () => {
         practiceHours: '',
         description: '',
     });
-    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const queryClient = useQueryClient();
 
-    const {
-        data: practicePlacesData,
-        isLoading,
-        isError,
-        error,
-    } = useQuery<PracticePlaceResponse, Error>({
+    const { data: practicePlacesData } = useQuery<PracticePlaceResponse, Error>({
         queryKey: ['practicePlaces'],
         queryFn: getPracticePlaces,
     });
@@ -95,24 +124,68 @@ const PracticePlace: React.FC = () => {
     const addPlaceMutation = useMutation<number, Error, Omit<PracticePlace, 'id'>>({
         mutationFn: addPracticePlace,
         onSuccess: async (newPlace) => {
-            if (newPlace.id=== undefined) {
+            if (newPlace.id === undefined) {
                 console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }
 
             try {
-                // 백엔드에서 반환된 ID를 사용하여 상세 정보를 가져옴
+                //새 장소의 상세정보 아이디로 가져옴.
                 const newPlaceDetails = await getPracticePlaceDetails(newPlace.id);
-
+                //장소 데이터 다시 갱신 함.
                 queryClient.invalidateQueries({ queryKey: ['practicePlaces'] });
+                //새 장소의 상세 정보를 추가함
                 setFilteredPracticePlaces((prev) => {
                     if (Array.isArray(prev)) {
                         return [...prev, newPlaceDetails];
                     } else {
                         return [newPlaceDetails];
                     }
-                }); // 새로운 장소 데이터를 배열에 추가
+                });
+
+                // 지도에 새로운 장소의 마커 추가
+                if (map && clusterer) {
+                    const { latitude, longitude } = newPlaceDetails.coordinate;
+                    const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
+
+                    const markerImage = new window.kakao.maps.MarkerImage(
+                        markerImages[newPlaceDetails.part] || markerImages.default,
+                        new window.kakao.maps.Size(24, 35),
+                        { offset: new window.kakao.maps.Point(12, 35) }
+                    );
+
+                    const marker = new window.kakao.maps.Marker({
+                        position: markerCoordinate,
+                        image: markerImage,
+                    });
+
+                    const infowindow = new window.kakao.maps.InfoWindow({
+                        content: `<div style="padding:5px;">${newPlaceDetails.name}</div>`,
+                    });
+
+                    window.kakao.maps.event.addListener(marker, 'mouseover', () => {
+                        infowindow.open(map, marker);
+                    });
+
+                    window.kakao.maps.event.addListener(marker, 'mouseout', () => {
+                        infowindow.close();
+                    });
+
+                    window.kakao.maps.event.addListener(marker, 'click', () => {
+                        setSelectedPlace(newPlaceDetails);
+                        setIsModalOpen(true);
+                        fetchPlaceDetails(newPlaceDetails.id as number); // fetchPlaceDetails 함수 호출
+                    });
+
+                    marker.setMap(map); // 마커를 지도에 추가
+                    clusterer.addMarker(marker); // 클러스터러에 마커 추가
+                    setMarkers((prevMarkers) => [...prevMarkers, marker]);
+
+                    map.setCenter(markerCoordinate);
+                    map.setLevel(3); // 줌 레벨 설정 (작은 숫자일수록 더 확대됨)
+                }
+
                 setIsAddModalOpen(false);
                 setNewPlace({
                     name: '',
@@ -149,55 +222,33 @@ const PracticePlace: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (placesList && Array.isArray(placesList)) {
-            const filtered = placesList.filter((place) => {
-                const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
-                const partMatch = selectedPart === 'all' || place.part === selectedPart;
-                return regionMatch && partMatch;
-            });
-            setFilteredPracticePlaces(filtered);
+        const filtered = placesList.filter((place: { region: string; part: string }) => {
+            const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
+            const partMatch = selectedPart === 'all' || place.part === selectedPart;
+            return regionMatch && partMatch;
+        });
+        setFilteredPracticePlaces(filtered);
+
+        if (map) {
+            if (selectedRegion !== 'ALL') {
+                const regionCoord = regionCoordinates[selectedRegion];
+                const center = new window.kakao.maps.LatLng(regionCoord.latitude, regionCoord.longitude);
+                map.setCenter(center);
+                map.setLevel(5); // 줌 레벨 설정
+            } else {
+                map.setCenter(new window.kakao.maps.LatLng(37.5665, 126.978));
+                map.setLevel(5); // 기본 줌 레벨 설정
+            }
+
+            if (Array.isArray(filtered)) {
+                updateMarkers(filtered);
+            } else {
+                console.error('filteredPracticePlaces is not an array:', filteredPracticePlaces);
+            }
         }
-    }, [selectedRegion, selectedPart, placesList]);
+    }, [selectedRegion, selectedPart, placesList, map]);
 
-    if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
-        throw new Error('Kakao API keys are not defined in the environment variables');
-    }
-
-    const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
-    const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
-
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${kakaoMapApiKey}&autoload=false&libraries=clusterer`;
-        script.onload = () => {
-            window.kakao.maps.load(() => {
-                const mapContainer = document.getElementById('map');
-                if (mapContainer) {
-                    const mapOption = {
-                        center: new window.kakao.maps.LatLng(37.5665, 126.978),
-                        level: 5,
-                    };
-                    const map = new window.kakao.maps.Map(mapContainer, mapOption);
-                    setMap(map);
-
-                    const mapTypeControl = new window.kakao.maps.MapTypeControl();
-                    map.addControl(mapTypeControl, window.kakao.maps.ControlPosition.TOPRIGHT);
-
-                    const zoomControl = new window.kakao.maps.ZoomControl();
-                    map.addControl(zoomControl, window.kakao.maps.ControlPosition.RIGHT);
-
-                    const clusterer = new window.kakao.maps.MarkerClusterer({
-                        map: map,
-                        averageCenter: true,
-                        minLevel: 10,
-                    });
-                    setClusterer(clusterer);
-                }
-            });
-        };
-        document.head.appendChild(script);
-    }, [kakaoMapApiKey]);
-
+    //필터된 공연장소에 마커 업데이트
     useEffect(() => {
         if (map) {
             if (Array.isArray(filteredPracticePlaces)) {
@@ -207,88 +258,6 @@ const PracticePlace: React.FC = () => {
             }
         }
     }, [map, filteredPracticePlaces]);
-
-    const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        if (name === 'latitude' || name === 'longitude') {
-            setNewPlace((prev) => ({
-                ...prev,
-                coordinate: {
-                    ...prev.coordinate,
-                    [name]: parseFloat(value),
-                },
-            }));
-        } else {
-            setNewPlace((prev) => ({ ...prev, [name]: value }));
-        }
-    };
-
-    const handleAddPlaceSubmit = () => {
-        if (!newPlace.name || !newPlace.part || !newPlace.region || !newPlace.address) {
-            toast.warning('연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.');
-            return;
-        }
-        addPlaceMutation.mutate(newPlace);
-    };
-
-    useEffect(() => {
-        if (map && clusterer && Array.isArray(filteredPracticePlaces)) {
-            const bounds = new window.kakao.maps.LatLngBounds();
-            const newMarkers = filteredPracticePlaces
-                .map((place) => {
-                    const latitude = place.coordinate?.latitude;
-                    const longitude = place.coordinate?.longitude;
-
-                    if (latitude !== undefined && longitude !== undefined && place.id !== undefined) {
-                        const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
-                        bounds.extend(markerCoordinate);
-
-                        const markerImage = new window.kakao.maps.MarkerImage(
-                            markerImages[place.part] || markerImages.default,
-                            new window.kakao.maps.Size(24, 35),
-                            { offset: new window.kakao.maps.Point(12, 35) }
-                        );
-
-                        const marker = new window.kakao.maps.Marker({
-                            position: markerCoordinate,
-                            image: markerImage,
-                        });
-
-                        const infowindow = new window.kakao.maps.InfoWindow({
-                            content: `<div style="padding:5px;">${place.name}</div>`,
-                        });
-
-                        window.kakao.maps.event.addListener(marker, 'mouseover', () => {
-                            infowindow.open(map, marker);
-                        });
-
-                        window.kakao.maps.event.addListener(marker, 'mouseout', () => {
-                            infowindow.close();
-                        });
-
-                        window.kakao.maps.event.addListener(marker, 'click', () => {
-                            fetchPlaceDetails(place.id as number);
-                        });
-
-                        marker.setMap(map);
-                        return marker;
-                    }
-                })
-                .filter((marker) => marker !== undefined); // undefined가 아닌 마커들만 필터링
-
-            setMarkers((prevMarkers) => {
-                prevMarkers.forEach((marker) => marker?.setMap(null));
-                return newMarkers;
-            });
-
-            clusterer?.clear();
-            clusterer?.addMarkers(newMarkers);
-
-            if (!bounds.isEmpty()) {
-                map?.setBounds(bounds);
-            }
-        }
-    }, [map, clusterer, filteredPracticePlaces, fetchPlaceDetails]);
 
     const updateMarkers = (places: PracticePlace[]) => {
         if (!Array.isArray(places)) {
@@ -333,6 +302,7 @@ const PracticePlace: React.FC = () => {
                     setSelectedPlace(place);
                     setIsModalOpen(true);
                     fetchPlaceDetails(place.id as number); // fetchPlaceDetails 함수 호출
+                    window.location.href = `/performanceplace/${place.id}`;
                 });
 
                 marker.setMap(map); // 마커를 지도에 추가
@@ -345,65 +315,12 @@ const PracticePlace: React.FC = () => {
                 return newMarkers;
             });
 
-            clusterer?.clear(); // 이전 마커 클러스터 제거
-            clusterer?.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
+            clusterer.clear(); // 이전 마커 클러스터 제거
+            clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
 
             if (!bounds.isEmpty()) {
-                map?.setBounds(bounds);
+                map.setBounds(bounds);
             }
-        }
-    };
-
-    const handleAddressSearch = async () => {
-        try {
-            if (!address || address.trim() === '') {
-                toast.warning('주소를 입력해 주세요.');
-                return; // 주소가 빈칸이거나 null이면 함수 종료
-            }
-
-            const encodedAddress = encodeURIComponent(address);
-
-            // 카카오 주소 검색 api 호출해서 주소 정보 가져옴
-            const response = await axios.get(`https://dapi.kakao.com/v2/local/search/address.json?query=${address}`, {
-                headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` },
-            });
-            const result = response.data.documents[0];
-            if (result) {
-                // 검색 결과 ui에 반영
-                setSearchResult(result);
-                // newPlace 상태를 업데이트
-                setNewPlace((prev) => ({
-                    ...prev,
-                    coordinate: {
-                        latitude: parseFloat(result.y), // 검색 결과의 위도 값을 coordinate.latitude에 설정
-                        longitude: parseFloat(result.x), // 검색 결과의 경도 값을 coordinate.longitude에 설정
-                    },
-                    address: result.address.address_name,
-                }));
-
-                // 마커 추가
-                const markerCoordinate = new window.kakao.maps.LatLng(result.y, result.x);
-                const marker = new window.kakao.maps.Marker({
-                    position: markerCoordinate,
-                    map: searchMap, // 검색 지도를 위한 마커 추가
-                    image: new window.kakao.maps.MarkerImage(
-                        markerImages[newPlace.part] || markerImages.default,
-                        new window.kakao.maps.Size(24, 35),
-                        { offset: new window.kakao.maps.Point(12, 35) }
-                    ),
-                });
-
-                // 이전 검색 마커 제거
-                searchMarkers.forEach((marker) => marker?.setMap(null));
-                setSearchMarkers([marker]);
-
-                searchMap?.setCenter(markerCoordinate);
-            } else {
-                toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
-                // 검색 결과가 없음을 알리는 UI
-            }
-        } catch (error) {
-            toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
         }
     };
 
@@ -411,21 +328,10 @@ const PracticePlace: React.FC = () => {
         setCurrentPage(pageNumber);
     };
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = Array.isArray(filteredPracticePlaces)
-        ? filteredPracticePlaces.slice(indexOfFirstItem, indexOfLastItem)
-        : [];
-    const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(filteredPracticePlaces.length / itemsPerPage); i++) {
-        pageNumbers.push(i);
-    }
-
-    // 추가: 지도 중심을 변경하는 함수
     const handleTitleClick = (latitude: number, longitude: number) => {
         if (map) {
             map.setCenter(new window.kakao.maps.LatLng(latitude, longitude));
-            map.setLevel(3); // 줌 레벨 설정 (작은 숫자일수록 더 확대됨)
+            map.setLevel(3);
         }
     };
 
@@ -438,12 +344,12 @@ const PracticePlace: React.FC = () => {
                         <input
                             type="text"
                             className="w-full border rounded p-2 pl-10"
-                            placeholder="검색어를 입력하세요                            ..."
+                            placeholder="검색어를 입력하세요..."
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                         />
-                        <div className="absolute left-3 top-3 text-gray-400">
-                            <IoMdSearch size={20} onClick={handleAddressSearch} />
+                        <div className="absolute  left-3 top-3 text-gray-400">
+                            <IoMdSearch size={20} />
                         </div>
                     </div>
                 </div>
@@ -468,7 +374,6 @@ const PracticePlace: React.FC = () => {
                                 <option value="GANGSEOGU">강서구</option>
                                 <option value="GEUMCHEONGU">금천구</option>
                                 <option value="GUROGU">구로구</option>
-                                <option value="GEUMCHEONGU">금천구</option>
                                 <option value="DOBONGGU">도봉구</option>
                                 <option value="DONGDAEMUNGU">동대문구</option>
                                 <option value="DONGJAKGU">동작구</option>
@@ -502,9 +407,6 @@ const PracticePlace: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <button className="bg-purple-700 text-white py-2 px-4 rounded-full">
-                            <FaMapMarkerAlt />
-                        </button>
                         <button
                             className="bg-purple-700 text-white py-2 px-4 rounded-full"
                             onClick={() => setIsAddModalOpen(true)}
@@ -513,331 +415,42 @@ const PracticePlace: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <div id="map" className="w-full h-96 relative z-0">
-                    <Map
-                        center={{ lat: 37.5665, lng: 126.978 }}
-                        style={{ width: '100%', height: '100%' }}
-                        level={5}
-                        onCreate={setMap}
-                    >
-                        <MarkerClusterer>
-                            {Array.isArray(filteredPracticePlaces) &&
-                                filteredPracticePlaces
-                                    .map((place) => {
-                                        const latitude = place.coordinate?.latitude;
-                                        const longitude = place.coordinate?.longitude;
 
-                                        if (
-                                            latitude !== undefined &&
-                                            longitude !== undefined &&
-                                            place.id !== undefined
-                                        ) {
-                                            return (
-                                                <MapMarker
-                                                    key={uuidv4()}
-                                                    position={{ lat: latitude, lng: longitude }}
-                                                    image={{
-                                                        src: markerImages[place.part] || markerImages.default,
-                                                        size: { width: 24, height: 35 },
-                                                        options: { offset: { x: 12, y: 35 } },
-                                                    }}
-                                                    onClick={() => fetchPlaceDetails(place.id as number)}
-                                                />
-                                            );
-                                        } else {
-                                            console.error('Missing coordinates or id:', place);
-                                            return null;
-                                        }
-                                    })
-                                    .filter((marker) => marker !== null)}
-                        </MarkerClusterer>
-                        <MapTypeControl position="TOPRIGHT" />
-                        <ZoomControl position="RIGHT" />
-                    </Map>
-                </div>
-                <div className="mt-6">
-                    <ul className="space-y-4">
-                        {currentItems.map((place) => (
-                            <li key={uuidv4()} className="border p-4 rounded-lg bg-white shadow-md">
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <span className="rounded-ml bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
-                                            {place.part}
-                                        </span>
-                                        <h3
-                                            className="text-xl my-1 font-semibold cursor-pointer"
-                                            onClick={() =>
-                                                handleTitleClick(place.coordinate.latitude, place.coordinate.longitude)
-                                            }
-                                        >
-                                            {place.name}
-                                        </h3>
-                                        <p className="text-m text-gray-600 font-regular">{place.address}</p>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            if (place.id !== undefined) {
-                                                fetchPlaceDetails(place.id);
-                                            } else {
-                                                console.error('Place id is undefined:', place);
-                                            }
-                                        }}
-                                        className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
-                                    >
-                                        상세 정보
-                                    </button>
-                                </div>
-                            </li>
-                        ))}
-                    </ul>
-                    <div className="flex justify-center space-x-2 mt-4">
-                        {pageNumbers.map((number) => (
-                            <button
-                                key={uuidv4()}
-                                onClick={() => handlePageChange(number)}
-                                className={`py-2 px-4 rounded-full ${
-                                    currentPage === number ? 'bg-purple-700 text-white' : 'bg-gray-300 text-black'
-                                } hover:bg-purple-800 transition-colors duration-300 ease-in-out`}
-                            >
-                                {number}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <PracticePlaceMap
+                    places={filteredPracticePlaces}
+                    map={map}
+                    setMap={setMap}
+                    fetchPlaceDetails={fetchPlaceDetails}
+                    clusterer={clusterer} // 클러스터러 전달
+                    setClusterer={setClusterer} // 클러스터러 설정 함수 전달
+                />
+
+                <PracticePlaceList
+                    places={filteredPracticePlaces}
+                    currentPage={currentPage}
+                    itemsPerPage={itemsPerPage}
+                    handlePageChange={handlePageChange}
+                    handleTitleClick={handleTitleClick}
+                    fetchPlaceDetails={fetchPlaceDetails}
+                />
+
                 {isModalOpen && selectedPlace && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-1/3 relative">
-                            <div className="relative h-56 w-full sm:h-52">
-                                {selectedPlace.part === 'BAND' && (
-                                    <img src="/band.png" alt="Band" className="object-cover w-full h-full rounded-lg" />
-                                )}
-                                {selectedPlace.part === 'DANCE' && (
-                                    <img
-                                        src="/dance.png"
-                                        alt="Dance"
-                                        className="object-cover w-full h-full rounded-lg"
-                                    />
-                                )}
-                                {selectedPlace.part === 'VOCAL' && (
-                                    <img
-                                        src="/vocal.png"
-                                        alt="Vocal"
-                                        className="object-cover w-full h-full rounded-lg"
-                                    />
-                                )}
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
-                                    aria-label="닫기"
-                                >
-                                    <IoMdClose size={20} />
-                                </button>
-                            </div>
-                            <div className="p-4">
-                                <h2 className="text-xl font-bold mb-4">{selectedPlace.name}</h2>
-                                <span className="break-keep rounded-sm bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">
-                                    {selectedPlace.part}
-                                </span>
-                                <div className="my-2 flex w-full items-center justify-start gap-3">
-                                    <button
-                                        className="bg-purple-700 text-white py-2 px-4 rounded-full"
-                                        onClick={() => {
-                                            window.open(
-                                                `https://map.kakao.com/link/to/${selectedPlace.name},${selectedPlace.coordinate.latitude},${selectedPlace.coordinate.longitude}`,
-                                                '_blank'
-                                            );
-                                        }}
-                                    >
-                                        길찾기
-                                    </button>
-                                    <button
-                                        className="bg-blue-500 text-white py-2 px-4 rounded-full"
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(selectedPlace.address);
-                                            alert('주소가 복사되었습니다.');
-                                        }}
-                                    >
-                                        주소 복사
-                                    </button>
-                                </div>
-                                <hr className="w-90 my-4 h-px bg-gray-300" />
-                                <div className="my-4 flex flex-col gap-4">
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaMapPin size={16} className="text-gray-400" />
-                                        <span>{selectedPlace.address}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaClock size={14} className="text-gray-400" />
-                                        <span>연습 가능 시간: {selectedPlace.practiceHours}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaPhoneAlt size={15} className="text-gray-400" />
-                                        <span>{selectedPlace.phoneNumber || '-'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaTag size={17} className="text-gray-400" />
-                                        <span>대관료: {selectedPlace.rentalFee}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaTag size={17} className="text-gray-400" />
-                                        <span>수용 인원: {selectedPlace.capacity}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 align-middle">
-                                        <FaTag size={17} className="text-gray-400" />
-                                        <span>설명: {selectedPlace.description}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <PracticePlaceDetailsModal
+                        place={selectedPlace}
+                        isOpen={isModalOpen}
+                        onClose={() => setIsModalOpen(false)}
+                    />
                 )}
+
                 {isAddModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-                        <div className="bg-white p-6 rounded-lg w-2/3 relative">
-                            <h2 className="text-xl font-bold mb-4">연습 장소 추가</h2>
-                            <div className="flex flex-col gap-4">
-                                <div id="searchMap" className="w-full h-48 mb-4 relative z-0">
-                                    <Map
-                                        center={{ lat: 37.5665, lng: 126.978 }}
-                                        style={{ width: '100%', height: '100%' }}
-                                        level={5}
-                                        onCreate={setSearchMap} // 검색용 지도를 위한 Map 인스턴스 저장
-                                    >
-                                        {searchResult && (
-                                            <MapMarker
-                                                key={searchResult.address_name} // 고유한 값을 key로 사용
-                                                position={{
-                                                    lat: parseFloat(searchResult.y),
-                                                    lng: parseFloat(searchResult.x),
-                                                }}
-                                            />
-                                        )}
-                                    </Map>
-                                </div>
-                                <input
-                                    type="text"
-                                    name="address"
-                                    value={address}
-                                    onChange={(e) => setAddress(e.target.value)}
-                                    placeholder="주소"
-                                    className="border p-2 rounded"
-                                />
-                                <button
-                                    onClick={handleAddressSearch}
-                                    className="bg-blue-500 text-white py-2 px-4 rounded-full mb-4"
-                                >
-                                    주소 검색
-                                </button>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input
-                                        type="text"
-                                        name="name"
-                                        value={newPlace.name}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="연습 장소 이름"
-                                        className="border p-2 rounded"
-                                    />
-                                    <select
-                                        name="part"
-                                        value={newPlace.part}
-                                        onChange={handleAddPlaceChange}
-                                        className="border p-2 rounded"
-                                    >
-                                        <option value="">분야</option>
-                                        <option value="BAND">밴드</option>
-                                        <option value="DANCE">춤</option>
-                                        <option value="VOCAL">노래</option>
-                                    </select>
-                                    <select
-                                        name="region"
-                                        value={newPlace.region}
-                                        onChange={handleAddPlaceChange}
-                                        className="border p-2 rounded"
-                                    >
-                                        <option value="">지역</option>
-                                        <option value="GANGNAMGU">강남구</option>
-                                        <option value="GANGDONGGU">강동구</option>
-                                        <option value="GANGBUKGU">강북구</option>
-                                        <option value="GANGSEOGU">강서구</option>
-                                        <option value="GEUMCHEONGU">금천구</option>
-                                        <option value="GUROGU">구로구</option>
-                                        <option value="GEUMCHEONGU">금천구</option>
-                                        <option value="DOBONGGU">도봉구</option>
-                                        <option value="DONGDAEMUNGU">동대문구</option>
-                                        <option value="DONGJAKGU">동작구</option>
-                                        <option value="MAPOGU">마포구</option>
-                                        <option value="SEODAEMUNGU">서대문구</option>
-                                        <option value="SEOCHOGU">서초구</option>
-                                        <option value="SEONGDONGGU">성동구</option>
-                                        <option value="SEONGBUKGU">성북구</option>
-                                        <option value="SONGPA">송파구</option>
-                                        <option value="YANGCHEONGU">양천구</option>
-                                        <option value="YEONGDEUNGPOGU">영등포구</option>
-                                        <option value="YONGSANGU">용산구</option>
-                                        <option value="EUNPYEONGGU">은평구</option>
-                                        <option value="JONGNOGU">종로구</option>
-                                        <option value="JUNGGU">중구</option>
-                                        <option value="JUNGNANGGU">중랑구</option>
-                                        {/* 지역구 추가 */}
-                                    </select>
-                                    <input
-                                        type="text"
-                                        name="phoneNumber"
-                                        value={newPlace.phoneNumber}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="전화번호"
-                                        className="border p-2 rounded"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="rentalFee"
-                                        value={newPlace.rentalFee}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="대관료"
-                                        className="border p-2 rounded"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="capacity"
-                                        value={newPlace.capacity}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="수용 인원"
-                                        className="border p-2 rounded"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="practiceHours"
-                                        value={newPlace.practiceHours}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="연습 가능 시간"
-                                        className="border p-2 rounded"
-                                    />
-                                    <input
-                                        type="text"
-                                        name="description"
-                                        value={newPlace.description}
-                                        onChange={handleAddPlaceChange}
-                                        placeholder="설명"
-                                        className="border p-2 rounded"
-                                    />
-                                </div>
-                                <div className="flex justify-end space-x-2 mt-4">
-                                    <button
-                                        onClick={() => setIsAddModalOpen(false)}
-                                        className="bg-gray-500 text-white py-2 px-4 rounded-full"
-                                    >
-                                        취소
-                                    </button>
-                                    <button
-                                        onClick={handleAddPlaceSubmit}
-                                        className="bg-blue-500 text-white py-2 px-4 rounded-full"
-                                    >
-                                        추가
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <AddPracticePlaceModal
+                        isOpen={isAddModalOpen}
+                        onClose={() => setIsAddModalOpen(false)}
+                        onSubmit={(newPlace) => addPlaceMutation.mutate(newPlace)}
+                        kakaoRestApiKey={kakaoRestApiKey}
+                        newPlace={newPlace}
+                        setNewPlace={setNewPlace}
+                    />
                 )}
             </div>
         </div>
