@@ -4,13 +4,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
-import KakaoMap from './kakaoMap';
+
 import Recruit_post from './Recruit_post';
 import WritePostForm from './WritePostForm';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
-import PostContent from './Post/post';
+import PostContent from './Post/[postId]/post';
 import { useParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
+import KakaoMap from './kakaoMap';
 
 const Recruit_page: React.FC = () => {
     const [isMapVisible, setIsMapVisible] = useState(false);
@@ -247,7 +248,7 @@ const Recruit_page: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    <KakaoMap isVisible={isMapVisible} posts={posts} />
+                    {isMapVisible && <KakaoMap isVisible={isMapVisible} posts={posts} />}
                     <div className="border p-4">
                         {selectedPost
                             ? isPosting && (

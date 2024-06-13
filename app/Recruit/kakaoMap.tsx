@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Map, MapTypeControl, MapMarker, ZoomControl, MarkerClusterer } from 'react-kakao-maps-sdk';
-import { useRouter } from 'next/router';
+import { Map, MarkerClusterer } from 'react-kakao-maps-sdk'; // react-kakao-maps-sdk에서 필요한 모듈만 import
 import { regionCenters } from './types';
 
 interface Location {
@@ -23,12 +22,13 @@ interface KakaoMapProps {
 }
 
 const KakaoMap: React.FC<KakaoMapProps> = ({ isVisible, posts }) => {
-    // const router = useRouter();
-    const [locations, setLocations] = useState<Location[]>([]);
+    const [mapInstance, setMapInstance] = useState<any>(null); // 맵 인스턴스를 상태로 관리
 
     useEffect(() => {
+        let script: HTMLScriptElement | null = null;
+
         if (isVisible) {
-            const script = document.createElement('script');
+            script = document.createElement('script');
             script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&libraries=services,clusterer&autoload=false`;
             script.onload = () => {
                 window.kakao.maps.load(() => {
@@ -59,29 +59,32 @@ const KakaoMap: React.FC<KakaoMapProps> = ({ isVisible, posts }) => {
                                 position: markerPosition,
                             });
 
-                            // window.kakao.maps.event.addListener(marker, 'click', () => {
-                            //     router.push(`/recruitboard/${post.id}`);
-                            // });
-
                             return marker;
                         });
 
-                        setLocations(newLocations);
+                        setMapInstance(map); // 맵 인스턴스 설정
                         clusterer.addMarkers(markers);
                     }
                 });
             };
             document.head.appendChild(script);
-
-            return () => {
-                document.getElementById('map')?.remove();
-                document.head.removeChild(script);
-            };
         }
-    }, [isVisible, posts]);
+
+        return () => {
+            if (script) {
+                document.head.removeChild(script); // 스크립트 제거
+            }
+            if (mapInstance) {
+                // 맵 인스턴스가 있으면 컴포넌트 언마운트 시 맵 제거
+                mapInstance.relayout();
+                mapInstance.removeAllChildren();
+            }
+        };
+    }, [isVisible, posts, mapInstance]);
 
     if (!isVisible) return null;
 
     return <div id="map" style={{ width: '100%', height: '400px' }}></div>;
 };
+
 export default KakaoMap;

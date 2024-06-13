@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { regionCenters, type Comment, type Post } from '../types';
+import { regionCenters, type Comment, type Post } from '../../types';
 
 interface PostProps {
     post: Post;
