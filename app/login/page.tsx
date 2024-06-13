@@ -32,7 +32,7 @@ const Login = () => {
     //로그인 버튼 클릭시 post api 요청
     const loginMutation = useMutation({
         mutationFn: async (data: { email: string; password: string }) => {
-            const response = await apiClient.post('/api/auth/login', data, {
+            const response = await apiClient.post('/login', data, {
                 withCredentials: true, // 이 옵션을 추가하여 쿠키를 포함한 요청을 허용
             });
             return response.data;
@@ -98,7 +98,7 @@ const Login = () => {
                         required
                     />
                     <div className="flex justify-between mt-6">
-                        <Link href="/signup" className="w-1/2 pr-2">
+                        <Link href="/signup/email-password" className="w-1/2 pr-2">
                             <button className="w-full bg-purple-500 text-white hover:bg-purple-600 py-3 rounded-lg transition transform duration-300 hover:scale-105">
                                 회원가입
                             </button>

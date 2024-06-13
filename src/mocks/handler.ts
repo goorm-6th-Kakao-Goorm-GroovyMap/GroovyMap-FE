@@ -5,11 +5,21 @@ interface User {
     email: string;
     password: string;
     nickname: string;
+    region?: string;
+    part?: string;
+    subPart?: string;
 }
 
 const users: User[] = [
-    { email: 'valid@example.com', password: 'password123!', nickname: 'validuser' },
-    { email: 'newuser@example.com', password: 'password123!', nickname: 'newuser' },
+    {
+        email: 'valid@example.com',
+        password: 'password123!',
+        nickname: 'validuser',
+        region: 'ALL',
+        part: 'BAND',
+        subPart: 'GUITAR',
+    },
+    { email: 'newuser@example.com', password: 'password123!', nickname: 'newuser', region: 'ALL', part: 'VOCAL' },
 ];
 
 const certificationCodes: { [email: string]: string } = {};
@@ -46,14 +56,18 @@ export const handlers = [
     }),
 
     rest.post<Partial<User>>('/register', async (req, res, ctx) => {
-        const { email, password, nickname } = req.body as User;
+        const { email, password, nickname, region, part, subPart } = req.body as User;
         if (email && password && nickname) {
-            users.push({ email, password, nickname });
+            users.push({ email, password, nickname, region, part, subPart });
             // Remove certification code after successful registration
             delete certificationCodes[email];
             return res(
                 ctx.status(200),
-                ctx.json({ result: true, message: '회원가입에 성공했습니다!', user: { email, nickname } })
+                ctx.json({
+                    result: true,
+                    message: '회원가입에 성공했습니다!',
+                    user: { email, nickname, region, part, subPart },
+                })
             );
         }
         return res(ctx.status(400), ctx.json({ result: false, message: '회원가입에 실패했습니다.' }));
@@ -65,7 +79,16 @@ export const handlers = [
         if (user) {
             return res(
                 ctx.status(200),
-                ctx.json({ message: '로그인에 성공했습니다!', user: { email: user.email, nickname: user.nickname } })
+                ctx.json({
+                    message: '로그인에 성공했습니다!',
+                    user: {
+                        email: user.email,
+                        nickname: user.nickname,
+                        region: user.region,
+                        part: user.part,
+                        subPart: user.subPart,
+                    },
+                })
             );
         }
         return res(
