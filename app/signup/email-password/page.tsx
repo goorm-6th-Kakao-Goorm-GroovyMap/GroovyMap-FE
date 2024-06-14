@@ -35,9 +35,8 @@ const EmailPasswordPage: React.FC = () => {
             return response.data;
         },
         onSuccess: (data) => {
-            if (data.message) {
-                toast.success(data.message);
-            }
+            const message = data.message || '인증 코드가 이메일로 전송되었습니다.'; // 기본 메시지 설정
+            toast.success(message); // 이메일 전송 성공 메시지 표시
         },
         onError: (error) => {
             toast.error('이메일 인증 요청에 실패했습니다.');
@@ -50,16 +49,21 @@ const EmailPasswordPage: React.FC = () => {
             const response = await apiClient.post('/register/certificate-code', {
                 email: formData.email,
                 certificationCode: certificationCode,
+                //이메일과 인증 코드를 보냄
             });
-            return response.data;
+            return response.data; //json data 반환(result, message)
         },
         onSuccess: (data) => {
-            if (data.result) {
-                toast.success('이메일 인증에 성공했습니다!');
+            const result = data.result !== undefined ? data.result : false; // 기본 값 설정
+            const message = data.message || (result ? '이메일 인증에 성공했습니다!' : '인증 코드가 잘못되었습니다.');
+            //result 값 확인 후, 반환 값에 message 있으면 넣고, 아니면 result가 true일때 성공 메시지.
+            if (result) {
+                //reult값이 true일 경우
+                toast.success(message);
                 setFormData((prev) => ({ ...prev, certificationCode }));
                 setIsEmailVerified(true);
             } else {
-                toast.error('인증 코드가 잘못되었습니다.');
+                toast.error(message);
             }
         },
         onError: () => {
@@ -84,7 +88,7 @@ const EmailPasswordPage: React.FC = () => {
             toast.warning('인증 코드를 입력해 주세요.');
             return;
         }
-        validateEmailCodeMutation.mutate();
+        validateEmailCodeMutation.mutate(); //인증코드 보냄
     };
 
     //비밀 번호 확인
@@ -112,7 +116,7 @@ const EmailPasswordPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50">
             <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold text-center mb-6">회원가입 - 이메일 인증</h1>
                 <div className="space-y-4">
@@ -150,7 +154,7 @@ const EmailPasswordPage: React.FC = () => {
                             />
                             <button
                                 type="button"
-                                onClick={handleValidateEmailCode}
+                                onClick={handleValidateEmailCode} //받은 인증 코드 post
                                 className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
                             >
                                 인증 코드 확인

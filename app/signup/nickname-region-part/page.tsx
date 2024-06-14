@@ -48,7 +48,7 @@ const partMap: { [key: string]: string } = {
 const subPartMap: { [key: string]: string } = {
     GUITAR: '기타',
     KEYBOARD: '건반',
-    BASS: '베이스',
+    BASSE: '베이스',
     VOCAL: '보컬',
     HIPHOP: '힙합',
     JAZZ: '재즈',
@@ -57,7 +57,6 @@ const subPartMap: { [key: string]: string } = {
 
 const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
-    const [user, setUser] = useRecoilState(userState);
     const router = useRouter();
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -96,22 +95,27 @@ const NicknameRegionPartPage: React.FC = () => {
                 email: formData.email,
                 password: formData.password,
                 nickname: formData.nickname,
-                region: regionMap[formData.region], // 한국어 값을 영어로 변환
-                part: partMap[formData.part], // 한국어 값을 영어로 변환
-                type: subPartMap[formData.subPart], // 한국어 값을 영어로 변환
+                region: regionMap[formData.region],
+                part: partMap[formData.part],
+                type: subPartMap[formData.subPart],
             });
             return response.data;
         },
         onSuccess: (data) => {
-            setUser(data.user);
-            toast.success('회원가입에 성공했습니다!');
-            confetti({
-                particleCount: 100,
-                spread: 160,
-            });
-            setTimeout(() => {
-                router.push('/login');
-            }, 2000);
+            if (data.result) {
+                //회원가입 결과 값 반환이 true일 경우에
+                toast.success('회원가입에 성공했습니다!');
+                confetti({
+                    particleCount: 100,
+                    spread: 160,
+                });
+                setTimeout(() => {
+                    //로그인 페이지로 라우팅
+                    router.push('/login');
+                }, 2000);
+            } else {
+                toast.error('회원가입에 실패했습니다. 다시 시도해주세요.');
+            }
         },
         onError: (error: any) => {
             toast.error('회원가입에 실패했습니다. 다시 시도해주세요.');
@@ -132,8 +136,8 @@ const NicknameRegionPartPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50">
+            <div className="w-full max-w-xl p-8 bg-white rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold text-center mb-6">회원가입 - 추가 정보</h1>
                 <div className="space-y-4">
                     <div>

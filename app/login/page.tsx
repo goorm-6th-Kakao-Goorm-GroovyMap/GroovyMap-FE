@@ -10,7 +10,6 @@ import apiClient from '@/api/apiClient';
 import { useMutation } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
 import confetti from 'canvas-confetti';
-import { userState } from '@/recoil/state/loginState';
 import { toast } from 'react-toastify';
 
 const Login = () => {
@@ -19,7 +18,7 @@ const Login = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-    });
+    }); //로그인에 필요한 formData
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -33,18 +32,17 @@ const Login = () => {
     const loginMutation = useMutation({
         mutationFn: async (data: { email: string; password: string }) => {
             const response = await apiClient.post('/login', data, {
-                withCredentials: true, // 이 옵션을 추가하여 쿠키를 포함한 요청을 허용
+                withCredentials: true, // 쿠키를 포함한 요청을 허용하는 옵션
             });
             return response.data;
         },
         onSuccess: (data) => {
-            setUser(data.user); //리코일에서 가져온 유저 정보 넘겨주고 메인으로 이동
             toast.success('로그인에 성공했습니다!');
             confetti({
                 particleCount: 100,
                 spread: 160,
             });
-            router.push('/');
+            router.push('/'); //로그인 후 메인 페이지로 이동시킴
         },
         onError: (error) => {
             console.log('Error during login:', error);
@@ -57,12 +55,12 @@ const Login = () => {
         loginMutation.mutate(formData);
     };
 
-    //소셜 로그인 나중에 추가하기
+    //카카오 로그인 나중에 추가하기
     const handleKakaoLogin = () => {
         const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/kakao`;
         router.push(kakaoLoginURL);
     };
-
+    //구글 로그인 나중에 추가
     const handleGoogleLogin = () => {
         const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/google`;
         router.push(googleLoginURL);
@@ -71,7 +69,7 @@ const Login = () => {
     return (
         <>
             <title>그루비 맵 | 로그인</title>
-            <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-gray-50">
+            <div className="flex flex-col items-center justify-center min-h-screen py-12 bg-white">
                 <div className="mb-2">
                     <Drawing />
                 </div>
@@ -94,7 +92,7 @@ const Login = () => {
                         placeholder="비밀번호"
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full p-4 border  border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         required
                     />
                     <div className="flex justify-between mt-6">

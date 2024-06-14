@@ -89,8 +89,8 @@ const Filter: React.FC<FilterProps> = ({
     };
 
     return (
-        <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
-            <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
+            <div className="flex items-center flex-grow gap-2">
                 <div className="flex items-center border rounded-lg p-2 bg-white">
                     <label className="font-bold mr-2">지역</label>
                     <select
@@ -120,10 +120,10 @@ const Filter: React.FC<FilterProps> = ({
                     </select>
                 </div>
                 {selectedPart !== 'all' && subParts[selectedPart]?.length > 0 && (
-                    <div className="flex items-center border rounded-lg p-2 bg-white">
-                        <label className="font-bold mr-2">세부 유형</label>
+                    <div className="flex items-center border rounded-lg p-3 bg-white flex-grow">
+                        <label className="font-bold mr-2 flex-shrink-0">세부 유형</label>
                         <select
-                            className="border-none p-2 bg-white"
+                            className="border-none bg-white w w-full"
                             value={subPartMap[selectedSubPart] || ''}
                             onChange={handleSubPartChange}
                         >
