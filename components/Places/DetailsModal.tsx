@@ -1,19 +1,21 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
+import React from 'react';
 import { IoMdClose } from 'react-icons/io';
 import { FaMapPin, FaClock, FaPhoneAlt, FaTag } from 'react-icons/fa';
-import { PracticePlace } from '@/types/types';
+import { Place } from '@/types/types';
 
-interface PracticePlaceDetailsModalProps {
-    place: PracticePlace;
+interface DetailsModalProps {
+    place: Place;
     isOpen: boolean;
     onClose: () => void;
 }
 
-//상세 정보 버튼 누를시에 나오는 모달
-const PracticePlaceDetailsModal: React.FC<PracticePlaceDetailsModalProps> = ({ place, isOpen, onClose }) => {
-    if (!isOpen || !place) return null;
+const DetailsModal: React.FC<DetailsModalProps> = ({ place, isOpen, onClose }) => {
+    if (!isOpen) return null;
+
+    const hours = (place as any).performanceHours || (place as any).practiceHours;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -71,7 +73,7 @@ const PracticePlaceDetailsModal: React.FC<PracticePlaceDetailsModalProps> = ({ p
                         </div>
                         <div className="flex items-center gap-2 align-middle">
                             <FaClock size={14} className="text-gray-400" />
-                            <span>연습 가능 시간: {place.practiceHours}</span>
+                            <span>운영 시간: {hours}</span>
                         </div>
                         <div className="flex items-center gap-2 align-middle">
                             <FaPhoneAlt size={15} className="text-gray-400" />
@@ -96,4 +98,4 @@ const PracticePlaceDetailsModal: React.FC<PracticePlaceDetailsModalProps> = ({ p
     );
 };
 
-export default PracticePlaceDetailsModal;
+export default DetailsModal;

@@ -1,53 +1,26 @@
+/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @next/next/no-img-element */ // 이미지 src 넣을 때 에러 수정하기 위해 추가
 'use client';
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { IoMdSearch } from 'react-icons/io';
-import { FaPlus } from 'react-icons/fa';
-import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/placeApi/practicePlaceApi';
-import type { PracticePlace, PracticePlaceResponse } from '@/types/types';
-import PracticePlaceList from './components/PracticePlaceList';
-import PracticePlaceMap from './components/PracticePlaceMap';
-import PracticePlaceDetailsModal from './components/PracticePlaceDetailsModal';
-import AddPracticePlaceModal from './components/AddPracticePlaceModal';
+import { IoMdSearch, IoMdClose } from 'react-icons/io';
+import { FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
+import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/places/practicePlaceApi';
+import type { PracticePlaceResponse, PracticePlace, Place } from '@/types/types';
+import DetailsModal from '@/components/Places/DetailsModal';
+import AddModal from '@/components/Places/AddModal';
+import List from '@/components/Places/List';
+import Map from '@/components/Places/Map';
+import { updateMarkers } from '@/components/Places/UpdataMarkers';
 
-//지도 분야별 마커 이미지
-const markerImages: { [key: string]: string } = {
+const markersImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
     VOCAL: '/guitar.svg',
     default: '/guitar.svg',
-};
-
-//지역별 위 경도
-const regionCoordinates: { [key: string]: { latitude: number; longitude: number } } = {
-    ALL: { latitude: 37.5665, longitude: 126.978 },
-    GANGNAMGU: { latitude: 37.5172, longitude: 127.0473 },
-    GANGDONGGU: { latitude: 37.5301, longitude: 127.1237 },
-    GANGBUKGU: { latitude: 37.6396, longitude: 127.0257 },
-    GANGSEOGU: { latitude: 37.551, longitude: 126.8495 },
-    GEUMCHEONGU: { latitude: 37.4563, longitude: 126.8958 },
-    GUROGU: { latitude: 37.4955, longitude: 126.8876 },
-    DOBONGGU: { latitude: 37.6659, longitude: 127.0318 },
-    DONGDAEMUNGU: { latitude: 37.5743, longitude: 127.0398 },
-    DONGJAKGU: { latitude: 37.5124, longitude: 126.9394 },
-    MAPOGU: { latitude: 37.566, longitude: 126.901 },
-    SEODAEMUNGU: { latitude: 37.5793, longitude: 126.9368 },
-    SEOCHOGU: { latitude: 37.4836, longitude: 127.0327 },
-    SEONGDONGGU: { latitude: 37.5613, longitude: 127.0384 },
-    SEONGBUKGU: { latitude: 37.5894, longitude: 127.0167 },
-    SONGPA: { latitude: 37.5145, longitude: 127.1056 },
-    YANGCHEONGU: { latitude: 37.5165, longitude: 126.8661 },
-    YEONGDEUNGPOGU: { latitude: 37.5244, longitude: 126.929 },
-    YONGSANGU: { latitude: 37.5326, longitude: 126.99 },
-    EUNPYEONGGU: { latitude: 37.6176, longitude: 126.9227 },
-    JONGNOGU: { latitude: 37.5725, longitude: 126.978 },
-    JUNGGU: { latitude: 37.5641, longitude: 126.9979 },
-    JUNGNANGGU: { latitude: 37.6063, longitude: 127.093 },
 };
 
 const PracticePlace: React.FC = () => {
@@ -84,15 +57,14 @@ const PracticePlace: React.FC = () => {
         | 'JUNGNANGGU'
     >('ALL');
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
-    const [markers, setMarkers] = useState<any[]>([]);
     const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
+    const [markers, setMarkers] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
     const [selectedPlace, setSelectedPlace] = useState<PracticePlace | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [address, setAddress] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
     const [newPlace, setNewPlace] = useState<Omit<PracticePlace, 'id'>>({
         name: '',
         part: 'BAND',
@@ -121,21 +93,18 @@ const PracticePlace: React.FC = () => {
         }
     }, [placesList]);
 
-    const addPlaceMutation = useMutation<number, Error, Omit<PracticePlace, 'id'>>({
+    const addPlaceMutation = useMutation<PracticePlace, Error, Omit<PracticePlace, 'id'>>({
         mutationFn: addPracticePlace,
         onSuccess: async (newPlace) => {
-            if (newPlace.id === undefined) {
+            if (!newPlace.id) {
                 console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }
 
             try {
-                //새 장소의 상세정보 아이디로 가져옴.
                 const newPlaceDetails = await getPracticePlaceDetails(newPlace.id);
-                //장소 데이터 다시 갱신 함.
                 queryClient.invalidateQueries({ queryKey: ['practicePlaces'] });
-                //새 장소의 상세 정보를 추가함
                 setFilteredPracticePlaces((prev) => {
                     if (Array.isArray(prev)) {
                         return [...prev, newPlaceDetails];
@@ -143,49 +112,6 @@ const PracticePlace: React.FC = () => {
                         return [newPlaceDetails];
                     }
                 });
-
-                // 지도에 새로운 장소의 마커 추가
-                if (map && clusterer) {
-                    const { latitude, longitude } = newPlaceDetails.coordinate;
-                    const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
-
-                    const markerImage = new window.kakao.maps.MarkerImage(
-                        markerImages[newPlaceDetails.part] || markerImages.default,
-                        new window.kakao.maps.Size(24, 35),
-                        { offset: new window.kakao.maps.Point(12, 35) }
-                    );
-
-                    const marker = new window.kakao.maps.Marker({
-                        position: markerCoordinate,
-                        image: markerImage,
-                    });
-
-                    const infowindow = new window.kakao.maps.InfoWindow({
-                        content: `<div style="padding:5px;">${newPlaceDetails.name}</div>`,
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseover', () => {
-                        infowindow.open(map, marker);
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'mouseout', () => {
-                        infowindow.close();
-                    });
-
-                    window.kakao.maps.event.addListener(marker, 'click', () => {
-                        setSelectedPlace(newPlaceDetails);
-                        setIsModalOpen(true);
-                        fetchPlaceDetails(newPlaceDetails.id as number); // fetchPlaceDetails 함수 호출
-                    });
-
-                    marker.setMap(map); // 마커를 지도에 추가
-                    clusterer.addMarker(marker); // 클러스터러에 마커 추가
-                    setMarkers((prevMarkers) => [...prevMarkers, marker]);
-
-                    map.setCenter(markerCoordinate);
-                    map.setLevel(3); // 줌 레벨 설정 (작은 숫자일수록 더 확대됨)
-                }
-
                 setIsAddModalOpen(false);
                 setNewPlace({
                     name: '',
@@ -222,107 +148,33 @@ const PracticePlace: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        const filtered = placesList.filter((place: { region: string; part: string }) => {
-            const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
-            const partMatch = selectedPart === 'all' || place.part === selectedPart;
-            return regionMatch && partMatch;
-        });
-        setFilteredPracticePlaces(filtered);
-
-        if (map) {
-            if (selectedRegion !== 'ALL') {
-                const regionCoord = regionCoordinates[selectedRegion];
-                const center = new window.kakao.maps.LatLng(regionCoord.latitude, regionCoord.longitude);
-                map.setCenter(center);
-                map.setLevel(5); // 줌 레벨 설정
-            } else {
-                map.setCenter(new window.kakao.maps.LatLng(37.5665, 126.978));
-                map.setLevel(5); // 기본 줌 레벨 설정
-            }
-
-            if (Array.isArray(filtered)) {
-                updateMarkers(filtered);
-            } else {
-                console.error('filteredPracticePlaces is not an array:', filteredPracticePlaces);
-            }
+        if (placesList && Array.isArray(placesList)) {
+            const filtered = placesList.filter((place) => {
+                const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
+                const partMatch = selectedPart === 'all' || place.part === selectedPart;
+                return regionMatch && partMatch;
+            });
+            setFilteredPracticePlaces(filtered);
         }
-    }, [selectedRegion, selectedPart, placesList, map]);
+    }, [selectedRegion, selectedPart, placesList]);
 
-    //필터된 공연장소에 마커 업데이트
     useEffect(() => {
         if (map) {
             if (Array.isArray(filteredPracticePlaces)) {
-                updateMarkers(filteredPracticePlaces);
+                updateMarkers<PracticePlace>({
+                    places: filteredPracticePlaces,
+                    map,
+                    clusterer,
+                    setMarkers,
+                    fetchPlaceDetails,
+                    setSelectedPlace,
+                    setIsModalOpen,
+                });
             } else {
                 console.error('filteredPracticePlaces is not an array:', filteredPracticePlaces);
             }
         }
-    }, [map, filteredPracticePlaces]);
-
-    const updateMarkers = (places: PracticePlace[]) => {
-        if (!Array.isArray(places)) {
-            console.error('places is not an array:', places);
-            return;
-        }
-
-        if (map && clusterer) {
-            const bounds = new window.kakao.maps.LatLngBounds();
-
-            const newMarkers = places.map((place) => {
-                const markerCoordinate = new window.kakao.maps.LatLng(
-                    place.coordinate?.latitude,
-                    place.coordinate?.longitude
-                );
-                bounds.extend(markerCoordinate);
-
-                const markerImage = new window.kakao.maps.MarkerImage(
-                    markerImages[place.part] || markerImages.default,
-                    new window.kakao.maps.Size(24, 35),
-                    { offset: new window.kakao.maps.Point(12, 35) }
-                );
-
-                const marker = new window.kakao.maps.Marker({
-                    position: markerCoordinate,
-                    image: markerImage,
-                });
-
-                const infowindow = new window.kakao.maps.InfoWindow({
-                    content: `<div style="padding:5px;">${place.name}</div>`,
-                });
-
-                window.kakao.maps.event.addListener(marker, 'mouseover', () => {
-                    infowindow.open(map, marker);
-                });
-
-                window.kakao.maps.event.addListener(marker, 'mouseout', () => {
-                    infowindow.close();
-                });
-
-                window.kakao.maps.event.addListener(marker, 'click', () => {
-                    setSelectedPlace(place);
-                    setIsModalOpen(true);
-                    fetchPlaceDetails(place.id as number); // fetchPlaceDetails 함수 호출
-                    window.location.href = `/performanceplace/${place.id}`;
-                });
-
-                marker.setMap(map); // 마커를 지도에 추가
-
-                return marker;
-            });
-
-            setMarkers((prevMarkers) => {
-                prevMarkers.forEach((marker) => marker?.setMap(null)); // 이전 마커 제거
-                return newMarkers;
-            });
-
-            clusterer.clear(); // 이전 마커 클러스터 제거
-            clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
-
-            if (!bounds.isEmpty()) {
-                map.setBounds(bounds);
-            }
-        }
-    };
+    }, [map, filteredPracticePlaces, clusterer, fetchPlaceDetails]);
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -331,7 +183,7 @@ const PracticePlace: React.FC = () => {
     const handleTitleClick = (latitude: number, longitude: number) => {
         if (map) {
             map.setCenter(new window.kakao.maps.LatLng(latitude, longitude));
-            map.setLevel(3);
+            map.setLevel(3); // 줌 레벨 설정 (작은 숫자일수록 더 확대됨)
         }
     };
 
@@ -345,10 +197,8 @@ const PracticePlace: React.FC = () => {
                             type="text"
                             className="w-full border rounded p-2 pl-10"
                             placeholder="검색어를 입력하세요..."
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
                         />
-                        <div className="absolute  left-3 top-3 text-gray-400">
+                        <div className="absolute left-3 top-3 text-gray-400">
                             <IoMdSearch size={20} />
                         </div>
                     </div>
@@ -407,6 +257,9 @@ const PracticePlace: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
+                        <button className="bg-purple-700 text-white py-2 px-4 rounded-full">
+                            <FaMapMarkerAlt />
+                        </button>
                         <button
                             className="bg-purple-700 text-white py-2 px-4 rounded-full"
                             onClick={() => setIsAddModalOpen(true)}
@@ -416,37 +269,35 @@ const PracticePlace: React.FC = () => {
                     </div>
                 </div>
 
-                <PracticePlaceMap
+                <Map
                     places={filteredPracticePlaces}
                     map={map}
                     setMap={setMap}
+                    clusterer={clusterer}
+                    setClusterer={setClusterer}
                     fetchPlaceDetails={fetchPlaceDetails}
-                    clusterer={clusterer} // 클러스터러 전달
-                    setClusterer={setClusterer} // 클러스터러 설정 함수 전달
+                    kakaoMapApiKey={kakaoMapApiKey}
                 />
 
-                <PracticePlaceList
+                <List
                     places={filteredPracticePlaces}
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     handlePageChange={handlePageChange}
                     handleTitleClick={handleTitleClick}
                     fetchPlaceDetails={fetchPlaceDetails}
+                    type={'practice'}
                 />
 
                 {isModalOpen && selectedPlace && (
-                    <PracticePlaceDetailsModal
-                        place={selectedPlace}
-                        isOpen={isModalOpen}
-                        onClose={() => setIsModalOpen(false)}
-                    />
+                    <DetailsModal place={selectedPlace} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
                 )}
 
                 {isAddModalOpen && (
-                    <AddPracticePlaceModal
+                    <AddModal<PracticePlace>
                         isOpen={isAddModalOpen}
                         onClose={() => setIsAddModalOpen(false)}
-                        onSubmit={(newPlace) => addPlaceMutation.mutate(newPlace)}
+                        onSubmit={(newPlace: Omit<PracticePlace, 'id'>) => addPlaceMutation.mutate(newPlace)}
                         kakaoRestApiKey={kakaoRestApiKey}
                         newPlace={newPlace}
                         setNewPlace={setNewPlace}

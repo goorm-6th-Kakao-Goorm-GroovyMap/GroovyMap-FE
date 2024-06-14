@@ -2,33 +2,38 @@
 
 import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { PracticePlace } from '@/types/types';
+import { Place, PracticePlace, PerformancePlace } from '@/types/types';
 
-interface PracticePlaceListProps {
-    places: PracticePlace[];
+interface ListProps<T extends Place> {
+    places: T[];
     currentPage: number;
     itemsPerPage: number;
     handlePageChange: (pageNumber: number) => void;
     handleTitleClick: (latitude: number, longitude: number) => void;
     fetchPlaceDetails: (postId: number) => void;
+    type: 'practice' | 'performance';
 }
 
-const PracticePlaceList: React.FC<PracticePlaceListProps> = ({
+//지도 밑의 장소 리스트 보여주기
+const List = <T extends Place>({
     places,
     currentPage,
     itemsPerPage,
     handlePageChange,
     handleTitleClick,
     fetchPlaceDetails,
-}) => {
-    //페이지네이션
+    type,
+}: ListProps<T>) => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = places.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = Array.isArray(places) ? places.slice(indexOfFirstItem, indexOfLastItem) : [];
     const pageNumbers = [];
     for (let i = 1; i <= Math.ceil(places.length / itemsPerPage); i++) {
         pageNumbers.push(i);
     }
+
+    const isPracticePlace = (place: Place): place is PracticePlace => type === 'practice';
+    const isPerformancePlace = (place: Place): place is PerformancePlace => type === 'performance';
 
     return (
         <div className="mt-6">
@@ -49,9 +54,21 @@ const PracticePlaceList: React.FC<PracticePlaceListProps> = ({
                                     {place.name}
                                 </h3>
                                 <p className="text-m text-gray-600 font-regular">{place.address}</p>
+                                {isPracticePlace(place) && (
+                                    <p className="text-m text-gray-600 font-regular">{place.practiceHours}</p>
+                                )}
+                                {isPerformancePlace(place) && (
+                                    <p className="text-m text-gray-600 font-regular">{place.performanceHours}</p>
+                                )}
                             </div>
                             <button
-                                onClick={() => fetchPlaceDetails(place.id as number)}
+                                onClick={() => {
+                                    if (place.id !== undefined) {
+                                        fetchPlaceDetails(place.id);
+                                    } else {
+                                        console.error('Place id is undefined:', place);
+                                    }
+                                }}
                                 className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
                             >
                                 상세 정보
@@ -77,4 +94,4 @@ const PracticePlaceList: React.FC<PracticePlaceListProps> = ({
     );
 };
 
-export default PracticePlaceList;
+export default List;

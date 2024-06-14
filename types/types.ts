@@ -3,25 +3,24 @@ interface Coordinate {
     longitude: number;
 }
 
-interface PlaceBase {
+export interface Place {
+    // id?: number;
     name: string;
     part: 'BAND' | 'DANCE' | 'VOCAL';
     coordinate: Coordinate;
     region: string;
     address: string;
-    phoneNumber: string;
-    rentalFee: string;
-    capacity: string;
-    description: string;
+    phoneNumber?: string;
+    rentalFee?: string;
+    capacity?: string;
+    description?: string;
 }
 
-export interface PerformancePlace extends PlaceBase {
-    id?: number;
+export interface PerformancePlace extends Place {
     performanceHours: string;
 }
 
-export interface PracticePlace extends PlaceBase {
-    id?: number;
+export interface PracticePlace extends Place {
     practiceHours: string;
 }
 

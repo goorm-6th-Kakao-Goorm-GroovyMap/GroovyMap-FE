@@ -1,21 +1,26 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Map, MapMarker } from 'react-kakao-maps-sdk';
-import { PracticePlace } from '@/types/types';
-import axios from 'axios';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { Place } from '@/types/types';
 
-interface AddPracticePlaceModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSubmit: (newPlace: Omit<PracticePlace, 'id'>) => void;
-    kakaoRestApiKey: string;
-    newPlace: Omit<PracticePlace, 'id'>;
-    setNewPlace: React.Dispatch<React.SetStateAction<Omit<PracticePlace, 'id'>>>;
+declare global {
+    interface Window {
+        daum: any;
+    }
 }
 
-//지도 분야별 마커 이미지
+interface AddModalProps<T extends Place> {
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (newPlace: Omit<T, 'id'>) => void;
+    kakaoRestApiKey: string;
+    newPlace: Omit<T, 'id'>;
+    setNewPlace: React.Dispatch<React.SetStateAction<Omit<T, 'id'>>>;
+}
+
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
@@ -23,17 +28,20 @@ const markerImages: { [key: string]: string } = {
     default: '/guitar.svg',
 };
 
-const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
+//제네릭
+const AddModal = <T extends Place>({
     isOpen,
     onClose,
     onSubmit,
     kakaoRestApiKey,
     newPlace,
     setNewPlace,
-}) => {
+}: AddModalProps<T>) => {
+    const [address, setAddress] = useState('');
     const [searchMap, setSearchMap] = useState<any>(null);
-    const [searchResult, setSearchResult] = useState<any>(null);
+    const [searchMarkers, setSearchMarkers] = useState<any[]>([]);
     const [showPostcodePopup, setShowPostcodePopup] = useState(false);
+    const [searchResult, setSearchResult] = useState<any>(null);
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -46,69 +54,68 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
         };
     }, []);
 
-    const handlePostcodeComplete = (data: any) => {
-        const fullAddress = data.address;
-        const roadAddress = data.roadAddress || '';
-        const jibunAddress = data.jibunAddress || '';
+    const handlePostcodeComplete = useCallback(
+        (data: any) => {
+            const fullAddress = data.address;
+            const roadAddress = data.roadAddress || '';
+            const jibunAddress = data.jibunAddress || '';
 
-        setNewPlace((prev) => ({
-            ...prev,
-            address: fullAddress,
-        }));
+            setAddress(fullAddress);
+            setNewPlace((prev) => ({
+                ...prev,
+                address: fullAddress,
+            }));
 
-        const encodedAddress = encodeURIComponent(roadAddress || jibunAddress);
-        axios
-            .get(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodedAddress}`, {
-                headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` },
-            })
-            .then((response: { data: { documents: string | any[] } }) => {
-                if (response.data.documents.length > 0) {
-                    const result = response.data.documents[0];
-                    const latitude = parseFloat(result.y);
-                    const longitude = parseFloat(result.x);
-                    const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
+            const encodedAddress = encodeURIComponent(roadAddress || jibunAddress);
+            axios
+                .get(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodedAddress}`, {
+                    headers: { Authorization: `KakaoAK ${kakaoRestApiKey}` },
+                })
+                .then((response) => {
+                    if (response.data.documents.length > 0) {
+                        const result = response.data.documents[0];
+                        const latitude = parseFloat(result.y);
+                        const longitude = parseFloat(result.x);
+                        const markerCoordinate = new window.kakao.maps.LatLng(latitude, longitude);
 
-                    const markerImage = new window.kakao.maps.MarkerImage(
-                        markerImages[newPlace.part] || markerImages.default,
-                        new window.kakao.maps.Size(24, 35),
-                        { offset: new window.kakao.maps.Point(12, 35) }
-                    );
+                        const markerImage = new window.kakao.maps.MarkerImage(
+                            markerImages[newPlace.part] || markerImages.default,
+                            new window.kakao.maps.Size(24, 35),
+                            { offset: new window.kakao.maps.Point(12, 35) }
+                        );
 
-                    const marker = new window.kakao.maps.Marker({
-                        position: markerCoordinate,
-                        map: searchMap,
-                        image: markerImage,
-                    });
+                        const marker = new window.kakao.maps.Marker({
+                            position: markerCoordinate,
+                            map: searchMap,
+                            image: markerImage,
+                        });
 
-                    searchMap?.setCenter(markerCoordinate);
-                    setNewPlace((prev) => ({
-                        ...prev,
-                        coordinate: {
-                            latitude,
-                            longitude,
-                        },
-                    }));
-                } else {
-                    toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
-                }
-            })
-            .catch((error) => {
-                toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
-            });
+                        searchMarkers.forEach((marker) => marker?.setMap(null));
+                        setSearchMarkers([marker]);
 
-        setShowPostcodePopup(false);
-    };
+                        searchMap?.setCenter(markerCoordinate);
+                        setNewPlace((prev) => ({
+                            ...prev,
+                            coordinate: {
+                                latitude,
+                                longitude,
+                            },
+                        }));
+                    } else {
+                        toast.error('입력한 주소를 찾을 수 없습니다. 다른 주소로 다시 시도해주세요.');
+                    }
+                })
+                .catch((error) => {
+                    toast.error('주소를 검색하는 중 에러가 발생했습니다. 나중에 다시 시도해주세요.');
+                });
+
+            setShowPostcodePopup(false);
+        },
+        [kakaoRestApiKey, newPlace.part, searchMap, searchMarkers, setNewPlace]
+    );
 
     const handleAddressSearch = () => {
         setShowPostcodePopup(true);
-    };
-
-    const closePostcodePopup = () => {
-        setShowPostcodePopup(false);
-        const postcodePopupElement = document.getElementById('postcode-popup');
-        if (postcodePopupElement) {
-            postcodePopupElement.remove();
-        }
     };
 
     useEffect(() => {
@@ -119,7 +126,7 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
 
             new window.daum.Postcode({
                 oncomplete: handlePostcodeComplete,
-                onclose: closePostcodePopup,
+                onclose: () => setShowPostcodePopup(false),
             }).open();
 
             return () => {
@@ -154,12 +161,12 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
         onSubmit(newPlace);
     };
 
+    if (!isOpen) return null;
+
     return (
-        <div
-            className={`fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 ${isOpen ? '' : 'hidden'}`}
-        >
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-lg w-2/3 relative">
-                <h2 className="text-xl font-bold mb-4">연습 장소 추가</h2>
+                <h2 className="text-xl font-bold mb-4">공연 장소 추가</h2>
                 <div className="flex flex-col gap-4">
                     <div id="searchMap" className="w-full h-48 mb-4 relative z-0">
                         <Map
@@ -179,7 +186,14 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                             )}
                         </Map>
                     </div>
-
+                    <input
+                        type="text"
+                        name="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="주소"
+                        className="border p-2 rounded"
+                    />
                     <button
                         onClick={handleAddressSearch}
                         className="bg-blue-500 text-white py-2 px-4 rounded-full mb-4"
@@ -194,34 +208,33 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                             </div>
                         </div>
                     )}
-
                     <div className="grid grid-cols-2 gap-4">
                         <input
                             type="text"
                             name="name"
-                            value={newPlace.name}
+                            value={newPlace.name as string}
                             onChange={handleAddPlaceChange}
-                            placeholder="연습 장소 이름"
+                            placeholder="장소 이름"
                             className="border p-2 rounded"
                         />
                         <select
                             name="part"
-                            value={newPlace.part}
+                            value={newPlace.part as string}
                             onChange={handleAddPlaceChange}
                             className="border p-2 rounded"
                         >
-                            <option value="">분야</option>
+                            <option value="">전체</option>
                             <option value="BAND">밴드</option>
-                            <option value="DANCE">춤</option>
+                            <option value="DANCE">댄스</option>
                             <option value="VOCAL">노래</option>
                         </select>
                         <select
                             name="region"
-                            value={newPlace.region}
+                            value={newPlace.region as string}
                             onChange={handleAddPlaceChange}
                             className="border p-2 rounded"
                         >
-                            <option value="">지역</option>
+                            <option value="">전체</option>
                             <option value="GANGNAMGU">강남구</option>
                             <option value="GANGDONGGU">강동구</option>
                             <option value="GANGBUKGU">강북구</option>
@@ -237,7 +250,8 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                             <option value="SEONGDONGGU">성동구</option>
                             <option value="SEONGBUKGU">성북구</option>
                             <option value="SONGPA">송파구</option>
-                            <option value="YANGCHEONGU">양천구</option> <option value="YEONGDEUNGPOGU">영등포구</option>
+                            <option value="YANGCHEONGU">양천구</option>
+                            <option value="YEONGDEUNGPOGU">영등포구</option>
                             <option value="YONGSANGU">용산구</option>
                             <option value="EUNPYEONGGU">은평구</option>
                             <option value="JONGNOGU">종로구</option>
@@ -247,7 +261,7 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                         <input
                             type="text"
                             name="phoneNumber"
-                            value={newPlace.phoneNumber}
+                            value={newPlace.phoneNumber as string}
                             onChange={handleAddPlaceChange}
                             placeholder="전화번호"
                             className="border p-2 rounded"
@@ -255,7 +269,7 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                         <input
                             type="text"
                             name="rentalFee"
-                            value={newPlace.rentalFee}
+                            value={newPlace.rentalFee as string}
                             onChange={handleAddPlaceChange}
                             placeholder="대관료"
                             className="border p-2 rounded"
@@ -263,23 +277,35 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
                         <input
                             type="text"
                             name="capacity"
-                            value={newPlace.capacity}
+                            value={newPlace.capacity as string}
                             onChange={handleAddPlaceChange}
                             placeholder="수용 인원"
                             className="border p-2 rounded"
                         />
-                        <input
-                            type="text"
-                            name="practiceHours"
-                            value={newPlace.practiceHours}
-                            onChange={handleAddPlaceChange}
-                            placeholder="연습 가능 시간"
-                            className="border p-2 rounded"
-                        />
+                        {'performanceHours' in newPlace && (
+                            <input
+                                type="text"
+                                name="performanceHours"
+                                value={newPlace.performanceHours as string}
+                                onChange={handleAddPlaceChange}
+                                placeholder="공연 가능 시간"
+                                className="border p-2 rounded"
+                            />
+                        )}
+                        {'practiceHours' in newPlace && (
+                            <input
+                                type="text"
+                                name="practiceHours"
+                                value={newPlace.practiceHours as string}
+                                onChange={handleAddPlaceChange}
+                                placeholder="연습 가능 시간"
+                                className="border p-2 rounded"
+                            />
+                        )}
                         <input
                             type="text"
                             name="description"
-                            value={newPlace.description}
+                            value={newPlace.description as string}
                             onChange={handleAddPlaceChange}
                             placeholder="설명"
                             className="border p-2 rounded"
@@ -302,4 +328,4 @@ const AddPracticePlaceModal: React.FC<AddPracticePlaceModalProps> = ({
     );
 };
 
-export default AddPracticePlaceModal;
+export default AddModal;
