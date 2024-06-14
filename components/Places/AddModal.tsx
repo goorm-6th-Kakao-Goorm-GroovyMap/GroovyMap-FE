@@ -237,8 +237,8 @@ const AddModal = <T extends Place>({
                             onChange={handleAddPlaceChange}
                             className="border p-2 rounded"
                         >
-                            {Object.entries(regions).map(([key, value]) => (
-                                <option key={key} value={value}>
+                            {Object.entries(regionNames).map(([key, value]) => (
+                                <option key={key} value={key}>
                                     {value}
                                 </option>
                             ))}
