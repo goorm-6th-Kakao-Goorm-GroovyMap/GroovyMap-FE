@@ -54,12 +54,6 @@ const List = <T extends Place>({
                                     {place.name}
                                 </h3>
                                 <p className="text-m text-gray-600 font-regular">{place.address}</p>
-                                {isPracticePlace(place) && (
-                                    <p className="text-m text-gray-600 font-regular">{place.practiceHours}</p>
-                                )}
-                                {isPerformancePlace(place) && (
-                                    <p className="text-m text-gray-600 font-regular">{place.performanceHours}</p>
-                                )}
                             </div>
                             <button
                                 onClick={() => {

@@ -15,6 +15,7 @@ import AddModal from '@/components/Places/AddModal';
 import List from '@/components/Places/List';
 import Map from '@/components/Places/Map';
 import { updateMarkers } from '@/components/Places/UpdataMarkers';
+import { regions, regionNames, Region } from '@/constants/region';
 
 const markersImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
@@ -30,32 +31,7 @@ const PracticePlace: React.FC = () => {
 
     const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
     const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
-
-    const [selectedRegion, setSelectedRegion] = useState<
-        | 'ALL'
-        | 'GANGNAMGU'
-        | 'GANGDONGGU'
-        | 'GANGBUKGU'
-        | 'GANGSEOGU'
-        | 'GEUMCHEONGU'
-        | 'GUROGU'
-        | 'DOBONGGU'
-        | 'DONGDAEMUNGU'
-        | 'DONGJAKGU'
-        | 'MAPOGU'
-        | 'SEODAEMUNGU'
-        | 'SEOCHOGU'
-        | 'SEONGDONGGU'
-        | 'SEONGBUKGU'
-        | 'SONGPA'
-        | 'YANGCHEONGU'
-        | 'YEONGDEUNGPOGU'
-        | 'YONGSANGU'
-        | 'EUNPYEONGGU'
-        | 'JONGNOGU'
-        | 'JUNGGU'
-        | 'JUNGNANGGU'
-    >('ALL');
+    const [selectedRegion, setSelectedRegion] = useState<Region>(regions.ALL);
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
     const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
@@ -213,33 +189,14 @@ const PracticePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
-                                onChange={(e) =>
-                                    setSelectedRegion(e.target.value as 'ALL' | 'GANGNAMGU' | 'MAPOGU' | 'GANGDONGGU')
-                                }
+                                onChange={(e) => setSelectedRegion(e.target.value as Region)}
                             >
-                                <option value="ALL">전체</option>
-                                <option value="GANGNAMGU">강남구</option>
-                                <option value="GANGDONGGU">강동구</option>
-                                <option value="GANGBUKGU">강북구</option>
-                                <option value="GANGSEOGU">강서구</option>
-                                <option value="GEUMCHEONGU">금천구</option>
-                                <option value="GUROGU">구로구</option>
-                                <option value="DOBONGGU">도봉구</option>
-                                <option value="DONGDAEMUNGU">동대문구</option>
-                                <option value="DONGJAKGU">동작구</option>
-                                <option value="MAPOGU">마포구</option>
-                                <option value="SEODAEMUNGU">서대문구</option>
-                                <option value="SEOCHOGU">서초구</option>
-                                <option value="SEONGDONGGU">성동구</option>
-                                <option value="SEONGBUKGU">성북구</option>
-                                <option value="SONGPA">송파구</option>
-                                <option value="YANGCHEONGU">양천구</option>
-                                <option value="YEONGDEUNGPOGU">영등포구</option>
-                                <option value="YONGSANGU">용산구</option>
-                                <option value="EUNPYEONGGU">은평구</option>
-                                <option value="JONGNOGU">종로구</option>
-                                <option value="JUNGGU">중구</option>
-                                <option value="JUNGNANGGU">중랑구</option>
+                                {regionNames &&
+                                    Object.entries(regionNames).map(([key, value]) => (
+                                        <option key={key} value={key}>
+                                            {value}
+                                        </option>
+                                    ))}
                             </select>
                         </div>
                         <div className="flex items-center border rounded-lg p-2 bg-white">
@@ -295,6 +252,7 @@ const PracticePlace: React.FC = () => {
 
                 {isAddModalOpen && (
                     <AddModal<PracticePlace>
+                        selectedRegion={selectedRegion}
                         isOpen={isAddModalOpen}
                         onClose={() => setIsAddModalOpen(false)}
                         onSubmit={(newPlace: Omit<PracticePlace, 'id'>) => addPlaceMutation.mutate(newPlace)}

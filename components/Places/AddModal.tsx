@@ -5,6 +5,7 @@ import { Map, MapMarker } from 'react-kakao-maps-sdk';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { Place } from '@/types/types';
+import { regions, regionNames, Region } from '@/constants/region';
 
 declare global {
     interface Window {
@@ -15,6 +16,7 @@ declare global {
 interface AddModalProps<T extends Place> {
     isOpen: boolean;
     onClose: () => void;
+    selectedRegion: Region;
     onSubmit: (newPlace: Omit<T, 'id'>) => void;
     kakaoRestApiKey: string;
     newPlace: Omit<T, 'id'>;
@@ -36,6 +38,7 @@ const AddModal = <T extends Place>({
     kakaoRestApiKey,
     newPlace,
     setNewPlace,
+    selectedRegion,
 }: AddModalProps<T>) => {
     const [address, setAddress] = useState('');
     const [searchMap, setSearchMap] = useState<any>(null);
@@ -136,7 +139,7 @@ const AddModal = <T extends Place>({
                 }
             };
         }
-    }, [showPostcodePopup]);
+    }, [handlePostcodeComplete, showPostcodePopup]);
 
     const handleAddPlaceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -234,29 +237,11 @@ const AddModal = <T extends Place>({
                             onChange={handleAddPlaceChange}
                             className="border p-2 rounded"
                         >
-                            <option value="">전체</option>
-                            <option value="GANGNAMGU">강남구</option>
-                            <option value="GANGDONGGU">강동구</option>
-                            <option value="GANGBUKGU">강북구</option>
-                            <option value="GANGSEOGU">강서구</option>
-                            <option value="GEUMCHEONGU">금천구</option>
-                            <option value="GUROGU">구로구</option>
-                            <option value="DOBONGGU">도봉구</option>
-                            <option value="DONGDAEMUNGU">동대문구</option>
-                            <option value="DONGJAKGU">동작구</option>
-                            <option value="MAPOGU">마포구</option>
-                            <option value="SEODAEMUNGU">서대문구</option>
-                            <option value="SEOCHOGU">서초구</option>
-                            <option value="SEONGDONGGU">성동구</option>
-                            <option value="SEONGBUKGU">성북구</option>
-                            <option value="SONGPA">송파구</option>
-                            <option value="YANGCHEONGU">양천구</option>
-                            <option value="YEONGDEUNGPOGU">영등포구</option>
-                            <option value="YONGSANGU">용산구</option>
-                            <option value="EUNPYEONGGU">은평구</option>
-                            <option value="JONGNOGU">종로구</option>
-                            <option value="JUNGGU">중구</option>
-                            <option value="JUNGNANGGU">중랑구</option>
+                            {Object.entries(regions).map(([key, value]) => (
+                                <option key={key} value={value}>
+                                    {value}
+                                </option>
+                            ))}
                         </select>
                         <input
                             type="text"

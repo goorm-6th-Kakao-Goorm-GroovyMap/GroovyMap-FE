@@ -34,9 +34,11 @@ export const updateMarkers = <T extends Place>({
         const markerCoordinate = new window.kakao.maps.LatLng(place.coordinate.latitude, place.coordinate.longitude);
         bounds.extend(markerCoordinate);
 
-        const markerImage = new window.kakao.maps.MarkerImage('/guitar.svg', new window.kakao.maps.Size(24, 35), {
-            offset: new window.kakao.maps.Point(12, 35),
-        });
+        const markerImage = new window.kakao.maps.MarkerImage(
+            markerImages[place.part] || markerImages.default,
+            new window.kakao.maps.Size(24, 35),
+            { offset: new window.kakao.maps.Point(12, 35) }
+        );
 
         const marker = new window.kakao.maps.Marker({
             position: markerCoordinate,
@@ -66,13 +68,18 @@ export const updateMarkers = <T extends Place>({
         return marker;
     });
 
+    // 클러스터러가 null이 아닌 경우에만 clear 메서드를 호출
+    if (clusterer) {
+        clusterer.clear(); // 이전 마커 클러스터 제거
+        clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
+    } else {
+        console.error('Clusterer is null');
+    }
+
     setMarkers((prevMarkers) => {
         prevMarkers.forEach((marker) => marker?.setMap(null)); // 이전 마커 제거
         return newMarkers;
     });
-
-    clusterer.clear(); // 이전 마커 클러스터 제거
-    clusterer.addMarkers(newMarkers); // 새로운 마커 클러스터 추가
 
     if (!bounds.isEmpty()) {
         map.setBounds(bounds);
