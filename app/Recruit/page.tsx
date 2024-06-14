@@ -5,10 +5,10 @@ import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
 
-import Recruit_post from './Recruit_post';
+import Recruit_post from './PostList';
 import WritePostForm from './WritePostForm';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
-import PostContent from './Post/[postId]/post';
+import PostContent from './Post/[postId]/postContent';
 import { useParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import KakaoMap from './kakaoMap';
@@ -26,6 +26,8 @@ const Recruit_page: React.FC = () => {
     const { postId } = useParams<{ postId: string }>();
     const [locations, setLocations] = useState<Location[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+
+    const authorId = 1;
 
     const fetchPosts = async () => {
         try {
@@ -75,9 +77,14 @@ const Recruit_page: React.FC = () => {
         setLocations(locations);
     }, [posts]);
 
-    const handleAddComment = async (postId: number, author: string, content: string) => {
+    const handleAddComment = async (postId: number, authorId: number, content: string, date: string) => {
         try {
-            const response = await apiClient.post(`/recruitboard/${postId}/comment`, { author, content });
+            const response = await apiClient.post(`/recruitboard/${postId}/comment`, {
+                postId,
+                authorId, // 문자열을 숫자로 변환하여 전송
+                content,
+                date: date,
+            });
 
             if (response.status === 200) {
                 const newComment = response.data;
@@ -257,6 +264,7 @@ const Recruit_page: React.FC = () => {
                                       comments={comments[selectedPost] || []}
                                       addComment={handleAddComment}
                                       goBack={handleGoBack}
+                                      authorId={authorId}
                                   />
                               )
                             : isPosting && <Recruit_post posts={filteredPosts} onPostClick={handlePostClick} />}

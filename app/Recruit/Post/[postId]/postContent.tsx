@@ -2,22 +2,30 @@
 
 import React, { useState } from 'react';
 import { regionCenters, type Comment, type Post } from '../../types';
+import apiClient from '@/api/apiClient';
+import { DateTime } from 'luxon';
 
 interface PostProps {
     post: Post;
     comments: Comment[];
-    addComment: (postId: number, author: string, content: string) => void;
+    addComment: (postId: number, authorId: string, content: string, date: string) => void;
     goBack: () => void;
+    authorId: number;
 }
 
-const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack }) => {
+const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack, authorId }) => {
     const [commentContent, setCommentContent] = useState('');
-    const [commentAuthor, setCommentAuthor] = useState('');
 
-    const handleAddComment = () => {
-        addComment(post.id, commentAuthor, commentContent);
-        setCommentAuthor('');
-        setCommentContent('');
+    const handleAddComment = async () => {
+        try {
+            const now = DateTime.local().toISO();
+            console.log('post.id:', post.id);
+            console.log('authorId:', authorId);
+            addComment(post.id, authorId.toString(), commentContent, now);
+            setCommentContent('');
+        } catch (error) {
+            console.error('Failed to add comment:', error);
+        }
     };
 
     return (
@@ -44,13 +52,6 @@ const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack }
                 ))}
             </div>
             <div className="mb-4">
-                <input
-                    type="text"
-                    className="border p-2 w-full mb-2"
-                    placeholder="작성자"
-                    value={commentAuthor}
-                    onChange={(e) => setCommentAuthor(e.target.value)}
-                />
                 <textarea
                     className="border p-2 w-full"
                     placeholder="댓글을 입력하세요"
@@ -60,6 +61,15 @@ const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack }
                 <button className="bg-purple-700 text-white py-2 px-4 mt-2" onClick={handleAddComment}>
                     댓글 작성
                 </button>
+            </div>
+            {/* 댓글 목록 렌더링 */}
+            <div className="comments">
+                {comments.map((comment) => (
+                    <div key={comment.id} className="comment">
+                        <p>{comment.content}</p>
+                        <p>{comment.author}</p>
+                    </div>
+                ))}
             </div>
         </div>
     );
