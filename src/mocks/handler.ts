@@ -1,6 +1,5 @@
 import { rest } from 'msw';
 
-// Temporary in-memory storage for users and certification codes
 interface User {
     email: string;
     password: string;
@@ -51,7 +50,6 @@ export const handlers = [
                 ctx.json({ status: 4003, message: '이미 가입된 유저 이메일입니다. 다른 이메일을 사용해주세요.' })
             );
         }
-        // Generate a mock certification code
         const code = '123456';
         certificationCodes[email] = code;
         return res(ctx.status(200), ctx.json({ message: '이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.' }));
@@ -65,8 +63,13 @@ export const handlers = [
         return res(ctx.status(400), ctx.json({ result: false, message: '이메일 인증에 실패했습니다.' }));
     }),
 
-    rest.post<Partial<User>>('/register/nickname-check', async (req, res, ctx) => {
-        const { nickname } = req.body as User;
+    rest.post<Partial<User>>('/nickname-check', async (req, res, ctx) => {
+        const { nickname } = req.body as { nickname: string };
+        console.log('닉네임 중복 확인 요청:', nickname);
+        console.log(
+            '현재 사용자 목록:',
+            users.map((user) => user.nickname)
+        );
         if (users.some((user) => user.nickname === nickname)) {
             return res(ctx.status(400), ctx.json({ message: '이미 사용 중인 닉네임입니다.' }));
         }
@@ -77,7 +80,6 @@ export const handlers = [
         const { email, password, nickname, region, part, subPart } = req.body as User;
         if (email && password && nickname) {
             users.push({ email, password, nickname, region, part, subPart });
-            // Remove certification code after successful registration
             delete certificationCodes[email];
             return res(
                 ctx.status(200),
@@ -116,8 +118,7 @@ export const handlers = [
     }),
 
     rest.get('/user/info', async (req, res, ctx) => {
-        // This is a mock user data
-        const user = users[0]; // Return the first user for demo purposes
+        const user = users[0];
         return res(ctx.status(200), ctx.json(user));
     }),
 ];

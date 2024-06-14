@@ -10,6 +10,7 @@ import apiClient from '@/api/apiClient';
 import { useMutation } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
 import confetti from 'canvas-confetti';
+import { userState } from '@/recoil/state/loginState';
 import { toast } from 'react-toastify';
 
 const Login = () => {

@@ -1,15 +1,14 @@
 'use client';
 
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { useRecoilState } from 'recoil';
 import { signUpState } from '@/recoil/state/signupState';
-import { userState } from '@/recoil/state/loginState';
-import Filter from '../components/Filter';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
 import confetti from 'canvas-confetti';
+import Filter from '../components/Filter';
 
 // 한국어와 영어 매핑
 const regionMap: { [key: string]: string } = {
@@ -57,6 +56,7 @@ const subPartMap: { [key: string]: string } = {
 
 const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
+    const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
     const router = useRouter();
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +89,22 @@ const NicknameRegionPartPage: React.FC = () => {
         }));
     };
 
+    const checkNicknameAvailability = async () => {
+        try {
+            const response = await apiClient.post('/nickname-check', { nickname: formData.nickname });
+            setNicknameAvailable(response.data.available);
+            if (response.data.available) {
+                toast.success('사용 가능한 닉네임입니다.');
+            } else {
+                toast.error('이미 사용 중인 닉네임입니다.');
+            }
+        } catch (error) {
+            console.error('Error checking nickname availability:', error);
+            toast.error('닉네임 중복 확인 중 오류가 발생했습니다.');
+            setNicknameAvailable(false);
+        }
+    };
+
     const signupMutation = useMutation({
         mutationFn: async () => {
             const response = await apiClient.post('/register', {
@@ -103,14 +119,12 @@ const NicknameRegionPartPage: React.FC = () => {
         },
         onSuccess: (data) => {
             if (data.result) {
-                //회원가입 결과 값 반환이 true일 경우에
                 toast.success('회원가입에 성공했습니다!');
                 confetti({
                     particleCount: 100,
                     spread: 160,
                 });
                 setTimeout(() => {
-                    //로그인 페이지로 라우팅
                     router.push('/login');
                 }, 2000);
             } else {
@@ -132,6 +146,14 @@ const NicknameRegionPartPage: React.FC = () => {
             toast.warning('모든 필드를 입력해 주세요.');
             return;
         }
+        if (nicknameAvailable === null) {
+            toast.warning('닉네임 중복 확인을 해주세요.');
+            return;
+        }
+        if (nicknameAvailable === false) {
+            toast.warning('닉네임이 이미 사용 중입니다.');
+            return;
+        }
         signupMutation.mutate();
     };
 
@@ -142,15 +164,29 @@ const NicknameRegionPartPage: React.FC = () => {
                 <div className="space-y-4">
                     <div>
                         <label className="block font-semibold mb-2">닉네임</label>
-                        <input
-                            type="text"
-                            name="nickname"
-                            placeholder="닉네임을 입력하세요"
-                            value={formData.nickname}
-                            onChange={handleInputChange}
-                            className="w-full p-3 border rounded-lg"
-                            required
-                        />
+                        <div className="flex">
+                            <input
+                                type="text"
+                                name="nickname"
+                                placeholder="닉네임을 입력하세요"
+                                value={formData.nickname}
+                                onChange={handleInputChange}
+                                className="flex-1 p-3 border rounded-l-lg"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={checkNicknameAvailability}
+                                className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
+                            >
+                                닉네임 체크
+                            </button>
+                        </div>
+                        {nicknameAvailable !== null && (
+                            <p className={`text-sm mt-2 ${nicknameAvailable ? 'text-green-500' : 'text-red-500'}`}>
+                                {nicknameAvailable ? '사용 가능한 닉네임입니다.' : '이미 사용 중인 닉네임입니다.'}
+                            </p>
+                        )}
                     </div>
                     <Filter
                         selectedRegion={formData.region}
