@@ -57,10 +57,21 @@ const subPartMap: { [key: string]: string } = {
 const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
     const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
+    const [nicknameError, setNicknameError] = useState<string | null>(null);
     const router = useRouter();
 
+    //입력값, 닉네임 영어로만
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
+        if (name === 'nickname') {
+            const regex = /^[a-zA-Z0-9_]*$/;
+            if (!regex.test(value)) {
+                setNicknameError('닉네임은 영어 대소문자, 숫자, 밑줄(_)만 사용할 수 있습니다.');
+                return;
+            } else {
+                setNicknameError(null);
+            }
+        }
         setFormData((prevState) => ({
             ...prevState,
             [name]: value,
@@ -121,10 +132,12 @@ const NicknameRegionPartPage: React.FC = () => {
             if (data.result) {
                 toast.success('회원가입에 성공했습니다!');
                 confetti({
+                    //콘페티 효과
                     particleCount: 100,
                     spread: 160,
                 });
                 setTimeout(() => {
+                    //회원가입 성공 후 로그인 페이지로 이동
                     router.push('/login');
                 }, 2000);
             } else {
@@ -179,10 +192,11 @@ const NicknameRegionPartPage: React.FC = () => {
                                 onClick={checkNicknameAvailability}
                                 className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
                             >
-                                닉네임 체크
+                                중복 확인
                             </button>
                         </div>
-                        {nicknameAvailable !== null && (
+                        {nicknameError && <p className="text-sm text-red-500 mt-2">{nicknameError}</p>}
+                        {nicknameAvailable !== null && !nicknameError && (
                             <p className={`text-sm mt-2 ${nicknameAvailable ? 'text-green-500' : 'text-red-500'}`}>
                                 {nicknameAvailable ? '사용 가능한 닉네임입니다.' : '이미 사용 중인 닉네임입니다.'}
                             </p>
