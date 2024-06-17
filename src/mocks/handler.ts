@@ -42,8 +42,14 @@ const users: User[] = [
 const certificationCodes: { [email: string]: string } = {};
 
 export const handlers = [
-    rest.post<Partial<User>>('/register/send-certification', async (req, res, ctx) => {
-        const { email } = req.body as User;
+    rest.post('/register/email-check', async (req, res, ctx) => {
+        const { email } = req.body as { email: string };
+        const emailExists = users.some((user) => user.email === email);
+        return res(ctx.status(200), ctx.json({ exist: emailExists }));
+    }),
+
+    rest.post('/register/send-certification', async (req, res, ctx) => {
+        const { email } = req.body as { email: string };
         if (users.some((user) => user.email === email)) {
             return res(
                 ctx.status(400),
@@ -55,7 +61,7 @@ export const handlers = [
         return res(ctx.status(200), ctx.json({ message: '이메일 인증 요청을 보냈습니다. 인증코드를 입력해 주세요.' }));
     }),
 
-    rest.post<Partial<User & { certificationCode: string }>>('/register/certificate-code', async (req, res, ctx) => {
+    rest.post('/register/certificate-code', async (req, res, ctx) => {
         const { email, certificationCode } = req.body as { email: string; certificationCode: string };
         if (certificationCodes[email] === certificationCode) {
             return res(ctx.status(200), ctx.json({ result: true, message: '이메일 인증에 성공했습니다!' }));
@@ -63,20 +69,15 @@ export const handlers = [
         return res(ctx.status(400), ctx.json({ result: false, message: '이메일 인증에 실패했습니다.' }));
     }),
 
-    rest.post<Partial<User>>('/nickname-check', async (req, res, ctx) => {
+    rest.post('/nickname-check', async (req, res, ctx) => {
         const { nickname } = req.body as { nickname: string };
-        console.log('닉네임 중복 확인 요청:', nickname);
-        console.log(
-            '현재 사용자 목록:',
-            users.map((user) => user.nickname)
-        );
         if (users.some((user) => user.nickname === nickname)) {
             return res(ctx.status(400), ctx.json({ message: '이미 사용 중인 닉네임입니다.' }));
         }
         return res(ctx.status(200), ctx.json({ message: '사용 가능한 닉네임입니다.' }));
     }),
 
-    rest.post<Partial<User>>('/register', async (req, res, ctx) => {
+    rest.post('/register', async (req, res, ctx) => {
         const { email, password, nickname, region, part, subPart } = req.body as User;
         if (email && password && nickname) {
             users.push({ email, password, nickname, region, part, subPart });
@@ -93,7 +94,7 @@ export const handlers = [
         return res(ctx.status(400), ctx.json({ result: false, message: '회원가입에 실패했습니다.' }));
     }),
 
-    rest.post<Partial<User>>('/login', async (req, res, ctx) => {
+    rest.post('/login', async (req, res, ctx) => {
         const { email, password } = req.body as User;
         const user = users.find((user) => user.email === email && user.password === password);
         if (user) {

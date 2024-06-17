@@ -13,6 +13,7 @@ const EmailPasswordPage: React.FC = () => {
     const [certificationCode, setCertificationCode] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isEmailVerified, setIsEmailVerified] = useState(false);
+    const [isEmailChecked, setIsEmailChecked] = useState(false);
     const router = useRouter();
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -21,14 +22,29 @@ const EmailPasswordPage: React.FC = () => {
             ...prevState,
             [name]: value,
         }));
+        setIsEmailChecked(false);
     };
 
-    //인증 코드 확인
-    const handleCertificationCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setCertificationCode(e.target.value);
-    };
+    // 이메일 중복 확인
+    const checkEmailDuplicateMutation = useMutation({
+        mutationFn: async () => {
+            const response = await apiClient.post('/register/email-check', { email: formData.email });
+            return response.data;
+        },
+        onSuccess: (data) => {
+            if (data.exist) {
+                toast.error('이미 사용 중인 이메일입니다.');
+            } else {
+                toast.success('사용 가능한 이메일입니다.');
+                setIsEmailChecked(true);
+            }
+        },
+        onError: () => {
+            toast.error('이메일 중복 확인에 실패했습니다.');
+        },
+    });
 
-    //이메일 인증 코드 보내기
+    // 이메일 인증 코드 보내기
     const sendEmailCodeMutation = useMutation({
         mutationFn: async () => {
             const response = await apiClient.post('/register/send-certification', { email: formData.email });
@@ -43,22 +59,23 @@ const EmailPasswordPage: React.FC = () => {
         },
     });
 
-    //인증 코드 확인
+    // 인증 코드 확인
+    const handleCertificationCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
+        setCertificationCode(e.target.value);
+    };
+    // 인증 코드 확인
     const validateEmailCodeMutation = useMutation({
         mutationFn: async () => {
             const response = await apiClient.post('/register/certificate-code', {
                 email: formData.email,
                 certificationCode: certificationCode,
-                //이메일과 인증 코드를 보냄
             });
-            return response.data; //json data 반환(result, message)
+            return response.data; // json data 반환(result, message)
         },
         onSuccess: (data) => {
             const result = data.result !== undefined ? data.result : false; // 기본 값 설정
             const message = data.message || (result ? '이메일 인증에 성공했습니다!' : '인증 코드가 잘못되었습니다.');
-            //result 값 확인 후, 반환 값에 message 있으면 넣고, 아니면 result가 true일때 성공 메시지.
             if (result) {
-                //reult값이 true일 경우
                 toast.success(message);
                 setFormData((prev) => ({ ...prev, certificationCode }));
                 setIsEmailVerified(true);
@@ -71,9 +88,21 @@ const EmailPasswordPage: React.FC = () => {
         },
     });
 
+    const handleCheckEmail = () => {
+        if (!formData.email) {
+            toast.warning('이메일을 입력해 주세요.');
+            return;
+        }
+        checkEmailDuplicateMutation.mutate();
+    };
+
     const handleSendEmailCode = () => {
         if (!formData.email) {
             toast.warning('이메일을 입력해 주세요.');
+            return;
+        }
+        if (!isEmailChecked) {
+            toast.warning('이메일 중복 확인을 해주세요.');
             return;
         }
         sendEmailCodeMutation.mutate();
@@ -88,13 +117,13 @@ const EmailPasswordPage: React.FC = () => {
             toast.warning('인증 코드를 입력해 주세요.');
             return;
         }
-        validateEmailCodeMutation.mutate(); //인증코드 보냄
+        validateEmailCodeMutation.mutate(); // 인증코드 보냄
     };
 
-    //비밀 번호 확인
+    // 비밀번호 확인
     const isPasswordSame = formData.password === confirmPassword;
 
-    //다음 닉네임 및 지역 분야 설정 페이지로 이동
+    // 다음 닉네임 및 지역 분야 설정 페이지로 이동
     const handleNext = () => {
         if (!formData.email) {
             toast.warning('이메일을 입력해 주세요.');
@@ -134,12 +163,21 @@ const EmailPasswordPage: React.FC = () => {
                             />
                             <button
                                 type="button"
-                                onClick={handleSendEmailCode}
+                                onClick={handleCheckEmail}
                                 className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
                             >
-                                인증번호 보내기
+                                중복 확인
                             </button>
                         </div>
+                    </div>
+                    <div className="text-center">
+                        <button
+                            type="button"
+                            onClick={handleSendEmailCode}
+                            className="w-full bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition"
+                        >
+                            이메일로 인증코드 전송
+                        </button>
                     </div>
                     <div>
                         <label className="block font-semibold mb-2">인증 코드</label>
@@ -154,7 +192,7 @@ const EmailPasswordPage: React.FC = () => {
                             />
                             <button
                                 type="button"
-                                onClick={handleValidateEmailCode} //받은 인증 코드 post
+                                onClick={handleValidateEmailCode} // 받은 인증 코드 post
                                 className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
                             >
                                 인증 코드 확인
