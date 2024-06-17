@@ -57,6 +57,7 @@ const subPartMap: { [key: string]: string } = {
 const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
     const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
+    const [isEmailChecked, setIsEmailChecked] = useState(false);
     const [nicknameError, setNicknameError] = useState<string | null>(null);
     const router = useRouter();
 
@@ -100,22 +101,37 @@ const NicknameRegionPartPage: React.FC = () => {
         }));
     };
 
-    const checkNicknameAvailability = async () => {
-        try {
+    //닉네임 중복 확인
+    const checkNicknameAvailabilityMutation = useMutation({
+        mutationFn: async () => {
             const response = await apiClient.post('/nickname-check', { nickname: formData.nickname });
-            setNicknameAvailable(response.data.available);
-            if (response.data.available) {
+            return response.data;
+        },
+        onSuccess: (data) => {
+            setNicknameAvailable(data.available);
+            if (data.available) {
                 toast.success('사용 가능한 닉네임입니다.');
             } else {
                 toast.error('이미 사용 중인 닉네임입니다.');
             }
-        } catch (error) {
+        },
+        onError: (error) => {
             console.error('Error checking nickname availability:', error);
             toast.error('닉네임 중복 확인 중 오류가 발생했습니다.');
             setNicknameAvailable(false);
+        },
+    });
+
+    //닉네임 중복 확인 handle
+    const handleCheckNickname = () => {
+        if (!formData.nickname) {
+            toast.warning('닉네임을 입력해 주세요.');
+            return;
         }
+        checkNicknameAvailabilityMutation.mutate();
     };
 
+    //회원가입
     const signupMutation = useMutation({
         mutationFn: async () => {
             const response = await apiClient.post('/register', {
@@ -126,6 +142,7 @@ const NicknameRegionPartPage: React.FC = () => {
                 part: partMap[formData.part],
                 type: subPartMap[formData.subPart],
             });
+
             return response.data;
         },
         onSuccess: (data) => {
@@ -189,7 +206,7 @@ const NicknameRegionPartPage: React.FC = () => {
                             />
                             <button
                                 type="button"
-                                onClick={checkNicknameAvailability}
+                                onClick={handleCheckNickname}
                                 className="w-32 bg-purple-500 text-white hover:bg-purple-600 rounded-r-lg transition transform duration-300 hover:scale-105"
                             >
                                 중복 확인

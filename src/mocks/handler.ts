@@ -6,7 +6,7 @@ interface User {
     nickname: string;
     region?: string;
     part?: string;
-    subPart?: string;
+    type?: string; // 수정된 부분
     profileImage?: string;
     bio?: string;
     followers?: number;
@@ -20,7 +20,7 @@ const users: User[] = [
         nickname: 'validuser',
         region: 'ALL',
         part: 'BAND',
-        subPart: 'GUITAR',
+        type: 'GUITAR',
         profileImage: 'https://via.placeholder.com/150',
         bio: 'This is a bio',
         followers: 100,
@@ -45,7 +45,7 @@ export const handlers = [
     rest.post('/register/email-check', async (req, res, ctx) => {
         const { email } = req.body as { email: string };
         const emailExists = users.some((user) => user.email === email);
-        return res(ctx.status(200), ctx.json({ exist: emailExists }));
+        return res(ctx.status(200), ctx.json({ available: !emailExists }));
     }),
 
     rest.post('/register/send-certification', async (req, res, ctx) => {
@@ -71,27 +71,33 @@ export const handlers = [
 
     rest.post('/nickname-check', async (req, res, ctx) => {
         const { nickname } = req.body as { nickname: string };
-        if (users.some((user) => user.nickname === nickname)) {
-            return res(ctx.status(400), ctx.json({ message: '이미 사용 중인 닉네임입니다.' }));
-        }
-        return res(ctx.status(200), ctx.json({ message: '사용 가능한 닉네임입니다.' }));
+        const nicknameExists = users.some((user) => user.nickname === nickname);
+        return res(ctx.status(200), ctx.json({ available: !nicknameExists }));
     }),
 
     rest.post('/register', async (req, res, ctx) => {
-        const { email, password, nickname, region, part, subPart } = req.body as User;
-        if (email && password && nickname) {
-            users.push({ email, password, nickname, region, part, subPart });
-            delete certificationCodes[email];
-            return res(
-                ctx.status(200),
-                ctx.json({
-                    result: true,
-                    message: '회원가입에 성공했습니다!',
-                    user: { email, nickname, region, part, subPart },
-                })
-            );
+        const { email, password, nickname, region, part, type } = req.body as User;
+        console.log('Received payload:', req.body); // 요청 데이터 로깅
+
+        if (!email || !password || !nickname) {
+            return res(ctx.status(400), ctx.json({ result: false, message: '필수 필드가 누락되었습니다.' }));
         }
-        return res(ctx.status(400), ctx.json({ result: false, message: '회원가입에 실패했습니다.' }));
+
+        if (users.some((user) => user.email === email)) {
+            return res(ctx.status(400), ctx.json({ result: false, message: '이미 사용 중인 이메일입니다.' }));
+        }
+
+        users.push({ email, password, nickname, region, part, type });
+        delete certificationCodes[email];
+
+        return res(
+            ctx.status(200),
+            ctx.json({
+                result: true,
+                message: '회원가입에 성공했습니다!',
+                user: { email, nickname, region, part, type },
+            })
+        );
     }),
 
     rest.post('/login', async (req, res, ctx) => {
@@ -107,7 +113,7 @@ export const handlers = [
                         nickname: user.nickname,
                         region: user.region,
                         part: user.part,
-                        subPart: user.subPart,
+                        type: user.type,
                     },
                 })
             );

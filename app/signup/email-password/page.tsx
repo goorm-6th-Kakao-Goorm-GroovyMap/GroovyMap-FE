@@ -32,11 +32,12 @@ const EmailPasswordPage: React.FC = () => {
             return response.data;
         },
         onSuccess: (data) => {
-            if (data.exist) {
-                toast.error('이미 사용 중인 이메일입니다.');
-            } else {
+            if (data.available) {
                 toast.success('사용 가능한 이메일입니다.');
                 setIsEmailChecked(true);
+            } else {
+                toast.error('이미 사용 중인 이메일입니다.');
+                setIsEmailChecked(false);
             }
         },
         onError: () => {
