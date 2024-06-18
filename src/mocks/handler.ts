@@ -23,7 +23,7 @@ const users: User[] = [
         part: 'BAND',
         type: 'GUITAR',
         profileImage: '/profile.jpeg',
-        bio: 'This is a bio',
+        bio: '안녕하세요.',
         followers: 100,
         following: 200,
     },

@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState } from 'react';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { userState, activeTabState } from '@/recoil/state/userState'; //유저 상태와 메뉴별 탭 관리
+import { userState, activeTabState } from '@/recoil/state/userState';
 import Posts from '@/components/Mypage/Posts';
 import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 import PostRecord from '@/components/Mypage/PostRecord';
@@ -10,21 +11,21 @@ import SavedAndLiked from '@/components/Mypage/SavedAndLiked';
 import WritePostModal from '@/components/Mypage/WritePostModal';
 import SettingModal from '@/components/Mypage/SettingModal';
 import SkeletonLoader from '@/components/SkeletonLoader';
-import { FaPen, FaCog } from 'react-icons/fa';
+import { FaCog } from 'react-icons/fa';
+import { translateRegion, translatePart, translateType } from '@/constants/translate';
 
 const MyPage: React.FC = () => {
-    const [activeTab, setActiveTab] = useRecoilState(activeTabState); //하단의 메뉴 탭들 관리
-    const user = useRecoilValue(userState); //저장된 유저상태 불러옴
+    const [activeTab, setActiveTab] = useRecoilState(activeTabState);
+    const user = useRecoilValue(userState);
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setSettingsOpen] = useState(false);
 
-    // 탭마다 메뉴 변경되어 각 컴포넌트 렌더링
     const renderContent = () => {
         switch (activeTab) {
             case 'posts':
-                return <Posts />;
+                return <Posts onWritePost={() => setWritePostOpen(true)} />;
             case 'performance':
-                return <PerformanceRecord />;
+                return <PerformanceRecord onWritePost={() => setWritePostOpen(true)} />;
             case 'records':
                 return <PostRecord />;
             case 'saved':
@@ -34,15 +35,10 @@ const MyPage: React.FC = () => {
         }
     };
 
-    const handleWritePost = () => {
-        setWritePostOpen(true);
-    };
-
     const handleSettings = () => {
         setSettingsOpen(true);
     };
 
-    // 로딩시 처리
     if (!user) {
         return <SkeletonLoader />;
     }
@@ -53,7 +49,6 @@ const MyPage: React.FC = () => {
                 {/* 프로필 정보 */}
                 <div className="flex items-center mb-6">
                     {user.profileImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={user.profileImage} alt="Profile" className="w-20 h-20 rounded-full mr-4" />
                     ) : (
                         <div className="w-20 h-20 rounded-full mr-4 bg-gray-300" />
@@ -64,14 +59,12 @@ const MyPage: React.FC = () => {
                             팔로워: {user.followers}명 팔로잉: {user.following}명
                         </p>
                         <p>
-                            활동지역: {user.region} 분야: {user.part} 파트: {user.type}
+                            활동지역: {translateRegion(user.region)} 분야: {translatePart(user.part)} 파트:{' '}
+                            {translateType(user.type)}
                         </p>
                         <p>{user.bio}</p>
                     </div>
                     <div className="flex space-x-2">
-                        <button onClick={handleWritePost} className="text-purple-500 hover:text-purple-600">
-                            <FaPen size={24} />
-                        </button>
                         <button onClick={handleSettings} className="text-gray-500 hover:text-gray-600">
                             <FaCog size={24} />
                         </button>

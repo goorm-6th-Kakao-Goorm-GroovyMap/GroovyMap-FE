@@ -5,9 +5,9 @@ const nextConfig = {
         NEXT_PUBLIC_KAKAO_REST_API_KEY: process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY,
     },
     images: {
-        domains: ['localhost:8080', 'mk.kakaocdn.net'],
+        domains: ['localhost', 'mk.kakaocdn.net'], // 'localhost:8080'을 'localhost'로 수정
         loader: 'default',
-        path: '/',
+        path: '/_next/image',
     },
 };
 
