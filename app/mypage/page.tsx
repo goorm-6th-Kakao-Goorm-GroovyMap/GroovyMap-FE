@@ -23,16 +23,20 @@ const MyPage: React.FC = () => {
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setSettingsOpen] = useState(false);
 
-    const getUserInfo = async () => {
-        const response = await apiClient.get('/user/info');
-        return response.data;
-    };
     // 리액트 쿼리를 사용하여 유저 정보 가져오기
-    const { data, error, isLoading } = useQuery({
+    const {
+        data: userData,
+        error,
+        isLoading,
+    } = useQuery({
         queryKey: ['userInfo'],
-        queryFn: getUserInfo,
+        queryFn: async () => {
+            //마이페이지 유저 정보 가져오기 요청
+            const response = await apiClient.get('/user/me', { withCredentials: true });
+            return response.data;
+        },
         onSuccess: (data) => {
-            setUser(data);
+            setUser(data.user);
         },
         onError: () => {
             toast.error('유저 정보를 가져오는데 실패했습니다.');

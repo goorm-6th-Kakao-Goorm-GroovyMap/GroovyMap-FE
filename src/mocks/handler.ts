@@ -6,9 +6,9 @@ interface User {
     nickname: string;
     region?: string;
     part?: string;
-    type?: string; // 수정된 부분
+    type?: string;
     profileImage?: string;
-    bio?: string;
+    bio?: string; // 자기소개
     followers?: number;
     following?: number;
 }
@@ -69,7 +69,7 @@ export const handlers = [
         return res(ctx.status(400), ctx.json({ result: false, message: '이메일 인증에 실패했습니다.' }));
     }),
 
-    rest.post('/nickname-check', async (req, res, ctx) => {
+    rest.post('/register/nickname-check', async (req, res, ctx) => {
         const { nickname } = req.body as { nickname: string };
         const nicknameExists = users.some((user) => user.nickname === nickname);
         return res(ctx.status(200), ctx.json({ available: !nicknameExists }));
@@ -77,7 +77,7 @@ export const handlers = [
 
     rest.post('/register', async (req, res, ctx) => {
         const { email, password, nickname, region, part, type } = req.body as User;
-        console.log('Received payload:', req.body); // 요청 데이터 로깅
+        console.log('Received payload:', req.body);
 
         if (!email || !password || !nickname) {
             return res(ctx.status(400), ctx.json({ result: false, message: '필수 필드가 누락되었습니다.' }));
@@ -101,9 +101,12 @@ export const handlers = [
     }),
 
     rest.post('/login', async (req, res, ctx) => {
-        const { email, password } = req.body as User;
+        const { email, password } = req.body as { email: string; password: string };
         const user = users.find((user) => user.email === email && user.password === password);
         if (user) {
+            // Mock setting a cookie for authentication
+            const sessionCookie = 'fake-session-token';
+            ctx.cookie('session', sessionCookie, { path: '/' });
             return res(
                 ctx.status(200),
                 ctx.json({
@@ -114,6 +117,10 @@ export const handlers = [
                         region: user.region,
                         part: user.part,
                         type: user.type,
+                        profileImage: user.profileImage,
+                        bio: user.bio,
+                        followers: user.followers,
+                        following: user.following,
                     },
                 })
             );
@@ -124,8 +131,13 @@ export const handlers = [
         );
     }),
 
-    rest.get('/user/info', async (req, res, ctx) => {
-        const user = users[0];
-        return res(ctx.status(200), ctx.json(user));
+    rest.get('/member/info', async (req, res, ctx) => {
+        // 쿠키에서 세션 확인 후 사용자 정보 반환하도록 수정
+        const session = req.cookies['session'];
+        if (session === 'fake-session-token') {
+            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
+            return res(ctx.status(200), ctx.json(user));
+        }
+        return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
     }),
 ];

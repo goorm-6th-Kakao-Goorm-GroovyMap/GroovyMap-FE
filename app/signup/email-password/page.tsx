@@ -37,7 +37,6 @@ const EmailPasswordPage: React.FC = () => {
                 setIsEmailChecked(true);
             } else {
                 toast.error('이미 사용 중인 이메일입니다.');
-                setIsEmailChecked(false);
             }
         },
         onError: () => {
@@ -74,6 +73,7 @@ const EmailPasswordPage: React.FC = () => {
             return response.data; // json data 반환(result, message)
         },
         onSuccess: (data) => {
+            console.log('응답 데이터:', data); // 응답 데이터를 콘솔에 출력
             const result = data.result !== undefined ? data.result : false; // 기본 값 설정
             const message = data.message || (result ? '이메일 인증에 성공했습니다!' : '인증 코드가 잘못되었습니다.');
             if (result) {
@@ -84,7 +84,8 @@ const EmailPasswordPage: React.FC = () => {
                 toast.error(message);
             }
         },
-        onError: () => {
+        onError: (error) => {
+            console.error('인증에 실패했습니다:', error); // 오류 데이터를 콘솔에 출력
             toast.error('인증에 실패했습니다.');
         },
     });

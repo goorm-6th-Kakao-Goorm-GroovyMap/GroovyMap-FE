@@ -7,7 +7,7 @@ export const userState = atom({
         nickname: '',
         region: '',
         part: '',
-        subPart: '',
+        type: '',
         profileImage: '',
         bio: '',
         followers: 0,

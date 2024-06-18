@@ -1,20 +1,22 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import KakaoImg from './SocialLoginLogo/Kakao'; // default import
 import Drawing from '@/components/Svg/Drawing';
 import GoogleImg from './SocialLoginLogo/Google';
 import apiClient from '@/api/apiClient';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
 import confetti from 'canvas-confetti';
 import { userState } from '@/recoil/state/loginState';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie'; // 쿠키를 읽기 위해 js-cookie 사용
 
 const Login = () => {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [user, setUser] = useRecoilState(userState);
     const [formData, setFormData] = useState({
         email: '',
@@ -29,21 +31,29 @@ const Login = () => {
         }));
     };
 
-    //로그인 버튼 클릭시 post api 요청
     const loginMutation = useMutation({
         mutationFn: async (data: { email: string; password: string }) => {
             const response = await apiClient.post('/login', data, {
-                withCredentials: true, // 쿠키를 포함한 요청을 허용하는 옵션
+                withCredentials: true,
             });
             return response.data;
         },
-        onSuccess: (data) => {
+        onSuccess: async () => {
             toast.success('로그인에 성공했습니다!');
             confetti({
                 particleCount: 100,
                 spread: 160,
             });
-            router.push('/'); //로그인 후 메인 페이지로 이동시킴
+
+            // 로그인 성공 후 회원 정보 가져오기 api 엔드포인트 /member/info로 일단 해놓음. 나중에 변경
+            try {
+                const userInfoResponse = await apiClient.get('/member/info', { withCredentials: true });
+                setUser(userInfoResponse.data); // 유저 정보를 상태에 저장
+                router.push('/');
+            } catch (error) {
+                console.error('Failed to fetch user info:', error);
+                toast.error('유저 정보를 가져오는 데 실패했습니다.');
+            }
         },
         onError: (error) => {
             console.log('Error during login:', error);

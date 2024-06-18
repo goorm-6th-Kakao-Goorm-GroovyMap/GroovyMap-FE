@@ -10,48 +10,47 @@ import { toast } from 'react-toastify';
 import confetti from 'canvas-confetti';
 import Filter from '../components/Filter';
 
-// 한국어와 영어 매핑
 const regionMap: { [key: string]: string } = {
-    ALL: '전체',
-    GANGNAMGU: '강남구',
-    GANGDONGGU: '강동구',
-    GANGBUKGU: '강북구',
-    GANGSEOGU: '강서구',
-    GEUMCHEONGU: '금천구',
-    GUROGU: '구로구',
-    DOBONGGU: '도봉구',
-    DONGDAEMUNGU: '동대문구',
-    DONGJAKGU: '동작구',
-    MAPOGU: '마포구',
-    SEODAEMUNGU: '서대문구',
-    SEOCHOGU: '서초구',
-    SEONGDONGGU: '성동구',
-    SEONGBUKGU: '성북구',
-    SONGPA: '송파구',
-    YANGCHEONGU: '양천구',
-    YEONGDEUNGPOGU: '영등포구',
-    YONGSANGU: '용산구',
-    EUNPYEONGGU: '은평구',
-    JONGNOGU: '종로구',
-    JUNGGU: '중구',
-    JUNGNANGGU: '중랑구',
+    전체: 'ALL',
+    강남구: 'GANGNAMGU',
+    강동구: 'GANGDONGGU',
+    강북구: 'GANGBUKGU',
+    강서구: 'GANGSEOGU',
+    금천구: 'GEUMCHEONGU',
+    구로구: 'GUROGU',
+    도봉구: 'DOBONGGU',
+    동대문구: 'DONGDAEMUNGU',
+    동작구: 'DONGJAKGU',
+    마포구: 'MAPOGU',
+    서대문구: 'SEODAEMUNGU',
+    서초구: 'SEOCHOGU',
+    성동구: 'SEONGDONGGU',
+    성북구: 'SEONGBUKGU',
+    송파구: 'SONGPA',
+    양천구: 'YANGCHEONGU',
+    영등포구: 'YEONGDEUNGPOGU',
+    용산구: 'YONGSANGU',
+    은평구: 'EUNPYEONGGU',
+    종로구: 'JONGNOGU',
+    중구: 'JUNGGU',
+    중랑구: 'JUNGNANGGU',
 };
 
 const partMap: { [key: string]: string } = {
-    all: '전체',
-    BAND: '밴드',
-    DANCE: '댄스',
-    VOCAL: '보컬',
+    전체: 'ALL',
+    밴드: 'BAND',
+    댄스: 'DANCE',
+    보컬: 'VOCAL',
 };
 
 const subPartMap: { [key: string]: string } = {
-    GUITAR: '기타',
-    KEYBOARD: '건반',
-    BASSE: '베이스',
-    VOCAL: '보컬',
-    HIPHOP: '힙합',
-    JAZZ: '재즈',
-    ROCKING: '락킹',
+    기타: 'GUITAR',
+    건반: 'KEYBOARD',
+    베이스: 'BASS',
+    보컬: 'VOCAL',
+    힙합: 'HIPHOP',
+    재즈: 'JAZZ',
+    락킹: 'ROCKING',
 };
 
 const NicknameRegionPartPage: React.FC = () => {
@@ -77,6 +76,7 @@ const NicknameRegionPartPage: React.FC = () => {
             ...prevState,
             [name]: value,
         }));
+        console.log('Updated formData:', formData); // 값 저장 확인
     };
 
     const handleRegionChange = (region: string) => {
@@ -84,6 +84,7 @@ const NicknameRegionPartPage: React.FC = () => {
             ...prevState,
             region,
         }));
+        console.log('Selected region:', region); // 값 저장 확인
     };
 
     const handlePartChange = (part: string) => {
@@ -92,6 +93,7 @@ const NicknameRegionPartPage: React.FC = () => {
             part,
             subPart: '',
         }));
+        console.log('Selected part:', part); // 값 저장 확인
     };
 
     const handleSubPartChange = (subPart: string) => {
@@ -99,15 +101,17 @@ const NicknameRegionPartPage: React.FC = () => {
             ...prevState,
             subPart,
         }));
+        console.log('Selected subPart:', subPart); // 값 저장 확인
     };
 
-    //닉네임 중복 확인
+    // 닉네임 중복 확인
     const checkNicknameAvailabilityMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post('/nickname-check', { nickname: formData.nickname });
+            const response = await apiClient.post('register/nickname-check', { nickname: formData.nickname });
             return response.data;
         },
         onSuccess: (data) => {
+            console.log('응답 데이터:', data); // 응답 데이터를 콘솔에 출력
             setNicknameAvailable(data.available);
             if (data.available) {
                 toast.success('사용 가능한 닉네임입니다.');
@@ -116,7 +120,7 @@ const NicknameRegionPartPage: React.FC = () => {
             }
         },
         onError: (error) => {
-            console.error('Error checking nickname availability:', error);
+            console.error('닉네임 중복 확인 중 오류가 발생했습니다:', error); // 오류 데이터를 콘솔에 출력
             toast.error('닉네임 중복 확인 중 오류가 발생했습니다.');
             setNicknameAvailable(false);
         },
@@ -134,27 +138,31 @@ const NicknameRegionPartPage: React.FC = () => {
     //회원가입
     const signupMutation = useMutation({
         mutationFn: async () => {
+            const mappedRegion = regionMap[formData.region] || formData.region;
+            const mappedPart = partMap[formData.part] || formData.part;
+            const mappedSubPart = subPartMap[formData.subPart] || formData.subPart;
             const response = await apiClient.post('/register', {
                 email: formData.email,
                 password: formData.password,
                 nickname: formData.nickname,
-                region: regionMap[formData.region],
-                part: partMap[formData.part],
-                type: subPartMap[formData.subPart],
+                region: mappedRegion,
+                part: mappedPart,
+                type: mappedSubPart,
             });
 
             return response.data;
         },
         onSuccess: (data) => {
+            console.log('회원가입 성공 응답:', data); // 응답 데이터를 콘솔에 출력
             if (data.result) {
                 toast.success('회원가입에 성공했습니다!');
                 confetti({
-                    //콘페티 효과
+                    // 콘페티 효과
                     particleCount: 100,
                     spread: 160,
                 });
                 setTimeout(() => {
-                    //회원가입 성공 후 로그인 페이지로 이동
+                    // 회원가입 성공 후 로그인 페이지로 이동
                     router.push('/login');
                 }, 2000);
             } else {
@@ -162,6 +170,7 @@ const NicknameRegionPartPage: React.FC = () => {
             }
         },
         onError: (error: any) => {
+            console.error('회원가입 실패 응답:', error); // 오류 데이터를 콘솔에 출력
             toast.error('회원가입에 실패했습니다. 다시 시도해주세요.');
         },
     });
