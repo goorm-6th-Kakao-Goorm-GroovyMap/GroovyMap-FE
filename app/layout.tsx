@@ -10,11 +10,13 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RecoilRoot } from 'recoil'; //상태관리
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { worker } from '../src/mocks/browser';
 
+//msw 실행, 실제 연동시 주석처리 해야함.
+import { worker } from '../src/mocks/browser';
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     worker.start();
 }
+//
 
 const queryClient = new QueryClient();
 

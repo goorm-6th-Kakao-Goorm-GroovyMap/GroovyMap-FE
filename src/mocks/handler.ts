@@ -16,12 +16,12 @@ interface User {
 const users: User[] = [
     {
         email: 'valid@example.com',
-        password: 'password123!',
+        password: '123',
         nickname: 'validuser',
         region: 'ALL',
         part: 'BAND',
         type: 'GUITAR',
-        profileImage: 'https://via.placeholder.com/150',
+        profileImage: '/profile.jpeg',
         bio: 'This is a bio',
         followers: 100,
         following: 200,
@@ -32,7 +32,7 @@ const users: User[] = [
         nickname: 'newuser',
         region: 'ALL',
         part: 'VOCAL',
-        profileImage: 'https://via.placeholder.com/150',
+        profileImage: '/profile.jpeg',
         bio: 'New user bio',
         followers: 50,
         following: 100,
@@ -104,10 +104,9 @@ export const handlers = [
         const { email, password } = req.body as { email: string; password: string };
         const user = users.find((user) => user.email === email && user.password === password);
         if (user) {
-            // Mock setting a cookie for authentication
             const sessionCookie = 'fake-session-token';
-            ctx.cookie('session', sessionCookie, { path: '/' });
             return res(
+                ctx.cookie('session', sessionCookie, { path: '/' }),
                 ctx.status(200),
                 ctx.json({
                     message: '로그인에 성공했습니다!',
@@ -131,13 +130,20 @@ export const handlers = [
         );
     }),
 
-    rest.get('/member/info', async (req, res, ctx) => {
-        // 쿠키에서 세션 확인 후 사용자 정보 반환하도록 수정
+    rest.get('/mypage', async (req, res, ctx) => {
         const session = req.cookies['session'];
         if (session === 'fake-session-token') {
             const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
-            return res(ctx.status(200), ctx.json(user));
+            return res(ctx.status(200), ctx.json({ user }));
         }
         return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
+    }),
+
+    rest.post('/logout', async (req, res, ctx) => {
+        return res(
+            ctx.cookie('session', '', { path: '/', expires: new Date(0) }),
+            ctx.status(200),
+            ctx.json({ message: '로그아웃에 성공했습니다!' })
+        );
     }),
 ];

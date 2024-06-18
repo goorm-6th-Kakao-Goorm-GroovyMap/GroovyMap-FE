@@ -1,49 +1,24 @@
-// src/app/mypage/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRecoilState, useSetRecoilState } from 'recoil';
-import { userState, activeTabState } from '@/recoil/state/userState';
+import React, { useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { userState, activeTabState } from '@/recoil/state/userState'; //유저 상태와 메뉴별 탭 관리
 import Posts from '@/components/Mypage/Posts';
 import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 import PostRecord from '@/components/Mypage/PostRecord';
 import SavedAndLiked from '@/components/Mypage/SavedAndLiked';
 import WritePostModal from '@/components/Mypage/WritePostModal';
 import SettingModal from '@/components/Mypage/SettingModal';
-import apiClient from '@/api/apiClient';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-toastify';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { FaPen, FaCog } from 'react-icons/fa';
 
 const MyPage: React.FC = () => {
-    const queryClient = useQueryClient();
-    const setUser = useSetRecoilState(userState);
-    const [activeTab, setActiveTab] = useRecoilState(activeTabState);
+    const [activeTab, setActiveTab] = useRecoilState(activeTabState); //하단의 메뉴 탭들 관리
+    const user = useRecoilValue(userState); //저장된 유저상태 불러옴
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setSettingsOpen] = useState(false);
 
-    // 리액트 쿼리를 사용하여 유저 정보 가져오기
-    const {
-        data: userData,
-        error,
-        isLoading,
-    } = useQuery({
-        queryKey: ['userInfo'],
-        queryFn: async () => {
-            //마이페이지 유저 정보 가져오기 요청
-            const response = await apiClient.get('/user/me', { withCredentials: true });
-            return response.data;
-        },
-        onSuccess: (data) => {
-            setUser(data.user);
-        },
-        onError: () => {
-            toast.error('유저 정보를 가져오는데 실패했습니다.');
-        },
-    });
-
-    //탭마다 메뉴 변경되어 각 컴포넌트 렌더링
+    // 탭마다 메뉴 변경되어 각 컴포넌트 렌더링
     const renderContent = () => {
         switch (activeTab) {
             case 'posts':
@@ -67,17 +42,9 @@ const MyPage: React.FC = () => {
         setSettingsOpen(true);
     };
 
-    //로딩시 처리
-    if (isLoading) {
+    // 로딩시 처리
+    if (!user) {
         return <SkeletonLoader />;
-    }
-
-    if (error) {
-        return <div>유저 정보를 가져오는 중 오류가 발생했습니다.</div>;
-    }
-
-    if (!data) {
-        return <div>유저 정보를 불러올 수 없습니다.</div>;
     }
 
     return (
@@ -85,21 +52,21 @@ const MyPage: React.FC = () => {
             <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">
                 {/* 프로필 정보 */}
                 <div className="flex items-center mb-6">
-                    {data.profileImage ? (
+                    {user.profileImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={data.profileImage} alt="Profile" className="w-20 h-20 rounded-full mr-4" />
+                        <img src={user.profileImage} alt="Profile" className="w-20 h-20 rounded-full mr-4" />
                     ) : (
                         <div className="w-20 h-20 rounded-full mr-4 bg-gray-300" />
                     )}
                     <div className="flex-grow">
-                        <h1 className="text-2xl font-bold">@{data.nickname}</h1>
+                        <h1 className="text-2xl font-bold">@{user.nickname}</h1>
                         <p>
-                            팔로워: {data.followers}명 팔로잉: {data.following}명
+                            팔로워: {user.followers}명 팔로잉: {user.following}명
                         </p>
                         <p>
-                            활동지역: {data.region} 분야: {data.part} 파트: {data.subPart}
+                            활동지역: {user.region} 분야: {user.part} 파트: {user.type}
                         </p>
-                        <p>{data.bio}</p>
+                        <p>{user.bio}</p>
                     </div>
                     <div className="flex space-x-2">
                         <button onClick={handleWritePost} className="text-purple-500 hover:text-purple-600">
