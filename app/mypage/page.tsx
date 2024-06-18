@@ -12,11 +12,12 @@ import WritePostModal from '@/components/Mypage/WritePostModal';
 import SettingModal from '@/components/Mypage/SettingModal';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { FaCog } from 'react-icons/fa';
-import { translateRegion, translatePart, translateType } from '@/constants/translate';
+// import { translateRegion, translatePart, translateType } from '@/constants/translate';
+import { areas, parts, types } from '@/constants/constants'; // constants 파일로 수정
 
 const MyPage: React.FC = () => {
     const [activeTab, setActiveTab] = useRecoilState(activeTabState);
-    const user = useRecoilValue(userState);
+    const user = useRecoilValue(userState); //사용자 상태 가져옴
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setSettingsOpen] = useState(false);
 
@@ -58,11 +59,12 @@ const MyPage: React.FC = () => {
                         <p>
                             팔로워: {user.followers}명 팔로잉: {user.following}명
                         </p>
+                        {/* 활동지역, 분야, 파트 이름 constants에서 가져오게 수정 */}
                         <p>
-                            활동지역: {translateRegion(user.region)} 분야: {translatePart(user.part)} 파트:{' '}
-                            {translateType(user.type)}
+                            활동지역: {areas[user.region || 'ALL'].name} | 분야: {parts[user.part || 'ALL'].name} |
+                            파트: {types[user.type || 'ALL'].name}
                         </p>
-                        <p>{user.bio}</p>
+                        <p>{user.introduction}</p>
                     </div>
                     <div className="flex space-x-2">
                         <button onClick={handleSettings} className="text-gray-500 hover:text-gray-600">

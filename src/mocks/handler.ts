@@ -9,7 +9,7 @@ interface User {
     part?: string;
     type?: string;
     profileImage?: string;
-    bio?: string; // 자기소개
+    introduction?: string; // 자기소개
     followers?: number;
     following?: number;
 }
@@ -18,12 +18,12 @@ const users: User[] = [
     {
         email: 'valid@example.com',
         password: '123',
-        nickname: 'validuser',
+        nickname: 'lavie_music',
         region: 'ALL',
         part: 'BAND',
         type: 'GUITAR',
         profileImage: '/profile.jpeg',
-        bio: '안녕하세요.',
+        introduction: '안녕하세요.', // 유저 자기소개
         followers: 100,
         following: 200,
     },
@@ -34,7 +34,7 @@ const users: User[] = [
         region: 'ALL',
         part: 'VOCAL',
         profileImage: '/profile.jpeg',
-        bio: 'New user bio',
+        introduction: 'New user bio',
         followers: 50,
         following: 100,
     },
@@ -91,7 +91,7 @@ const practicePlaces: PracticePlace[] = [
         part: 'BAND',
         coordinate: { latitude: 34.0522, longitude: -118.2437 },
         region: 'GANGNAMGU',
-        address: '용산구',
+        address: '강남구',
         phoneNumber: '098-765-4321',
         rentalFee: '2000',
         capacity: '1000',
@@ -155,7 +155,11 @@ export const handlers = [
             ctx.json({
                 result: true,
                 message: '회원가입에 성공했습니다!',
-                user: { email, nickname, region, part, type },
+                email,
+                nickname,
+                region,
+                part,
+                type,
             })
         );
     }),
@@ -170,17 +174,15 @@ export const handlers = [
                 ctx.status(200),
                 ctx.json({
                     message: '로그인에 성공했습니다!',
-                    user: {
-                        email: user.email,
-                        nickname: user.nickname,
-                        region: user.region,
-                        part: user.part,
-                        type: user.type,
-                        profileImage: user.profileImage,
-                        bio: user.bio,
-                        followers: user.followers,
-                        following: user.following,
-                    },
+                    email: user.email,
+                    nickname: user.nickname,
+                    region: user.region,
+                    part: user.part,
+                    type: user.type,
+                    profileImage: user.profileImage,
+                    introduction: user.introduction,
+                    followers: user.followers,
+                    following: user.following,
                 })
             );
         }
@@ -194,7 +196,20 @@ export const handlers = [
         const session = req.cookies['session'];
         if (session === 'fake-session-token') {
             const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
-            return res(ctx.status(200), ctx.json({ user }));
+            return res(
+                ctx.status(200),
+                ctx.json({
+                    email: user.email,
+                    nickname: user.nickname,
+                    region: user.region,
+                    part: user.part,
+                    type: user.type,
+                    profileImage: user.profileImage,
+                    introduction: user.introduction,
+                    followers: user.followers,
+                    following: user.following,
+                })
+            );
         }
         return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
     }),

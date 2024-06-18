@@ -5,7 +5,8 @@ import { Map, MapMarker } from 'react-kakao-maps-sdk';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { Place } from '@/types/types';
-import { regions, regionNames, Region } from '@/constants/region';
+// import { regions, regionNames, Region } from '@/constants/region';
+import { areas, parts } from '@/constants/constants'; //constants 파일로 변경
 
 declare global {
     interface Window {
@@ -16,7 +17,7 @@ declare global {
 interface AddModalProps<T extends Place> {
     isOpen: boolean;
     onClose: () => void;
-    selectedRegion: Region;
+    selectedRegion: string; //region에서 string으로 변경
     onSubmit: (newPlace: Omit<T, 'id'>) => void;
     kakaoRestApiKey: string;
     newPlace: Omit<T, 'id'>;
@@ -161,9 +162,13 @@ const AddModal = <T extends Place>({
             toast.warning('연습 장소 이름, 분야, 지역, 주소는 필수 입력 항목입니다.');
             return;
         }
-        onSubmit(newPlace);
+        //백엔드로 전송
+        const newPlaceToSend = {
+            ...newPlace,
+            region: newPlace.region,
+        };
+        onSubmit(newPlaceToSend as Omit<T, 'id'>);
     };
-
     if (!isOpen) return null;
 
     return (
@@ -237,9 +242,9 @@ const AddModal = <T extends Place>({
                             onChange={handleAddPlaceChange}
                             className="border p-2 rounded"
                         >
-                            {Object.entries(regionNames).map(([key, value]) => (
+                            {Object.entries(areas).map(([key, value]) => (
                                 <option key={key} value={key}>
-                                    {value}
+                                    {value.name}
                                 </option>
                             ))}
                         </select>

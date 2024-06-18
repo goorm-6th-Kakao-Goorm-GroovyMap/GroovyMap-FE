@@ -45,7 +45,7 @@ const Login = () => {
 
             try {
                 const userInfoResponse = await apiClient.get('/mypage', { withCredentials: true });
-                setUser(userInfoResponse.data.user);
+                setUser(userInfoResponse.data); //유저 데이터 반환
                 router.push('/mypage');
             } catch (error) {
                 console.error('Failed to fetch user info:', error);

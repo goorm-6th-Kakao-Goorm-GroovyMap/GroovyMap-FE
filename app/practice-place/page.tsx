@@ -15,7 +15,8 @@ import AddModal from '@/components/Places/AddModal';
 import List from '@/components/Places/List';
 import Map from '@/components/Places/Map';
 import { updateMarkers } from '@/components/Places/UpdataMarkers';
-import { regions, regionNames, Region } from '@/constants/region';
+// import { regions, regionNames, Region } from '@/constants/region';
+import { areas, parts } from '@/constants/constants'; //constants에서 가져옴
 import { useRouter } from 'next/navigation';
 //유저 가져오기
 import { useRecoilValue } from 'recoil';
@@ -37,8 +38,8 @@ const PracticePlace: React.FC = () => {
     const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
     const router = useRouter();
     const user = useRecoilValue(userState);
-    const [selectedRegion, setSelectedRegion] = useState<Region>(regions.ALL);
-    const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
+    const [selectedRegion, setSelectedRegion] = useState<string>('ALL'); //수정함
+    const [selectedPart, setSelectedPart] = useState<string>('ALL'); //수정함
     const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
@@ -133,7 +134,7 @@ const PracticePlace: React.FC = () => {
         if (placesList && Array.isArray(placesList)) {
             const filtered = placesList.filter((place) => {
                 const regionMatch = selectedRegion === 'ALL' || place.region === selectedRegion;
-                const partMatch = selectedPart === 'all' || place.part === selectedPart;
+                const partMatch = selectedPart === 'ALL' || place.part === selectedPart;
                 return regionMatch && partMatch;
             });
             setFilteredPracticePlaces(filtered);
@@ -207,12 +208,13 @@ const PracticePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedRegion}
-                                onChange={(e) => setSelectedRegion(e.target.value as Region)}
+                                onChange={(e) => setSelectedRegion(e.target.value as string)}
                             >
-                                {regionNames &&
-                                    Object.entries(regionNames).map(([key, value]) => (
+                                {/* constants 파일에서 받아오게 수정 */}
+                                {areas &&
+                                    Object.entries(areas).map(([key, value]) => (
                                         <option key={key} value={key}>
-                                            {value}
+                                            {value.name}
                                         </option>
                                     ))}
                             </select>
@@ -222,12 +224,14 @@ const PracticePlace: React.FC = () => {
                             <select
                                 className="border-none p-2 bg-white"
                                 value={selectedPart}
-                                onChange={(e) => setSelectedPart(e.target.value as 'all' | 'BAND' | 'DANCE' | 'VOCAL')}
+                                onChange={(e) => setSelectedPart(e.target.value as 'ALL' | 'BAND' | 'DANCE' | 'VOCAL')}
                             >
-                                <option value="all">전체</option>
-                                <option value="BAND">밴드</option>
-                                <option value="DANCE">댄스</option>
-                                <option value="VOCAL">노래</option>
+                                {parts &&
+                                    Object.entries(parts).map(([key, value]) => (
+                                        <option key={key} value={key}>
+                                            {value.name}
+                                        </option>
+                                    ))}
                             </select>
                         </div>
                     </div>
