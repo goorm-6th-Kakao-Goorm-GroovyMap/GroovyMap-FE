@@ -8,12 +8,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { IoMdSearch, IoMdClose } from 'react-icons/io';
 import { FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
-import {
-    getPerformancePlaces,
-    addPerformancePlace,
-    getPerformancePlaceDetails,
-} from '@/api/places/performancePlaceApi';
-import type { PerformancePlaceResponse, PerformancePlace, Place } from '@/types/types';
+import { getPracticePlaces, addPracticePlace, getPracticePlaceDetails } from '@/api/places/practicePlaceApi';
+import type { PracticePlaceResponse, PracticePlace, Place } from '@/types/types';
 import DetailsModal from '@/components/Places/DetailsModal';
 import AddModal from '@/components/Places/AddModal';
 import List from '@/components/Places/List';
@@ -25,14 +21,14 @@ import { useRouter } from 'next/navigation';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 
-const markerImages: { [key: string]: string } = {
+const markersImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
     DANCE: '/guitar.svg',
     VOCAL: '/guitar.svg',
     default: '/guitar.svg',
 };
 
-const PerformancePlace: React.FC = () => {
+const PracticePlace: React.FC = () => {
     if (!process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || !process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY) {
         throw new Error('Kakao API keys are not defined in the environment variables');
     }
@@ -43,15 +39,15 @@ const PerformancePlace: React.FC = () => {
     const user = useRecoilValue(userState);
     const [selectedRegion, setSelectedRegion] = useState<Region>(regions.ALL);
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
-    const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<PerformancePlace[]>([]);
+    const [filteredPracticePlaces, setFilteredPracticePlaces] = useState<PracticePlace[]>([]);
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [markers, setMarkers] = useState<any[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedPlace, setSelectedPlace] = useState<PerformancePlace | null>(null);
+    const [selectedPlace, setSelectedPlace] = useState<PracticePlace | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newPlace, setNewPlace] = useState<Omit<PerformancePlace, 'id'>>({
+    const [newPlace, setNewPlace] = useState<Omit<PracticePlace, 'id'>>({
         name: '',
         part: 'BAND',
         coordinate: { latitude: 0, longitude: 0 },
@@ -60,27 +56,27 @@ const PerformancePlace: React.FC = () => {
         phoneNumber: '',
         rentalFee: '',
         capacity: '',
-        performanceHours: '',
+        practiceHours: '',
         description: '',
     });
     const itemsPerPage = 5;
     const queryClient = useQueryClient();
 
-    const { data: performancePlacesData } = useQuery<PerformancePlaceResponse, Error>({
-        queryKey: ['performancePlaces'],
-        queryFn: getPerformancePlaces,
+    const { data: practicePlacesData } = useQuery<PracticePlaceResponse, Error>({
+        queryKey: ['practicePlaces'],
+        queryFn: getPracticePlaces,
     });
 
-    const placesList = useMemo(() => performancePlacesData?.performancePlacePosts || [], [performancePlacesData]);
+    const placesList = useMemo(() => practicePlacesData?.practicePlacePosts || [], [practicePlacesData]);
 
     useEffect(() => {
         if (placesList) {
-            setFilteredPerformancePlaces(placesList);
+            setFilteredPracticePlaces(placesList);
         }
     }, [placesList]);
 
-    const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
-        mutationFn: addPerformancePlace,
+    const addPlaceMutation = useMutation<PracticePlace, Error, Omit<PracticePlace, 'id'>>({
+        mutationFn: addPracticePlace,
         onSuccess: async (newPlace) => {
             if (!newPlace.id) {
                 console.error('Returned ID is undefined.');
@@ -89,9 +85,9 @@ const PerformancePlace: React.FC = () => {
             }
 
             try {
-                const newPlaceDetails = await getPerformancePlaceDetails(newPlace.id);
-                queryClient.invalidateQueries({ queryKey: ['performancePlaces'] });
-                setFilteredPerformancePlaces((prev) => {
+                const newPlaceDetails = await getPracticePlaceDetails(newPlace.id);
+                queryClient.invalidateQueries({ queryKey: ['practicePlaces'] });
+                setFilteredPracticePlaces((prev) => {
                     if (Array.isArray(prev)) {
                         return [...prev, newPlaceDetails];
                     } else {
@@ -108,10 +104,10 @@ const PerformancePlace: React.FC = () => {
                     phoneNumber: '',
                     rentalFee: '',
                     capacity: '',
-                    performanceHours: '',
+                    practiceHours: '',
                     description: '',
                 });
-                toast.success('새로운 공연 장소가 성공적으로 추가되었습니다.');
+                toast.success('새로운 연습 장소가 성공적으로 추가되었습니다.');
             } catch (error) {
                 console.error('Error fetching new place details:', error);
                 toast.error('새로운 장소를 추가하는데 실패했습니다.');
@@ -125,7 +121,7 @@ const PerformancePlace: React.FC = () => {
 
     const fetchPlaceDetails = useCallback(async (postId: number) => {
         try {
-            const data = await getPerformancePlaceDetails(postId);
+            const data = await getPracticePlaceDetails(postId);
             setSelectedPlace(data);
             setIsModalOpen(true);
         } catch (error) {
@@ -140,15 +136,15 @@ const PerformancePlace: React.FC = () => {
                 const partMatch = selectedPart === 'all' || place.part === selectedPart;
                 return regionMatch && partMatch;
             });
-            setFilteredPerformancePlaces(filtered);
+            setFilteredPracticePlaces(filtered);
         }
     }, [selectedRegion, selectedPart, placesList]);
 
     useEffect(() => {
         if (map) {
-            if (Array.isArray(filteredPerformancePlaces)) {
-                updateMarkers<PerformancePlace>({
-                    places: filteredPerformancePlaces,
+            if (Array.isArray(filteredPracticePlaces)) {
+                updateMarkers<PracticePlace>({
+                    places: filteredPracticePlaces,
                     map,
                     clusterer,
                     setMarkers,
@@ -157,10 +153,10 @@ const PerformancePlace: React.FC = () => {
                     setIsModalOpen,
                 });
             } else {
-                console.error('filteredPerformancePlaces is not an array:', filteredPerformancePlaces);
+                console.error('filteredPracticePlaces is not an array:', filteredPracticePlaces);
             }
         }
-    }, [map, filteredPerformancePlaces, clusterer, fetchPlaceDetails]);
+    }, [map, filteredPracticePlaces, clusterer, fetchPlaceDetails]);
 
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
@@ -202,7 +198,7 @@ const PerformancePlace: React.FC = () => {
                     </div>
                 </div>
                 <header className="header mb-6">
-                    <h1 className="text-3xl font-extrabold text-purple-700">공연 장소</h1>
+                    <h1 className="text-3xl font-extrabold text-purple-700">연습 장소</h1>
                 </header>
                 <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                     <div className="flex items-center space-x-2">
@@ -246,7 +242,7 @@ const PerformancePlace: React.FC = () => {
                 </div>
 
                 <Map
-                    places={filteredPerformancePlaces}
+                    places={filteredPracticePlaces}
                     map={map}
                     setMap={setMap}
                     clusterer={clusterer}
@@ -256,13 +252,13 @@ const PerformancePlace: React.FC = () => {
                 />
 
                 <List
-                    places={filteredPerformancePlaces}
+                    places={filteredPracticePlaces}
                     currentPage={currentPage}
                     itemsPerPage={itemsPerPage}
                     handlePageChange={handlePageChange}
                     handleTitleClick={handleTitleClick}
                     fetchPlaceDetails={fetchPlaceDetails}
-                    type={'performance'}
+                    type={'practice'}
                 />
 
                 {isModalOpen && selectedPlace && (
@@ -270,11 +266,11 @@ const PerformancePlace: React.FC = () => {
                 )}
 
                 {isAddModalOpen && (
-                    <AddModal<PerformancePlace>
+                    <AddModal<PracticePlace>
                         selectedRegion={selectedRegion}
                         isOpen={isAddModalOpen}
                         onClose={() => setIsAddModalOpen(false)}
-                        onSubmit={(newPlace: Omit<PerformancePlace, 'id'>) => addPlaceMutation.mutate(newPlace)}
+                        onSubmit={(newPlace: Omit<PracticePlace, 'id'>) => addPlaceMutation.mutate(newPlace)}
                         kakaoRestApiKey={kakaoRestApiKey}
                         newPlace={newPlace}
                         setNewPlace={setNewPlace}
@@ -285,4 +281,4 @@ const PerformancePlace: React.FC = () => {
     );
 };
 
-export default PerformancePlace;
+export default PracticePlace;
