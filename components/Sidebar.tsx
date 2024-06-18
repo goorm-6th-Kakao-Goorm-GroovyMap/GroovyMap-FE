@@ -5,7 +5,7 @@ import Logo from '../components/Logo/Logo';
 
 const Sidebar = () => {
     return (
-        <aside className="sidebar">
+        <aside className="sidebar flex flex-col items-center px-10">
             <div className="logo mb-28 mt-14">
                 <Logo />
             </div>
