@@ -4,10 +4,8 @@
         "allowJs": true,
         "skipLibCheck": true,
         "strict": true,
-        "typeRoots": ["./node_modules/@types", "./types"],
         "noEmit": true,
         "esModuleInterop": true,
-        "types": ["node", "react", "react-dom", "next"],
         "module": "esnext",
         "moduleResolution": "bundler",
         "resolveJsonModule": true,
@@ -15,6 +13,7 @@
         "jsx": "preserve",
         "incremental": true,
         "typeRoots": ["./node_modules/@types", "./types"],
+        "types": ["node", "react", "react-dom", "next"],
         "plugins": [
             {
                 "name": "next"
