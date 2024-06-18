@@ -34,10 +34,49 @@ const RightSidebar = () => {
     return (
         <div className="w-64 bg-purple-50 p-6 flex flex-col justify-between h-full">
             <div className="flex flex-row items-center justify-around mb-6 mt-6">
-                <FaPaperPlane size={24} className="text-black" />
-                <FaBell size={24} className="text-black" />
-                <div className="bg-purple-700 p-2 rounded-full">
-                    <IoMdPerson size={24} className="text-white" />
+                <FaPaperPlane size={24} className="text-black cursor-pointer" />
+                <FaBell size={24} className="text-black cursor-pointer" />
+                <div className="relative">
+                    {user ? (
+                        <div
+                            className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
+                            onClick={() => setShowMenu(!showMenu)}
+                        >
+                            <div className="w-10 h-10 rounded-full overflow-hidden">
+                                <Image
+                                    src={user.profileImage || '/profile.jpeg'}
+                                    alt="User Profile"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-full"
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-purple-700 p-2 rounded-full cursor-pointer" onClick={handleUserIconClick}>
+                            <IoMdPerson size={24} className="text-white" />
+                        </div>
+                    )}
+                    {showMenu && (
+                        <div
+                            className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50"
+                            onMouseEnter={() => setShowMenu(true)}
+                            onMouseLeave={() => setShowMenu(false)}
+                        >
+                            <button
+                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                onClick={() => router.push('/mypage')}
+                            >
+                                마이페이지
+                            </button>
+                            <button
+                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                onClick={handleLogout}
+                            >
+                                로그아웃
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center">

@@ -20,6 +20,10 @@ import List from '@/components/Places/List';
 import Map from '@/components/Places/Map';
 import { updateMarkers } from '@/components/Places/UpdataMarkers';
 import { regions, regionNames, Region } from '@/constants/region';
+import { useRouter } from 'next/navigation';
+//유저 가져오기
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
 
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
@@ -35,7 +39,8 @@ const PerformancePlace: React.FC = () => {
 
     const kakaoMapApiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
     const kakaoRestApiKey = process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
-
+    const router = useRouter();
+    const user = useRecoilValue(userState);
     const [selectedRegion, setSelectedRegion] = useState<Region>(regions.ALL);
     const [selectedPart, setSelectedPart] = useState<'all' | 'BAND' | 'DANCE' | 'VOCAL'>('all');
     const [filteredPerformancePlaces, setFilteredPerformancePlaces] = useState<PerformancePlace[]>([]);
@@ -168,6 +173,18 @@ const PerformancePlace: React.FC = () => {
         }
     };
 
+    //로그인 유저만 글쓰게
+    const handleAddButtonClick = () => {
+        if (!user) {
+            toast.error('로그인 유저만 글쓰기 가능합니다.');
+            setTimeout(() => {
+                router.push('/login');
+            }, 1500);
+        } else {
+            setIsAddModalOpen(true);
+        }
+    };
+
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
             <ToastContainer />
@@ -219,12 +236,9 @@ const PerformancePlace: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                        <button className="bg-purple-700 text-white py-2 px-4 rounded-full">
-                            <FaMapMarkerAlt />
-                        </button>
                         <button
                             className="bg-purple-700 text-white py-2 px-4 rounded-full"
-                            onClick={() => setIsAddModalOpen(true)}
+                            onClick={handleAddButtonClick}
                         >
                             <FaPlus />
                         </button>
