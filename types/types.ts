@@ -4,7 +4,7 @@ interface Coordinate {
 }
 
 export interface Place {
-    // id?: number;
+    id?: number;
     name: string;
     part: 'BAND' | 'DANCE' | 'VOCAL';
     coordinate: Coordinate;
