@@ -45,8 +45,8 @@ const Login = () => {
 
             try {
                 const userInfoResponse = await apiClient.get('/mypage', { withCredentials: true });
-                setUser(userInfoResponse.data); //유저 데이터 반환
-                router.push('/mypage');
+                setUser(userInfoResponse.data); // 유저 데이터 반환
+                router.push(`/mypage`); // 유저의 마이페이지로 이동
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
                 toast.error('유저 정보를 가져오는 데 실패했습니다.');

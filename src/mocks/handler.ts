@@ -12,6 +12,14 @@ interface User {
     introduction?: string; // 자기소개
     followers?: number;
     following?: number;
+    id: string; // ID 추가
+}
+
+interface Post {
+    id: number;
+    text: string;
+    image?: string;
+    comments: { id: number; text: string }[];
 }
 
 const users: User[] = [
@@ -26,6 +34,7 @@ const users: User[] = [
         introduction: '안녕하세요.', // 유저 자기소개
         followers: 100,
         following: 200,
+        id: '1',
     },
     {
         email: 'newuser@example.com',
@@ -37,66 +46,68 @@ const users: User[] = [
         introduction: 'New user bio',
         followers: 50,
         following: 100,
+        id: '2',
     },
 ];
 
 const certificationCodes: { [email: string]: string } = {};
 
-const performancePlaces: PerformancePlace[] = [
+const posts: Post[] = [
     {
         id: 1,
-        name: 'Performance Place 1',
-        part: 'BAND',
-        coordinate: { latitude: 35.6895, longitude: 139.6917 },
-        region: 'YONGSANGU',
-        address: '용산구',
-        phoneNumber: '123-456-7890',
-        rentalFee: '1000',
-        capacity: '500',
-        performanceHours: '9am - 9pm',
-        description: 'Description 1',
+        text: '첫 번째 게시물 입니다',
+        image: '/band.png',
+        comments: [
+            { id: 1, text: '첫 번째 댓글' },
+            { id: 2, text: '두 번째 댓글' },
+        ],
+        userNickname: 'lavie_music',
     },
     {
         id: 2,
-        name: 'Performance Place 2',
-        part: 'BAND',
-        coordinate: { latitude: 34.0522, longitude: -118.2437 },
-        region: 'GANGNAMGU',
-        address: '강남구',
-        phoneNumber: '098-765-4321',
-        rentalFee: '2000',
-        capacity: '1000',
-        performanceHours: '10am - 10pm',
-        description: 'Description 2',
+        text: '두 번째 게시물',
+        image: '/dance.png',
+        comments: [{ id: 3, text: '세 번째 댓글' }],
+        userNickname: 'lavie_music',
     },
 ];
 
-const practicePlaces: PracticePlace[] = [
+const performanceRecords = [
     {
         id: 1,
-        name: 'Practice Place 1',
+        userNickname: 'lavie_music',
+        description: '첫 번째 공연 기록',
+        address: '서울시 강남구',
+        date: '2023-06-19',
         part: 'BAND',
-        coordinate: { latitude: 35.6895, longitude: 139.6917 },
-        region: 'YONGSANGU',
-        address: '용산구',
-        phoneNumber: '123-456-7890',
-        rentalFee: '1000',
-        capacity: '500',
-        practiceHours: '9am - 9pm',
-        description: 'Description 1',
+        type: 'GUITAR',
+        region: 'GANGNAMGU',
+        latitude: 37.4979,
+        longitude: 127.0276,
     },
     {
         id: 2,
-        name: 'Practice Place 2',
+        userNickname: 'lavie_music',
+        description: '두 번째 공연 기록',
+        address: '서울시 용산구',
+        date: '2023-06-20',
         part: 'BAND',
-        coordinate: { latitude: 34.0522, longitude: -118.2437 },
-        region: 'GANGNAMGU',
-        address: '강남구',
-        phoneNumber: '098-765-4321',
-        rentalFee: '2000',
-        capacity: '1000',
-        practiceHours: '10am - 10pm',
-        description: 'Description 2',
+        type: 'VOCAL',
+        region: 'YONGSANGU',
+        latitude: 37.5326,
+        longitude: 126.9906,
+    },
+    {
+        id: 3,
+        userNickname: 'newuser',
+        description: '새 사용자 첫 번째 공연 기록',
+        address: '서울시 종로구',
+        date: '2023-06-21',
+        part: 'VOCAL',
+        type: 'VOCAL',
+        region: 'JONGNOGU',
+        latitude: 37.5729,
+        longitude: 126.9793,
     },
 ];
 
@@ -147,7 +158,7 @@ export const handlers = [
             return res(ctx.status(400), ctx.json({ result: false, message: '이미 사용 중인 이메일입니다.' }));
         }
 
-        users.push({ email, password, nickname, region, part, type });
+        users.push({ email, password, nickname, region, part, type, id: `${users.length + 1}` });
         delete certificationCodes[email];
 
         return res(
@@ -183,6 +194,7 @@ export const handlers = [
                     introduction: user.introduction,
                     followers: user.followers,
                     following: user.following,
+                    id: user.id,
                 })
             );
         }
@@ -208,10 +220,35 @@ export const handlers = [
                     introduction: user.introduction,
                     followers: user.followers,
                     following: user.following,
+                    id: user.id,
                 })
             );
         }
         return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
+    }),
+
+    // 추가된 다이나믹 라우팅을 위한 핸들러
+    rest.get('/mypage/:id', async (req, res, ctx) => {
+        const { id } = req.params;
+        const user = users.find((user) => user.id === id);
+        if (user) {
+            return res(
+                ctx.status(200),
+                ctx.json({
+                    email: user.email,
+                    nickname: user.nickname,
+                    region: user.region,
+                    part: user.part,
+                    type: user.type,
+                    profileImage: user.profileImage,
+                    introduction: user.introduction,
+                    followers: user.followers,
+                    following: user.following,
+                    id: user.id,
+                })
+            );
+        }
+        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
     }),
 
     rest.post('/logout', async (req, res, ctx) => {
@@ -222,62 +259,168 @@ export const handlers = [
         );
     }),
 
-    // Performance place handlers
-    rest.get('/performanceplace', (req, res, ctx) => {
-        return res(
-            ctx.status(200),
-            ctx.json({
-                performancePlacePosts: performancePlaces.map((place) => ({
-                    ...place,
-                })),
-            })
-        );
-    }),
-
-    rest.post<PerformancePlace>('/performanceplace', (req, res, ctx) => {
-        const newPlace: PerformancePlace = {
-            ...req.body,
-            id: performancePlaces.length + 1,
-        };
-        performancePlaces.push(newPlace);
-        return res(ctx.status(201), ctx.json(newPlace));
-    }),
-
-    rest.get('/performanceplace/:postId', (req, res, ctx) => {
-        const { postId } = req.params;
-        const place = performancePlaces.find((place) => place.id === parseInt(postId as string, 10));
-        if (!place) {
-            return res(ctx.status(404), ctx.json({ error: 'Place not found' }));
+    // Posts handlers
+    rest.get('/mypage/posts', async (req, res, ctx) => {
+        const session = req.cookies['session'];
+        if (session === 'fake-session-token') {
+            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
+            const userPosts = posts.filter((post) => post.userNickname === user.nickname);
+            return res(ctx.status(200), ctx.json(userPosts));
         }
-        return res(ctx.status(200), ctx.json(place));
+        return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
     }),
 
-    // Practice place handlers
-    rest.get('/practiceplace', (req, res, ctx) => {
-        return res(
-            ctx.status(200),
-            ctx.json({
-                practicePlacePosts: practicePlaces.map((place) => ({
-                    ...place,
-                })),
-            })
-        );
-    }),
-
-    rest.post<PracticePlace>('/practiceplace', (req, res, ctx) => {
-        const newPlace: PracticePlace = {
-            ...req.body,
-            id: practicePlaces.length + 1,
-        };
-        practicePlaces.push(newPlace);
-        return res(ctx.status(201), ctx.json(newPlace));
-    }),
-    rest.get('/practiceplace/:postId', (req, res, ctx) => {
-        const { postId } = req.params;
-        const place = practicePlaces.find((place) => place.id === parseInt(postId as string, 10));
-        if (!place) {
-            return res(ctx.status(404), ctx.json({ error: 'Place not found' }));
+    rest.get('/mypage/posts/:id', async (req, res, ctx) => {
+        const { id } = req.params;
+        const user = users.find((user) => user.id === id);
+        if (user) {
+            const userPosts = posts.filter((post) => post.userNickname === user.nickname);
+            if (userPosts.length > 0) {
+                return res(ctx.status(200), ctx.json(userPosts));
+            }
         }
-        return res(ctx.status(200), ctx.json(place));
+        return res(ctx.status(404), ctx.json({ message: 'Posts not found for this user' }));
+    }),
+
+    rest.post('/mypage/write', async (req, res, ctx) => {
+        const session = req.cookies['session'];
+        if (session === 'fake-session-token') {
+            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
+            const text = await req.text();
+            const formData = new URLSearchParams(text);
+            const postText = formData.get('text') as string;
+            const imageFile = formData.get('image') as string;
+
+            const newPost: Post = {
+                id: posts.length + 1,
+                text: postText,
+                image: URL.createObjectURL(new Blob([imageFile])),
+                comments: [],
+            };
+            posts.push(newPost);
+            return res(ctx.status(201), ctx.json(newPost));
+        }
+        return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
+    }),
+
+    rest.post('/mypage/write/:id', async (req, res, ctx) => {
+        const { id } = req.params;
+        const user = users.find((user) => user.id === id);
+        if (user) {
+            const text = await req.text();
+            const formData = new URLSearchParams(text);
+            const postText = formData.get('text') as string;
+            const imageFile = formData.get('image') as string;
+
+            const newPost: Post = {
+                id: posts.length + 1,
+                text: postText,
+                image: URL.createObjectURL(new Blob([imageFile])),
+                comments: [],
+            };
+            posts.push(newPost);
+            return res(ctx.status(201), ctx.json(newPost));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
+    }),
+
+    // Performance records handlers
+    rest.get('/mypage/performance', async (req, res, ctx) => {
+        const session = req.cookies['session'];
+        if (session === 'fake-session-token') {
+            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
+            const userRecords = performanceRecords.filter((record) => record.userNickname === user.nickname);
+            return res(ctx.status(200), ctx.json(userRecords));
+        }
+        return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
+    }),
+
+    rest.get('/mypage/performance/:id', async (req, res, ctx) => {
+        const { id } = req.params;
+        const user = users.find((user) => user.id === id);
+        if (user) {
+            const userRecords = performanceRecords.filter((record) => record.userNickname === user.nickname);
+            if (userRecords.length > 0) {
+                return res(ctx.status(200), ctx.json(userRecords));
+            }
+        }
+        return res(ctx.status(404), ctx.json({ message: 'Performance records not found for this user' }));
+    }),
+
+    rest.post('/mypage/performance/write', async (req, res, ctx) => {
+        const session = req.cookies['session'];
+        if (session === 'fake-session-token') {
+            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
+
+            try {
+                const formData = await req.formData();
+                const description = formData.get('description') as string;
+                const address = formData.get('address') as string;
+                const date = formData.get('date') as string;
+                const part = formData.get('part') as string;
+                const type = formData.get('type') as string;
+                const region = formData.get('region') as string;
+                const latitude = parseFloat(formData.get('latitude') as string);
+                const longitude = parseFloat(formData.get('longitude') as string);
+
+                const newRecord = {
+                    id: performanceRecords.length + 1,
+                    userNickname: user.nickname,
+                    description,
+                    address,
+                    date,
+                    part,
+                    type,
+                    region,
+                    latitude,
+                    longitude,
+                };
+
+                performanceRecords.push(newRecord);
+                return res(ctx.status(201), ctx.json(newRecord));
+            } catch (error) {
+                console.error('Error handling formData:', error);
+                return res(ctx.status(500), ctx.json({ error: 'Internal Server Error' }));
+            }
+        }
+        return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
+    }),
+
+    rest.post('/mypage/performance/write/:id', async (req, res, ctx) => {
+        const { id } = req.params;
+        const user = users.find((user) => user.id === id);
+        if (user) {
+            try {
+                const formData = await req.formData();
+                const description = formData.get('description') as string;
+                const address = formData.get('address') as string;
+                const date = formData.get('date') as string;
+                const part = formData.get('part') as string;
+                const type = formData.get('type') as string;
+                const region = formData.get('region') as string;
+                const latitude = parseFloat(formData.get('latitude') as string);
+                const longitude = parseFloat(formData.get('longitude') as string);
+
+                const newRecord = {
+                    id: performanceRecords.length + 1,
+                    userNickname: user.nickname,
+                    description,
+                    address,
+                    date,
+                    part,
+                    type,
+                    region,
+                    latitude,
+                    longitude,
+                };
+
+                performanceRecords.push(newRecord);
+                return res(ctx.status(201), ctx.json(newRecord));
+            } catch (error) {
+                console.error('Error handling formData:', error);
+                return res(ctx.status(500), ctx.json({ error: 'Internal Server Error' }));
+            }
+        }
+        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
     }),
 ];

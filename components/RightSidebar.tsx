@@ -31,6 +31,13 @@ const RightSidebar = () => {
         }
     };
 
+    // 마이페이지 버튼 클릭 시 동적으로 사용자 마이페이지로 이동하기 추가
+    const handleMyPageClick = () => {
+        if (user) {
+            router.push(`/mypage`);
+        }
+    };
+
     return (
         <div className="w-64 bg-purple-50 p-6 flex flex-col justify-between h-full">
             <div className="flex flex-row items-center justify-around mb-6 mt-6">
@@ -65,7 +72,7 @@ const RightSidebar = () => {
                         >
                             <button
                                 className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                                onClick={() => router.push('/mypage')}
+                                onClick={handleMyPageClick}
                             >
                                 마이페이지
                             </button>

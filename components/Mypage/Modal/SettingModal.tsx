@@ -1,5 +1,5 @@
 'use client';
-
+//설정 모달
 import React from 'react';
 
 interface SettingModalProps {

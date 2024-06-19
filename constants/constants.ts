@@ -26,11 +26,11 @@ export const areas: Record<string, { name: string; lat: number; lng: number }> =
 };
 
 //분야
-export const parts: Record<string, { name: string }> = {
-    ALL: { name: '전체' },
-    BAND: { name: '밴드' },
-    VOCAL: { name: '음악' },
-    DANCE: { name: '춤' },
+export const parts: Record<string, { name: string; types?: string[] }> = {
+    ALL: { name: '전체', types: [] },
+    VOCAL: { name: '노래', types: [] },
+    BAND: { name: '밴드', types: ['GUITAR', 'KEYBOARD', 'BASSE', 'VOCAL'] },
+    DANCE: { name: '댄스', types: ['HIPHOP', 'JAZZ', 'LOCKING'] },
 };
 
 //분야별 파트타입 추가
@@ -45,7 +45,7 @@ export const types: Record<string, { name: string }> = {
     KEYBOARD: { name: '건반' },
     HIPHOP: { name: '힙합' },
     JAZZ: { name: '재즈' },
-    ROCKING: { name: '락킹' },
+    LOCKING: { name: '락킹' },
     // 필요한 다른 타입 추가
 };
 
