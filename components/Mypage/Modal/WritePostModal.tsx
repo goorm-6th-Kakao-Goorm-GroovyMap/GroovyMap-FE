@@ -48,6 +48,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
         if (image) {
             formData.append('image', image);
         }
+        formData.append('userNickname', loggedInUser.nickname); // 사용자 닉네임 추가
         mutation.mutate(formData);
     };
 

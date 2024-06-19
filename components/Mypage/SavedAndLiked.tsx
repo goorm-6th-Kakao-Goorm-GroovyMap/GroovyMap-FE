@@ -1,5 +1,5 @@
 'use client';
-
+//좋아요 저장한 콘텐츠
 import React from 'react';
 
 const SavedAndLiked: React.FC = () => {

@@ -17,8 +17,8 @@ interface Post {
     id: number;
     text: string;
     image?: string;
-    comments: Comment[];
-    userNickname: string;
+    comments: { id: number; text: string }[];
+    userNickname: string; // userNickname 속성 추가
 }
 
 interface PostsProps {
@@ -39,7 +39,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
         queryKey: ['posts', user?.id],
         queryFn: async () => {
             // 로그인한 사용자가 자신의 마이페이지를 볼 때
-            const endpoint = isOwner ? `/mypage/posts` : `/mypage/posts/${user?.id}`;
+            const endpoint = isOwner ? '/mypage/posts' : `/mypage/posts/${user?.id}`;
             const response = await apiClient.get(endpoint);
             return response.data;
         },
@@ -54,7 +54,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
         return <div>Error loading posts</div>;
     }
 
-    if (!posts) {
+    if (!posts || posts.length === 0) {
         return <div>No posts available</div>; // posts가 없을 경우 처리
     }
 

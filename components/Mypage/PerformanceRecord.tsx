@@ -1,5 +1,5 @@
 'use client';
-//공연기록
+
 import React, { useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
@@ -8,16 +8,18 @@ import { useParams } from 'next/navigation';
 import PerformanceWritePostModal from './Modal/PerformanceWritePostModal.tsx';
 import { Map, MapMarker, MapTypeControl, ZoomControl } from 'react-kakao-maps-sdk';
 import { areas } from '@/constants/constants';
+import { User } from '@/types/types';
 
 interface PerformanceRecordProps {
     isOwner: boolean;
+    user: User;
 }
 
-const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ isOwner }) => {
+const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) => {
     const [isWritePostOpen, setWritePostOpen] = useState(false); // 글쓰기 모달 상태
     const { id } = useParams(); // URL에서 사용자 ID를 추출
 
-    const endpoint = isOwner ? `/mypage/performance` : `/mypage/performance/${id}`;
+    const endpoint = isOwner ? `/mypage/performance` : `/mypage/performance/${user?.id}`;
 
     const {
         data: records,

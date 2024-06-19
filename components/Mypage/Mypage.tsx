@@ -15,6 +15,7 @@ import { FaCog } from 'react-icons/fa';
 import { areas, parts, types } from '@/constants/constants';
 import { usePathname, useParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
+import { User } from '@/types/types';
 
 const MyPage: React.FC<{ user: any; isOwner: boolean }> = ({ user, isOwner }) => {
     const [activeTab, setActiveTab] = useRecoilState(activeTabState); // 활성화된 탭 상태를 가져오고 설정
