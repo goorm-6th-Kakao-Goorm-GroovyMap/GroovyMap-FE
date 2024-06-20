@@ -58,15 +58,21 @@ const RightSidebar = () => {
                             className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
                             onClick={() => setShowMenu(!showMenu)}
                         >
-                            <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <Image
-                                    src={user.profileImage || '/profile.jpeg'}
-                                    alt="User Profile"
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-full"
-                                />
-                            </div>
+                            {user.profileImage ? (
+                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                    <Image
+                                        src={user.profileImage}
+                                        alt="User Profile"
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className="rounded-full"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-10 h-10 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                    {user.nickname.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="bg-purple-700 p-2 rounded-full cursor-pointer" onClick={handleUserIconClick}>

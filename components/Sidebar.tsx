@@ -1,16 +1,15 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Logo from '../components/Logo/Logo'
-
+import { useState } from 'react';
+import Link from 'next/link';
+import Logo from '../components/Logo/Logo';
 
 const Sidebar = () => {
-    const [activeLink, setActiveLink] = useState('')
+    const [activeLink, setActiveLink] = useState('');
 
     const handleLinkClick = (href: string) => {
-        setActiveLink(href)
-    }
+        setActiveLink(href);
+    };
 
     return (
         <aside className="sidebar flex flex-col items-center px-10">
@@ -49,8 +48,8 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <Link
-                            href="#"
-                            className={activeLink === '#' ? 'text-purple-700' : ''}
+                            href="/freeboard"
+                            className={activeLink === '/freeboard' ? 'text-purple-700' : ''}
                             onClick={() => handleLinkClick('#')}
                         >
                             자유게시판
@@ -67,8 +66,8 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <Link
-                            href="#"
-                            className={activeLink === '#' ? 'text-purple-700' : ''}
+                            href="/Recruit"
+                            className={activeLink === '/Recruit' ? 'text-purple-700' : ''}
                             onClick={() => handleLinkClick('#')}
                         >
                             팀원 모집
@@ -76,9 +75,9 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <Link
-                            href="#"
-                            className={activeLink === '#' ? 'text-purple-700' : ''}
-                            onClick={() => handleLinkClick('#')}
+                            href="/profile"
+                            className={activeLink === '/profile' ? 'text-purple-700' : ''}
+                            onClick={() => handleLinkClick('/profile')}
                         >
                             프로필
                         </Link>
@@ -95,7 +94,7 @@ const Sidebar = () => {
                 </ul>
             </nav>
         </aside>
-    )
-}
+    );
+};
 
-export default Sidebar
+export default Sidebar;

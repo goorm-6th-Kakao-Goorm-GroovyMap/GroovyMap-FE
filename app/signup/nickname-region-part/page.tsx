@@ -180,7 +180,7 @@ const NicknameRegionPartPage: React.FC = () => {
             !formData.nickname ||
             !formData.region ||
             !formData.part ||
-            (formData.part !== '보컬' && !formData.subPart)
+            (formData.part !== 'VOCAL' && !formData.subPart)
         ) {
             toast.warning('모든 필드를 입력해 주세요.');
             return;
