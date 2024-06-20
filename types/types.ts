@@ -31,3 +31,33 @@ export interface PerformancePlaceResponse {
 export interface PracticePlaceResponse {
     practicePlacePosts: PracticePlace[];
 }
+
+// User와 Post 인터페이스 추가
+export interface User {
+    id: number;
+    email: string;
+    nickname: string;
+    region: string;
+    part: string;
+    type: string;
+    profileImage: string;
+    introduction: string;
+    followers: number;
+    following: number;
+}
+
+export interface Comment {
+    id: number;
+    text: string;
+    userNickname: string;
+    userProfileImage: string;
+}
+
+export interface Post {
+    id: number;
+    text: string;
+    image?: string;
+    comments: Comment[];
+    userNickname: string;
+    userProfileImage: string;
+}
