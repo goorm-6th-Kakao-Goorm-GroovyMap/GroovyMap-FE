@@ -25,12 +25,12 @@ export const areas: Record<string, { name: string; lat: number; lng: number }> =
     JUNGNANGGU: { name: '중랑구', lat: 37.6063, lng: 127.0924 },
 };
 
-//분야
-export const parts: Record<string, { name: string }> = {
-    ALL: { name: '전체' },
-    BAND: { name: '밴드' },
-    VOCAL: { name: '음악' },
-    DANCE: { name: '춤' },
+//분야, 분야별 타입 선택할떄 쓰기위해서 추가함
+export const parts: Record<string, { name: string; types?: string[] }> = {
+    ALL: { name: '전체', types: [] },
+    VOCAL: { name: '노래', types: [] },
+    BAND: { name: '밴드', types: ['GUITAR', 'KEYBOARD', 'BASSE', 'VOCAL'] },
+    DANCE: { name: '댄스', types: ['HIPHOP', 'JAZZ', 'LOCKING'] },
 };
 
 //분야별 파트타입 추가

@@ -12,7 +12,7 @@ export const initialUserState = {
     introduction: '',
     followers: 0,
     following: 0,
-};
+}; //회원정보 받아오는 부분들 수정해야함
 
 // 유저 정보 상태
 export const userState = atom({
