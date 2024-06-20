@@ -81,7 +81,7 @@ const Recruit_page: React.FC = () => {
         try {
             const response = await apiClient.post(`/recruitboard/${postId}/comment`, {
                 postId,
-                authorId, // 문자열을 숫자로 변환하여 전송
+                authorId,
                 content,
                 date: date,
             });

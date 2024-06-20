@@ -2,13 +2,12 @@
 
 import React, { useState } from 'react';
 import { regionCenters, type Comment, type Post } from '../../types';
-import apiClient from '@/api/apiClient';
 import { DateTime } from 'luxon';
 
 interface PostProps {
     post: Post;
     comments: Comment[];
-    addComment: (postId: number, authorId: string, content: string, date: string) => void;
+    addComment: (postId: number, authorId: number, content: string, date: string) => void;
     goBack: () => void;
     authorId: number;
 }
@@ -21,7 +20,7 @@ const PostContent: React.FC<PostProps> = ({ post, comments, addComment, goBack, 
             const now = DateTime.local().toISO();
             console.log('post.id:', post.id);
             console.log('authorId:', authorId);
-            addComment(post.id, authorId.toString(), commentContent, now);
+            addComment(post.id, authorId, commentContent, now);
             setCommentContent('');
         } catch (error) {
             console.error('Failed to add comment:', error);
