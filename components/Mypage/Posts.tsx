@@ -7,7 +7,7 @@ import WritePostModal from './Modal/WritePostModal';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { User, Post } from '@/types/types';
-import Image from 'next/image'; // next/image를 import
+import Image from 'next/image';
 
 interface PostsProps {
     isOwner: boolean;
@@ -26,10 +26,9 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
     } = useQuery<Post[]>({
         queryKey: ['posts'],
         queryFn: async () => {
-            // 로그인한 사용자가 자신의 마이페이지를 볼 때
-            const endpoint = isOwner ? '/mypage/posts' : `/mypage/posts/${user?.id}`;
+            const endpoint = isOwner ? '/mypage/photo' : `/mypage/photo/${user?.id}`;
             const response = await apiClient.get(endpoint);
-            return response.data;
+            return response.data.myPagePhotoDtos;
         },
     });
 
@@ -43,11 +42,13 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
     }
 
     if (!posts || posts.length === 0) {
-        return <div>No posts available</div>; // posts가 없을 경우 처리
+        return <div>No posts available</div>;
     }
 
-    const handlePostClick = (post: Post) => {
-        setSelectedPost(post);
+    const handlePostClick = async (post: Post) => {
+        const endpoint = isOwner ? `/mypage/photo/${post.id}` : `/mypage/photo/${user?.id}/${post.id}`;
+        const response = await apiClient.get(endpoint);
+        setSelectedPost(response.data);
     };
 
     return (
@@ -62,16 +63,15 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
             <div className="grid grid-cols-3 gap-4">
                 {posts.map((post) => (
                     <div key={post.id} className="border rounded cursor-pointer" onClick={() => handlePostClick(post)}>
-                        {post.image && (
+                        {post.photoUrl && (
                             <Image
-                                src={post.image}
+                                src={post.photoUrl}
                                 alt="Post"
                                 className="w-full h-60 object-cover"
                                 width={500}
                                 height={300}
                             />
                         )}
-                        <p>{post.text}</p>
                     </div>
                 ))}
             </div>

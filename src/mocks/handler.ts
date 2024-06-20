@@ -1,5 +1,4 @@
 import { rest } from 'msw';
-import type { PerformancePlace, PracticePlace } from '@/types/types';
 
 interface User {
     email: string;
@@ -19,7 +18,7 @@ interface Post {
     id: number;
     text: string;
     image?: string;
-    comments: { id: number; text: string }[];
+    comments: { id: number; text: string; userNickname: string; userProfileImage: string }[];
     userNickname: string;
 }
 
@@ -55,15 +54,15 @@ const posts: Post[] = [
     {
         id: 1,
         text: 'Mock Post 1',
-        image: 'https://via.placeholder.com/150',
-        comments: [{ id: 1, text: 'Nice post!' }],
+        image: '/dance.png',
+        comments: [{ id: 1, text: 'Nice post!', userNickname: 'commenter1', userProfileImage: '/profile1.jpeg' }],
         userNickname: 'lavie_music',
     },
     {
         id: 2,
         text: 'Mock Post 2',
-        image: 'https://via.placeholder.com/150',
-        comments: [{ id: 2, text: 'Great post!' }],
+        image: '/band.png',
+        comments: [{ id: 2, text: 'Great post!', userNickname: 'commenter2', userProfileImage: '/profile2.jpeg' }],
         userNickname: 'lavie_music',
     },
 ];
@@ -73,7 +72,6 @@ const performanceRecords: any[] = [];
 const certificationCodes: { [email: string]: string } = {};
 
 export const handlers = [
-    // User authentication and registration handlers
     rest.post('/register/email-check', async (req, res, ctx) => {
         const { email } = req.body as { email: string };
         const emailExists = users.some((user) => user.email === email);
@@ -167,48 +165,21 @@ export const handlers = [
     rest.get('/mypage', async (req, res, ctx) => {
         const session = req.cookies['session'];
         if (session === 'fake-session-token') {
-            const user = users[0]; // 항상 첫 번째 유저의 정보를 반환합니다.
-            return res(
-                ctx.status(200),
-                ctx.json({
-                    email: user.email,
-                    nickname: user.nickname,
-                    region: user.region,
-                    part: user.part,
-                    type: user.type,
-                    profileImage: user.profileImage,
-                    introduction: user.introduction,
-                    followers: user.followers,
-                    following: user.following,
-                })
-            );
+            const user = { ...users[0] }; // 항상 첫 번째 유저의 정보를 반환합니다.
+            return res(ctx.status(200), ctx.json(user));
         }
         return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
     }),
 
-    // 추가된 다이나믹 라우팅을 위한 핸들러
-    rest.get('/mypage/:id', async (req, res, ctx) => {
-        const { id } = req.params;
-        const user = users.find((user) => user.id === id);
-        if (user) {
-            return res(
-                ctx.status(200),
-                ctx.json({
-                    email: user.email,
-                    nickname: user.nickname,
-                    region: user.region,
-                    part: user.part,
-                    type: user.type,
-                    profileImage: user.profileImage,
-                    introduction: user.introduction,
-                    followers: user.followers,
-                    following: user.following,
-                    id: user.id,
-                })
-            );
-        }
-        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
-    }),
+    // rest.get('/mypage/:id', (req, res, ctx) => {
+    //     const { id } = req.params;
+    //     const user = users.find((user) => user.id === id);
+    //     if (user) {
+    //         return res(ctx.status(200), ctx.json(user));
+    //     } else {
+    //         return res(ctx.status(404), ctx.json({ message: 'User not found' }));
+    //     }
+    // }),
 
     rest.post('/logout', async (req, res, ctx) => {
         return res(
@@ -219,11 +190,11 @@ export const handlers = [
     }),
 
     // Handlers for posts
-    rest.get('/mypage/posts', async (req, res, ctx) => {
+    rest.get('/mypage/posts', (req, res, ctx) => {
+        // 세션 토큰을 사용하여 사용자를 식별하고 적절한 데이터 반환
         const session = req.cookies['session'];
         if (session === 'fake-session-token') {
-            const user = users[0];
-            const userPosts = posts.filter((post) => post.userNickname === user.nickname);
+            const userPosts = posts.filter((post) => post.userNickname === 'lavie_music'); // 예시 사용자명
             return res(ctx.status(200), ctx.json(userPosts));
         }
         return res(ctx.status(403), ctx.json({ message: 'Unauthorized' }));
@@ -252,13 +223,48 @@ export const handlers = [
         return res(ctx.status(200), ctx.json({ message: 'Post created successfully' }));
     }),
 
+    rest.get('/mypage/photo', async (req, res, ctx) => {
+        const userPosts = posts.map((post) => ({
+            id: post.id,
+            photoUrl: post.image,
+        }));
+        return res(ctx.status(200), ctx.json({ myPagePhotoDtos: userPosts }));
+    }),
+
+    rest.get('/mypage/photo/:postId', async (req, res, ctx) => {
+        const { postId } = req.params;
+        const post = posts.find((post) => post.id === parseInt(postId, 10));
+        if (post) {
+            return res(ctx.status(200), ctx.json(post));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
+    }),
+
     // Handlers for performance records
     rest.get('/mypage/performance', async (req, res, ctx) => {
         return res(ctx.status(200), ctx.json(performanceRecords));
     }),
 
+    rest.get('/mypage/performance/:memberId', async (req, res, ctx) => {
+        const { memberId } = req.params;
+        const userRecords = performanceRecords.filter((record) => record.userId === memberId);
+        if (userRecords) {
+            return res(ctx.status(200), ctx.json(userRecords));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'Performance records not found' }));
+    }),
+
     rest.post('/mypage/performance/write', async (req, res, ctx) => {
-        const { description, address, date, part, type, region, latitude, longitude } = req.body as any;
+        const { description, address, date, part, type, region, latitude, longitude } = req.body as {
+            description: string;
+            address: string;
+            date: string;
+            part: string;
+            type: string;
+            region: string;
+            latitude: number;
+            longitude: number;
+        };
         const newRecord = {
             id: performanceRecords.length + 1,
             description,

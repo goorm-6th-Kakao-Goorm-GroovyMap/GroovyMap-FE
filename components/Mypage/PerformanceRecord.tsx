@@ -1,38 +1,96 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { useParams } from 'next/navigation';
 import PerformanceWritePostModal from './Modal/PerformanceWritePostModal.tsx';
-import { Map, MapMarker, MapTypeControl, ZoomControl } from 'react-kakao-maps-sdk';
 import { areas } from '@/constants/constants';
-import { User } from '@/types/types';
+import type { User, PerformanceRecord, Place } from '@/types/types';
+import Map from '@/components/Places/Map';
+import { updateMarkers } from '@/components/Places/UpdataMarkers'; // updateMarkers 함수 import
 
 interface PerformanceRecordProps {
     isOwner: boolean;
     user: User;
 }
 
+interface KakaoMap {
+    clear(): void;
+    addMarkers(markers: any[]): void;
+}
+
 const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) => {
-    const [isWritePostOpen, setWritePostOpen] = useState(false); // 글쓰기 모달 상태
-    const { id } = useParams(); // URL에서 사용자 ID를 추출
+    const [isWritePostOpen, setWritePostOpen] = useState(false);
+    const { id } = useParams();
+    const [map, setMap] = useState<kakao.maps.Map | null>(null);
+    const [clusterer, setClusterer] = useState<KakaoMap | null>(null);
+    const [records, setRecords] = useState<PerformanceRecord[]>([]);
+    const [markers, setMarkers] = useState<any[]>([]);
+    const [selectedPlace, setSelectedPlace] = useState<Place | null>(null); // 타입 변경
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const endpoint = isOwner ? `/mypage/performance` : `/mypage/performance/${user?.id}`;
 
-    const {
-        data: records,
-        error,
-        isLoading,
-    } = useQuery<any[]>({
+    const { error, isLoading } = useQuery<PerformanceRecord[]>({
         queryKey: ['performanceRecords', id],
         queryFn: async () => {
             const response = await apiClient.get(endpoint);
+            setRecords(response.data);
             return response.data;
         },
-        enabled: !!id || isOwner, // id가 있거나 isOwner일 때만 쿼리 실행
+        enabled: !!id || isOwner,
     });
+
+    useEffect(() => {
+        if (map && clusterer && records) {
+            updateMarkers({
+                places: records.map((record) => ({
+                    id: record.id,
+                    name: record.description,
+                    part: record.part as 'BAND' | 'DANCE' | 'VOCAL', // 명시적으로 설정
+                    type: record.type,
+                    coordinate: { latitude: record.latitude, longitude: record.longitude },
+                    region: record.region,
+                    address: record.address,
+                })),
+                map,
+                clusterer,
+                setMarkers,
+                fetchPlaceDetails: async (id) => {
+                    console.log(`Fetching details for place ID: ${id}`);
+                },
+                setSelectedPlace,
+                setIsModalOpen,
+            });
+        }
+    }, [map, clusterer, records]);
+
+    const handleRecordAdd = (newRecord: PerformanceRecord) => {
+        setRecords((prevRecords) => [...prevRecords, newRecord]);
+        if (map && clusterer) {
+            updateMarkers({
+                places: [...records, newRecord].map((record) => ({
+                    id: record.id,
+                    name: record.description,
+                    part: record.part as 'BAND' | 'DANCE' | 'VOCAL', // 명시적으로 설정
+                    type: record.type,
+                    coordinate: { latitude: record.latitude, longitude: record.longitude },
+                    region: record.region,
+                    address: record.address,
+                })),
+                map,
+                clusterer,
+                setMarkers,
+                fetchPlaceDetails: async (id) => {
+                    console.log(`Fetching details for place ID: ${id}`);
+                },
+                setSelectedPlace,
+                setIsModalOpen,
+            });
+        }
+    };
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -53,26 +111,28 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                 </div>
             )}
             <div className="relative mb-4">
-                <Map center={{ lat: 37.5665, lng: 126.978 }} style={{ width: '100%', height: '400px' }} level={5}>
-                    {records &&
-                        records.length > 0 &&
-                        records.map(
-                            (record) =>
-                                record.latitude &&
-                                record.longitude && (
-                                    <MapMarker
-                                        key={record.id}
-                                        position={{ lat: record.latitude, lng: record.longitude }}
-                                        title={record.description}
-                                    />
-                                )
-                        )}
-                    <MapTypeControl position="TOPRIGHT" />
-                    <ZoomControl position="RIGHT" />
-                </Map>
+                <Map
+                    places={records.map((record) => ({
+                        id: record.id,
+                        name: record.description,
+                        part: record.part as 'BAND' | 'DANCE' | 'VOCAL', // 명시적으로 설정
+                        type: record.type,
+                        coordinate: { latitude: record.latitude, longitude: record.longitude },
+                        region: record.region,
+                        address: record.address,
+                    }))}
+                    map={map}
+                    setMap={setMap}
+                    clusterer={clusterer}
+                    setClusterer={setClusterer}
+                    fetchPlaceDetails={async (id) => {
+                        console.log(`Fetching details for place ID: ${id}`);
+                    }}
+                    kakaoMapApiKey={process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY || ''}
+                />
             </div>
             <div className="grid grid-cols-1 gap-4">
-                {records && records.length > 0 ? (
+                {records.length > 0 ? (
                     records.map((record) => (
                         <div key={record.id} className="border p-4 rounded">
                             <p>{record.description}</p>
@@ -85,7 +145,12 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                     <div>No performance records available.</div>
                 )}
             </div>
-            {isWritePostOpen && <PerformanceWritePostModal onClose={() => setWritePostOpen(false)} />}
+            {isWritePostOpen && (
+                <PerformanceWritePostModal
+                    onClose={() => setWritePostOpen(false)}
+                    onRecordAdd={handleRecordAdd} // 새로운 기록 추가 핸들러
+                />
+            )}
         </div>
     );
 };

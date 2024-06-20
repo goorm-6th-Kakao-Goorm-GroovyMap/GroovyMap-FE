@@ -10,9 +10,10 @@ import { parts, types, areas } from '@/constants/constants';
 
 interface PerformanceWritePostModalProps {
     onClose: () => void;
+    onRecordAdd: (newRecord: any) => void; // 새로운 기록을 추가하는 핸들러
 }
 
-const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ onClose }) => {
+const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ onClose, onRecordAdd }) => {
     const [description, setDescription] = useState('');
     const [address, setAddress] = useState('');
     const [date, setDate] = useState('');
@@ -27,13 +28,25 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
 
     const { mutate, status } = useMutation({
         mutationFn: async (newRecord: FormData) => {
-            return await apiClient.post(`/mypage/performance/write`, newRecord, {
+            const response = await apiClient.post(`/mypage/performance/write`, newRecord, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
+            return response.data;
         },
-        onSuccess: () => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({
                 queryKey: ['performanceRecords'],
+            });
+            onRecordAdd({
+                id: data.id,
+                description: data.description,
+                address: data.address,
+                date: data.date,
+                part: data.part,
+                type: data.type,
+                region: data.region,
+                latitude: data.latitude,
+                longitude: data.longitude,
             });
             onClose();
         },
@@ -198,8 +211,6 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
                         </option>
                     ))}
                 </select>
-                {/* 이미지는 뺌 */}
-                {/* <input type="file" onChange={handleImageChange} className="mb-4" /> */}
                 <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
