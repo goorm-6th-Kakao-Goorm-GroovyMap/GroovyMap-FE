@@ -1,3 +1,4 @@
+/* eslint-disable react/jsx-no-undef */
 'use client';
 
 import React, { useState } from 'react';
@@ -6,20 +7,8 @@ import PostDetailModal from './PostDetailModal';
 import WritePostModal from './Modal/WritePostModal';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
-import { User } from '@/types';
-
-interface Comment {
-    id: number;
-    text: string;
-}
-
-interface Post {
-    id: number;
-    text: string;
-    image?: string;
-    comments: { id: number; text: string }[];
-    userNickname: string; // userNickname 속성 추가
-}
+import { User, Post } from '@/types/types';
+import Image from 'next/image'; // next/image를 import
 
 interface PostsProps {
     isOwner: boolean;
@@ -74,7 +63,16 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
             <div className="grid grid-cols-3 gap-4">
                 {posts.map((post) => (
                     <div key={post.id} className="border rounded cursor-pointer" onClick={() => handlePostClick(post)}>
-                        {post.image && <img src={post.image} alt="Post" className="w-full h-60 object-cover" />}
+                        {post.image && (
+                            <Image
+                                src={post.image}
+                                alt="Post"
+                                className="w-full h-60 object-cover"
+                                width={500}
+                                height={300}
+                            />
+                        )}
+                        <p>{post.text}</p>
                     </div>
                 ))}
             </div>

@@ -1,9 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { userState, activeTabState } from '@/recoil/state/userState';
+import React, { useState } from 'react';
+import { useRecoilState } from 'recoil';
+import { activeTabState } from '@/recoil/state/userState';
 import Posts from '@/components/Mypage/Posts';
 import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 import PostRecord from '@/components/Mypage/PostRecord';
@@ -13,52 +13,24 @@ import SettingModal from '@/components/Mypage/Modal/SettingModal';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { FaCog } from 'react-icons/fa';
 import { areas, parts, types } from '@/constants/constants';
-import { usePathname, useParams } from 'next/navigation';
-import apiClient from '@/api/apiClient';
 import { User } from '@/types/types';
 
-const MyPage: React.FC<{ user: any; isOwner: boolean }> = ({ user, isOwner }) => {
+const MyPage: React.FC<{ user: User; isOwner: boolean }> = ({ user, isOwner }) => {
     const [activeTab, setActiveTab] = useRecoilState(activeTabState); // 활성화된 탭 상태를 가져오고 설정
-    const [profileUser, setProfileUser] = useState(user); // 프로필 사용자 상태
     const [isWritePostOpen, setWritePostOpen] = useState(false); // 게시물 탭의 글쓰기 모달 상태 관리
     const [isSettingsOpen, setIsSettingsOpen] = useState(false); // 설정 버튼 모달 상태 관리
-    const [isLoading, setIsLoading] = useState(!user); // 로딩 상태
-    const [error, setError] = useState<string | null>(null); // 에러 상태
-    const { id } = useParams(); // URL에서 사용자 ID를 추출
-
-    // 프로필 사용자 데이터를 가져오는 함수
-    const fetchUserProfile = async (memberId: string) => {
-        try {
-            const response = await apiClient.get(`/mypage/${memberId}`);
-            setProfileUser(response.data);
-        } catch (error) {
-            setError('Error fetching user data');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (!profileUser && id) {
-            // URL의 ID가 있을 경우 다른 사용자 정보 가져오기
-            fetchUserProfile(id as string);
-        } else {
-            // 프로필 사용자 정보가 이미 있으면 로딩 상태를 false로 설정
-            setIsLoading(false);
-        }
-    }, [id, profileUser]);
 
     // 현재 활성화된 탭에 따라 메뉴 렌더링
     const renderContent = () => {
         switch (activeTab) {
             case 'posts':
-                return <Posts user={profileUser} isOwner={isOwner} onWritePost={() => setWritePostOpen(true)} />;
+                return <Posts user={user} isOwner={isOwner} onWritePost={() => setWritePostOpen(true)} />;
             case 'performance':
-                return <PerformanceRecord user={profileUser} isOwner={isOwner} />;
+                return <PerformanceRecord user={user} isOwner={isOwner} />;
             case 'records':
-                return <PostRecord user={profileUser} isOwner={isOwner} />;
+                return <PostRecord user={user} isOwner={isOwner} />;
             case 'saved':
-                return <SavedAndLiked user={profileUser} isOwner={isOwner} />;
+                return <SavedAndLiked user={user} isOwner={isOwner} />;
             default:
                 return null;
         }
@@ -69,35 +41,26 @@ const MyPage: React.FC<{ user: any; isOwner: boolean }> = ({ user, isOwner }) =>
         setIsSettingsOpen(true);
     };
 
-    // 사용자 정보가 없으면 로딩 스켈레톤을 보여줌
-    if (isLoading) {
-        return <SkeletonLoader />;
-    }
-
-    if (error) {
-        return <div>{error}</div>;
-    }
-
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-50 p-4">
             <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">
                 {/* 프로필 정보 섹션 */}
                 <div className="flex items-center mb-6">
-                    {profileUser?.profileImage ? (
-                        <img src={profileUser.profileImage} alt="Profile" className="w-20 h-20 rounded-full mr-4" />
+                    {user?.profileImage ? (
+                        <img src={user.profileImage} alt="Profile" className="w-20 h-20 rounded-full mr-4" />
                     ) : (
                         <div className="w-20 h-20 rounded-full mr-4 bg-gray-300" />
                     )}
                     <div className="flex-grow">
-                        <h1 className="text-2xl font-bold">@{profileUser?.nickname}</h1>
+                        <h1 className="text-2xl font-bold">@{user?.nickname}</h1>
                         <p>
-                            팔로워: {profileUser?.followers}명 팔로잉: {profileUser?.following}명
+                            팔로워: {user?.followers}명 팔로잉: {user?.following}명
                         </p>
                         <p>
-                            활동지역: {areas[profileUser?.region || 'ALL'].name} | 분야:{' '}
-                            {parts[profileUser?.part || 'ALL'].name} | 파트: {types[profileUser?.type || 'ALL'].name}
+                            활동지역: {areas[user?.region || 'ALL'].name} | 분야: {parts[user?.part || 'ALL'].name} |
+                            파트: {types[user?.type || 'ALL'].name}
                         </p>
-                        <p>{profileUser?.introduction}</p>
+                        <p>{user?.introduction}</p>
                     </div>
                     {isOwner && (
                         <div className="flex space-x-2">

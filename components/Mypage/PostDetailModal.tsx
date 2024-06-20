@@ -3,27 +3,7 @@
 
 import React from 'react';
 import { FaHeart } from 'react-icons/fa';
-
-interface Comment {
-    id: number;
-    text: string;
-    userNickname: string;
-    userProfileImage: string;
-}
-
-interface Post {
-    id: number;
-    text: string;
-    image?: string;
-    comments: Comment[];
-    userNickname: string;
-    userProfileImage: string;
-}
-
-interface User {
-    nickname: string;
-    profileImage: string;
-}
+import { Post, User } from '@/types/types';
 
 interface PostDetailModalProps {
     post: Post;

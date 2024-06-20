@@ -25,14 +25,16 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
     const queryClient = useQueryClient();
     const router = useRouter();
 
-    const mutation = useMutation({
+    const { mutate, status } = useMutation({
         mutationFn: async (newRecord: FormData) => {
             return await apiClient.post(`/mypage/performance/write`, newRecord, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['performanceRecords']);
+            queryClient.invalidateQueries({
+                queryKey: ['performanceRecords'],
+            });
             onClose();
         },
         onError: (error) => {
@@ -61,7 +63,7 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
         if (image) {
             formData.append('image', image);
         }
-        mutation.mutate(formData);
+        mutate(formData);
     };
 
     useEffect(() => {
@@ -212,9 +214,9 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
                     <button
                         onClick={handleSubmit}
                         className="bg-purple-500 text-white py-2 px-4 rounded-lg"
-                        disabled={mutation.isLoading}
+                        disabled={status === 'loading'}
                     >
-                        {mutation.isLoading ? '등록 중...' : '등록'}
+                        {status === 'loading' ? '등록 중...' : '등록'}
                     </button>
                 </div>
             </div>

@@ -1,4 +1,3 @@
-//로그인한 사용자의 마이페이지
 'use client';
 
 import { useRecoilValue } from 'recoil';

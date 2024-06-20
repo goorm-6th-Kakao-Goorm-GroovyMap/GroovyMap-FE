@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
-import { useRouter, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 
@@ -14,25 +14,30 @@ interface WritePostModalProps {
 const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
     const [text, setText] = useState('');
     const [image, setImage] = useState<File | null>(null);
+    const [errorMessage, setErrorMessage] = useState('');
     const queryClient = useQueryClient();
     const params = useParams();
     const loggedInUser = useRecoilValue(userState);
-    const memberId = params?.id; // URL에서 사용자 ID를 추출
-    const isOwner = !memberId || loggedInUser?.id === memberId; // 로그인한 사용자가 자신의 마이페이지를 보는지 확인
+    const memberId = params.id; // URL에서 사용자 ID를 추출
 
-    const mutation = useMutation({
+    const endpoint = memberId ? `/mypage/photo/write/${memberId}` : `/mypage/photo/write`;
+
+    const { mutate, status } = useMutation({
         mutationFn: async (newPost: FormData) => {
-            const endpoint = isOwner ? `/mypage/photo/write` : `/mypage/photo/write/${memberId}`;
             return await apiClient.post(endpoint, newPost, {
                 headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true,
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries(['posts', memberId]);
+            queryClient.invalidateQueries({
+                queryKey: ['posts', memberId || loggedInUser?.id],
+            });
             onClose();
         },
         onError: (error) => {
             console.error('Error creating post:', error);
+            setErrorMessage('게시물 작성 중 오류가 발생했습니다.');
         },
     });
 
@@ -43,19 +48,23 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
     };
 
     const handleSubmit = () => {
+        if (!text) {
+            setErrorMessage('텍스트를 입력해주세요.');
+            return;
+        }
         const formData = new FormData();
         formData.append('text', text);
         if (image) {
             formData.append('image', image);
         }
-        formData.append('userNickname', loggedInUser.nickname); // 사용자 닉네임 추가
-        mutation.mutate(formData);
+        mutate(formData);
     };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-4">새 게시물 작성</h2>
+                {errorMessage && <div className="text-red-500 mb-2">{errorMessage}</div>}
                 <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -71,9 +80,9 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
                     <button
                         onClick={handleSubmit}
                         className="bg-purple-500 text-white py-2 px-4 rounded-lg"
-                        disabled={mutation.isLoading}
+                        disabled={status === 'pending'}
                     >
-                        {mutation.isLoading ? '등록 중...' : '등록'}
+                        {status === 'pending' ? '등록 중...' : '등록'}
                     </button>
                 </div>
             </div>

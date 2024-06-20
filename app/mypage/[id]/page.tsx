@@ -1,17 +1,14 @@
-// pages/mypage/[id].tsx
-// id로 다른 사용자 페이지 렌더링시 필요한 페이지
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useRecoilValue } from 'recoil';
 import apiClient from '@/api/apiClient';
 import { userState } from '@/recoil/state/userState';
 import MyPage from '@/components/Mypage/Mypage';
 
 const UserProfilePage = () => {
-    const router = useRouter();
-    const { id } = router.query; // URL에서 사용자 ID를 추출
+    const { id } = useParams(); // URL에서 사용자 ID를 추출
     const loggedInUser = useRecoilValue(userState); // 로그인한 사용자 정보 가져오기
     const [profileUser, setProfileUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -23,8 +20,8 @@ const UserProfilePage = () => {
                 if (!id) {
                     setProfileUser(loggedInUser);
                 } else {
-                    //다른 사용자일 경우 유저 정보를 아이디로 받아옴
-                    const response = await apiClient.get(`/mypage/${memberId}`);
+                    // 다른 사용자일 경우 유저 정보를 아이디로 받아옴
+                    const response = await apiClient.get(`/mypage/${id}`);
                     setProfileUser(response.data);
                 }
             } catch (error) {
