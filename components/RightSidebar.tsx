@@ -6,7 +6,7 @@ import { IoMdPerson } from 'react-icons/io';
 import { useRouter } from 'next/navigation'; // 사용자 아이콘 눌렀을 때 로그인으로 이동할 때 필요
 import Image from 'next/image';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { userState } from '@/recoil/state/userState';
+import { userState, initialUserState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
 
 const RightSidebar = () => {
@@ -24,7 +24,7 @@ const RightSidebar = () => {
     const handleLogout = async () => {
         try {
             await apiClient.post('/logout', {}, { withCredentials: true });
-            setUser(null);
+            setUser(initialUserState);
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);
