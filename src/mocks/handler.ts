@@ -155,7 +155,6 @@ export const handlers = [
                     introduction: user.introduction,
                     followers: user.followers,
                     following: user.following,
-                    id: user.id,
                 })
             );
         }
@@ -181,7 +180,6 @@ export const handlers = [
                     introduction: user.introduction,
                     followers: user.followers,
                     following: user.following,
-                    id: user.id,
                 })
             );
         }
