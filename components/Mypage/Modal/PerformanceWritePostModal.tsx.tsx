@@ -214,9 +214,9 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
                     <button
                         onClick={handleSubmit}
                         className="bg-purple-500 text-white py-2 px-4 rounded-lg"
-                        disabled={status === 'loading'}
+                        disabled={status === 'pending'}
                     >
-                        {status === 'loading' ? '등록 중...' : '등록'}
+                        {status === 'pending' ? '등록 중...' : '등록'}
                     </button>
                 </div>
             </div>

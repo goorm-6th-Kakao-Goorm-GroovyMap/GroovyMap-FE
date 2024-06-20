@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-undef */
 'use client';
 
 import React, { useState } from 'react';
@@ -25,7 +24,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
         error,
         isLoading,
     } = useQuery<Post[]>({
-        queryKey: ['posts', user?.id],
+        queryKey: ['posts'],
         queryFn: async () => {
             // 로그인한 사용자가 자신의 마이페이지를 볼 때
             const endpoint = isOwner ? '/mypage/posts' : `/mypage/posts/${user?.id}`;

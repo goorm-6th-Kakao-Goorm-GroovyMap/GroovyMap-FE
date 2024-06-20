@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
-import { useParams } from 'next/navigation';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 
@@ -16,11 +15,9 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
     const [image, setImage] = useState<File | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const queryClient = useQueryClient();
-    const params = useParams();
     const loggedInUser = useRecoilValue(userState);
-    const memberId = params.id; // URL에서 사용자 ID를 추출
 
-    const endpoint = memberId ? `/mypage/photo/write/${memberId}` : `/mypage/photo/write`;
+    const endpoint = `/mypage/photo/write`;
 
     const { mutate, status } = useMutation({
         mutationFn: async (newPost: FormData) => {
@@ -31,7 +28,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['posts', memberId || 'loggedInUser'],
+                queryKey: ['posts', loggedInUser?.id],
             });
             onClose();
         },
@@ -57,6 +54,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
         if (image) {
             formData.append('image', image);
         }
+        formData.append('userNickname', loggedInUser.nickname); // 로그인한 사용자의 닉네임 추가
         mutate(formData);
     };
 

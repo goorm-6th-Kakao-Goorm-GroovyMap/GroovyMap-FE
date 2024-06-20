@@ -9,10 +9,10 @@ interface User {
     part?: string;
     type?: string;
     profileImage?: string;
-    introduction?: string; // 자기소개
+    introduction?: string;
     followers?: number;
     following?: number;
-    id: string; // ID 추가
+    id: string;
 }
 
 interface Post {
@@ -20,7 +20,7 @@ interface Post {
     text: string;
     image?: string;
     comments: { id: number; text: string }[];
-    userNickname: string; // userNickname 속성 추가
+    userNickname: string;
 }
 
 const users: User[] = [
@@ -32,7 +32,7 @@ const users: User[] = [
         part: 'BAND',
         type: 'GUITAR',
         profileImage: '/profile.jpeg',
-        introduction: '안녕하세요.', // 유저 자기소개
+        introduction: '안녕하세요.',
         followers: 100,
         following: 200,
         id: '1',
@@ -68,7 +68,7 @@ const posts: Post[] = [
     },
 ];
 
-const performanceRecords: any[] = []; // Add appropriate type for performance records
+const performanceRecords: any[] = [];
 
 const certificationCodes: { [email: string]: string } = {};
 
