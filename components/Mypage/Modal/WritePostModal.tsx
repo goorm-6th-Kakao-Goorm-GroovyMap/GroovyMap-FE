@@ -31,7 +31,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ['posts', memberId || loggedInUser?.id],
+                queryKey: ['posts', memberId || 'loggedInUser'],
             });
             onClose();
         },
