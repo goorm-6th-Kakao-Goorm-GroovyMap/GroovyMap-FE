@@ -39,7 +39,7 @@ const RightSidebar = () => {
     // 마이페이지 버튼 클릭 시 동적으로 사용자 마이페이지로 이동하기 추가
     const handleMyPageClick = () => {
         if (user.nickname) {
-            router.push(`/mypage`); //닉네임 혹은 id로 됐을때 변경
+            router.push(`/mypage/${user.nickname}`);
         }
     };
 
@@ -58,10 +58,10 @@ const RightSidebar = () => {
                             className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
                             onClick={() => setShowMenu(!showMenu)}
                         >
-                            {user.profileImage ? ( //유저 정보 필드키 맞는지 확인하고 변경하기 photoUrl인지 profileImage인지
+                            {user.profileUrl ? (
                                 <div className="w-10 h-10 rounded-full overflow-hidden">
                                     <Image
-                                        src={user.profileImage}
+                                        src={user.profileUrl}
                                         alt="User Profile"
                                         layout="fill"
                                         objectFit="cover"

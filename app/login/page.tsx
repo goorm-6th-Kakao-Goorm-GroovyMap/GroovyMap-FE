@@ -44,9 +44,12 @@ const Login = () => {
             });
 
             try {
-                const userInfoResponse = await apiClient.get('/mypage', { withCredentials: true });
-                setUser(userInfoResponse.data); //유저 데이터 반환, memberInfo로 수정해야함
-                router.push('/mypage'); //라우터 이동하는 것도 수정해야함 닉네임 혹은 멤버 아이디로 가게
+                const userInfoResponse = await apiClient.get('/memberInfo', { withCredentials: true });
+                setUser({
+                    nickname: userInfoResponse.data.nickname,
+                    profileUrl: userInfoResponse.data.profileUrl, // profileUrl로
+                });
+                router.push(`/mypage/${userInfoResponse.data.nickname}`);
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
                 toast.error('유저 정보를 가져오는 데 실패했습니다.');

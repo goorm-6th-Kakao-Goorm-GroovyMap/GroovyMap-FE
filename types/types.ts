@@ -31,3 +31,16 @@ export interface PerformancePlaceResponse {
 export interface PracticePlaceResponse {
     practicePlacePosts: PracticePlace[];
 }
+
+export interface User {
+    nickname: string;
+    profileUrl: string;
+    email?: string;
+    region?: string;
+    part?: string;
+    type?: string;
+    profileImage?: string;
+    introduction?: string;
+    followers?: number;
+    following?: number;
+}

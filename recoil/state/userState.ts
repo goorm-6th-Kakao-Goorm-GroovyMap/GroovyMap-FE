@@ -3,16 +3,9 @@ import { atom } from 'recoil';
 // const { persistAtom } = recoilPersist();
 
 export const initialUserState = {
-    email: '',
     nickname: '',
-    region: '',
-    part: '',
-    type: '',
-    profileImage: '',
-    introduction: '',
-    followers: 0,
-    following: 0,
-}; //회원정보 받아오는 부분들 수정해야함
+    profileUrl: '',
+}; //회원정보 받아오는 부분들 수정함
 
 // 유저 정보 상태
 export const userState = atom({
