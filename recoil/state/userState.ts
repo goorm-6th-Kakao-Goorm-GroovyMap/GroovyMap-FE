@@ -1,6 +1,6 @@
 import { atom } from 'recoil';
-// import { recoilPersist } from 'recoil-persist';
-// const { persistAtom } = recoilPersist();
+import { recoilPersist } from 'recoil-persist';
+const { persistAtom } = recoilPersist();
 
 export const initialUserState = {
     nickname: '',
@@ -11,7 +11,7 @@ export const initialUserState = {
 export const userState = atom({
     key: 'userState',
     default: initialUserState,
-    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
 
 // 마이페이지 유저 상태
@@ -37,5 +37,5 @@ export const myPageUserState = atom({
 export const activeTabState = atom({
     key: 'activeTabState',
     default: 'posts', // 기본값을 'posts'로 설정
-    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });

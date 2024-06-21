@@ -59,7 +59,7 @@ const RightSidebar = () => {
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                <div className="w-8 h-8 rounded-full overflow-hidden">
                                     <Image
                                         src={user.profileUrl}
                                         alt="User Profile"
@@ -69,7 +69,7 @@ const RightSidebar = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="w-10 h-10 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                <div className="w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full">
                                     {user.nickname.charAt(0).toUpperCase()}
                                 </div>
                             )}
