@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useRecoilValue, useResetRecoilState } from 'recoil'; // useResetRecoilState를 사용합니다.
 import { userState, initialUserState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
+import { toast } from 'react-toastify';
 
 const RightSidebar = () => {
     const router = useRouter();
@@ -30,9 +31,14 @@ const RightSidebar = () => {
         try {
             await apiClient.post('/logout', {}, { withCredentials: true });
             resetUser(); // Recoil 상태 초기화
+            if (typeof window !== 'undefined') {
+                window.sessionStorage.removeItem('recoil-persist'); // 세션 스토리지에서 Recoil 상태 제거함
+            }
+            toast.success('로그아웃에 성공했습니다!');
             router.push('/login');
         } catch (error) {
             console.error('Logout failed:', error);
+            toast.error('로그아웃에 실패했습니다.');
         }
     };
 
