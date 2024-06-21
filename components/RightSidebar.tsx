@@ -39,7 +39,7 @@ const RightSidebar = () => {
     // 마이페이지 버튼 클릭 시 동적으로 사용자 마이페이지로 이동하기 추가
     const handleMyPageClick = () => {
         if (user.nickname) {
-            router.push(`/mypage`);
+            router.push(`/mypage/${user.nickname}`);
         }
     };
 
@@ -58,15 +58,21 @@ const RightSidebar = () => {
                             className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
                             onClick={() => setShowMenu(!showMenu)}
                         >
-                            <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <Image
-                                    src={user.profileImage || '/profile.jpeg'}
-                                    alt="User Profile"
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-full"
-                                />
-                            </div>
+                            {user.profileUrl ? (
+                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                    <Image
+                                        src={user.profileUrl}
+                                        alt="User Profile"
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className="rounded-full"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-10 h-10 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                    {user.nickname.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="bg-purple-700 p-2 rounded-full cursor-pointer" onClick={handleUserIconClick}>

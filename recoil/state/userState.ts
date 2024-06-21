@@ -1,9 +1,21 @@
 import { atom } from 'recoil';
-import { recoilPersist } from 'recoil-persist';
-const { persistAtom } = recoilPersist();
+// import { recoilPersist } from 'recoil-persist';
+// const { persistAtom } = recoilPersist();
 
 export const initialUserState = {
-    //memberId 추가함
+    nickname: '',
+    profileUrl: '',
+}; //회원정보 받아오는 부분들 수정함
+
+// 유저 정보 상태
+export const userState = atom({
+    key: 'userState',
+    default: initialUserState,
+    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+});
+
+// 마이페이지 유저 상태
+export const initialMyPageUserState = {
     email: '',
     nickname: '',
     region: '',
@@ -15,16 +27,15 @@ export const initialUserState = {
     following: 0,
 };
 
-// 유저 정보 상태
-export const userState = atom({
-    key: 'userState',
-    default: initialUserState,
-    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+//마이페이지 유저
+export const myPageUserState = atom({
+    key: 'myPageUserState',
+    default: initialMyPageUserState,
 });
 
 // 마이페이지에서 활성화된 창
 export const activeTabState = atom({
     key: 'activeTabState',
     default: 'posts', // 기본값을 'posts'로 설정
-    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
