@@ -49,7 +49,7 @@ const Login = () => {
                     nickname: userInfoResponse.data.nickname,
                     profileUrl: userInfoResponse.data.profileUrl, // profileUrl로
                 });
-                router.push(`/mypage/${userInfoResponse.data.nickname}`);
+                router.push(`/`);
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
                 toast.error('유저 정보를 가져오는 데 실패했습니다.');
