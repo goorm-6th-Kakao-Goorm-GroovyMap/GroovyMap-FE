@@ -1,4 +1,5 @@
 import { rest } from 'msw';
+import { Post } from '@/types/types';
 
 interface User {
     email: string;
@@ -36,6 +37,39 @@ const users: User[] = [
         introduction: 'New user bio',
         followers: 50,
         following: 100,
+    },
+];
+
+const posts: Post[] = [
+    {
+        id: '1',
+        text: '첫 번째 게시물',
+        image: '/dance.png',
+        userNickname: 'lavie_music',
+        userProfileImage: '/profile.jpeg',
+        comments: [
+            {
+                id: '22',
+                text: '첫 번째 댓글',
+                userNickname: 'newuser',
+                userProfileImage: '/profile.jpeg',
+            },
+        ],
+    },
+    {
+        id: '2',
+        text: '두 번째 게시물',
+        image: '/band.png',
+        userNickname: 'lavie_music',
+        userProfileImage: '/profile.jpeg',
+        comments: [
+            {
+                id: '11',
+                text: '첫 번째 댓글',
+                userNickname: 'newuser',
+                userProfileImage: '/profile.jpeg',
+            },
+        ],
     },
 ];
 
@@ -158,5 +192,19 @@ export const handlers = [
             return res(ctx.status(200), ctx.json(user));
         }
         return res(ctx.status(404), ctx.json({ message: 'User not found' }));
+    }),
+    rest.get('/mypage/photo/:nickname', async (req, res, ctx) => {
+        const { nickname } = req.params;
+        const userPosts = posts.filter((post) => post.userNickname === nickname);
+        return res(ctx.status(200), ctx.json(userPosts));
+    }),
+
+    rest.get('/mypage/photo/:nickname/:postId', async (req, res, ctx) => {
+        const { nickname, postId } = req.params;
+        const post = posts.find((post) => post.userNickname === nickname && post.id === postId);
+        if (post) {
+            return res(ctx.status(200), ctx.json(post));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
     }),
 ];

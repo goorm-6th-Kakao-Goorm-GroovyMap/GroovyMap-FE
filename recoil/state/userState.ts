@@ -1,5 +1,6 @@
 import { atom } from 'recoil';
 import { recoilPersist } from 'recoil-persist';
+import { User } from '@/types/types'; // User 타입 임포트
 const { persistAtom } = recoilPersist();
 
 export const initialUserState = {
@@ -14,19 +15,18 @@ export const userState = atom({
     effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
 
-// 마이페이지 유저 상태
-export const initialMyPageUserState = {
-    email: '',
-    nickname: '',
-    region: '',
-    part: '',
-    type: '',
-    profileImage: '',
-    introduction: '',
-    followers: 0,
-    following: 0,
+// 마이페이지에서 관리하는 유저 상태
+export const initialMyPageUserState: Partial<User> = {
+    // email: '',
+    // nickname: '',
+    // region: '',
+    // part: '',
+    // type: '',
+    profileUrl: '',
+    // introduction: '',
+    // followers: 0,
+    // following: 0,
 };
-
 //마이페이지 유저
 export const myPageUserState = atom({
     key: 'myPageUserState',

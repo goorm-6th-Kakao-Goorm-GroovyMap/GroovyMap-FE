@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRecoilValue, useRecoilState } from 'recoil';
-import { activeTabState, userState } from '@/recoil/state/userState';
+import { useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
+import { activeTabState, userState, myPageUserState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
 import { User } from '@/types/types';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import Posts from '@/components/Mypage/Posts';
-import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
+// import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 import WritePostModal from '@/components/Mypage/Modal/WritePostModal';
 import SettingModal from '@/components/Mypage/Modal/SettingModal';
 import { FaCog } from 'react-icons/fa';
@@ -19,11 +19,11 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
     const { nickname } = params;
     const currentUser = useRecoilValue(userState);
     const [activeTab, setActiveTab] = useRecoilState(activeTabState);
+    const setMyPageUser = useSetRecoilState(myPageUserState); // 마이페이지 유저 상태 설정
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     // isOwner 변수를 통해 현재 사용자가 자신의 페이지를 보고 있는지 확인함
-    // currentUser = 로그인 유저 => userState에 로그인시 저장된 유저
     const isOwner = currentUser.nickname === nickname;
 
     // 사용자 데이터를 가져오는 함수
@@ -34,6 +34,7 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
 
     // React Query의 useQuery 훅을 사용하여 데이터를 가져옴
     const {
+        refetch, //리패치 추가함
         data: userData,
         isLoading,
         isError,
@@ -43,6 +44,22 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
         enabled: !!nickname, // nickname이 존재할 때만 쿼리를 실행
     });
 
+    // userData가 변경될 때마다 myPageUserState를 업데이트함
+    useEffect(() => {
+        if (userData) {
+            setMyPageUser(userData);
+            console.log(userData);
+        }
+    }, [userData, setMyPageUser]);
+
+    // 프로필 이미지 URL을 절대 경로로 변환
+    const getProfileImageUrl = (url: string) => {
+        if (url.startsWith('http')) {
+            return url; // 이미 절대 경로인 경우
+        }
+        return `http://localhost:8080${url}`; // 백엔드 도메인에 맞게 수정
+    };
+
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
     const renderContent = () => {
         if (!userData) {
@@ -51,8 +68,8 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
         switch (activeTab) {
             case 'posts':
                 return <Posts user={userData} isOwner={isOwner} onWritePost={() => setWritePostOpen(true)} />;
-            case 'performance':
-                return <PerformanceRecord user={userData} isOwner={isOwner} />;
+            // case 'performance':
+            //     return <PerformanceRecord user={userData} isOwner={isOwner} />;
             default:
                 return null;
         }
@@ -77,17 +94,19 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
         <div className="flex flex-col items-center min-h-screen bg-gray-50 p-4">
             <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">
                 <div className="flex items-center mb-6">
-                    {userData.profileUrl ? (
+                    {userData.profileImage ? (
                         <Image
-                            src={userData.profileUrl}
-                            width={40}
-                            height={40}
+                            src={getProfileImageUrl(userData.profileImage)} // 절대 경로로 변환하여 이미지 표시
+                            width={96} // 적절한 width와 height를 설정하세요
+                            height={96}
                             alt="Profile"
                             className="w-24 h-24 rounded-full mr-4"
                         />
                     ) : (
                         <div className="w-24 h-24 bg-purple-700 text-white flex items-center justify-center rounded-full mr-6">
-                            <span className="text-4xl">{userData.nickname.charAt(0).toUpperCase()}</span>
+                            <span className="text-4xl">
+                                {userData.nickname ? userData.nickname.charAt(0).toUpperCase() : ''}
+                            </span>
                         </div>
                     )}
                     <div className="flex-grow">
@@ -127,7 +146,7 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
                 <div className="mt-4">{renderContent()}</div>
             </div>
             {isWritePostOpen && <WritePostModal onClose={() => setWritePostOpen(false)} />}
-            {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} />}
+            {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} onProfileUpdate={refetch} />}
         </div>
     );
 };

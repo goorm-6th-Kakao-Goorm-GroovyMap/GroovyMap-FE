@@ -1,28 +1,28 @@
-// components/SettingModal.tsx
 'use client';
 
 import React, { useState, ChangeEvent, useEffect } from 'react';
-import { areas, parts, types } from '@/constants/constants'; // types도 추가
+import { areas, parts, types } from '@/constants/constants';
 import { useMutation } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
 import { useRecoilState, useResetRecoilState } from 'recoil';
-import { userState } from '@/recoil/state/userState';
+import { myPageUserState } from '@/recoil/state/userState';
 
 interface SettingModalProps {
     onClose: () => void;
+    onProfileUpdate: () => void; // 프로필 업데이트 후 호출할 함수
 }
 
-const SettingModal: React.FC<SettingModalProps> = ({ onClose }) => {
-    const [user, setUser] = useRecoilState(userState);
-    const resetUserState = useResetRecoilState(userState); // Recoil 상태 초기화 함수
+const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate }) => {
+    const [myPageUser, setMyPageUser] = useRecoilState(myPageUserState);
+    const resetUserState = useResetRecoilState(myPageUserState);
     const [formData, setFormData] = useState({
-        profileImage: '',
-        nickname: user.nickname || '',
-        region: user.region || 'ALL',
-        part: user.part || 'ALL',
-        type: '', // 새로운 필드 추가
-        introduction: user.introduction || '',
+        profileImage: null as File | null,
+        nickname: myPageUser.nickname || '',
+        region: myPageUser.region || 'ALL',
+        part: myPageUser.part || 'ALL',
+        type: myPageUser.type || '',
+        introduction: myPageUser.introduction || '',
     });
     const [filteredTypes, setFilteredTypes] = useState<string[]>([]);
 
@@ -42,28 +42,47 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose }) => {
         }));
     };
 
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            setFormData((prevState) => ({
+                ...prevState,
+                profileImage: files[0],
+            }));
+        }
+    };
+
     const updateMutation = useMutation({
-        mutationFn: async (data: any) => {
-            const response = await apiClient.patch('/member/update', data);
+        mutationFn: async (data: FormData) => {
+            console.log('Sending FormData:', data); // FormData 내용 확인
+            const response = await apiClient.patch('/member/update', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                withCredentials: true, // 세션 유지 설정
+            });
             return response.data;
         },
         onSuccess: (data) => {
-            setUser(data);
+            setMyPageUser(data);
+            console.log(data);
             toast.success('프로필이 성공적으로 업데이트되었습니다.');
+            onProfileUpdate(); // 프로필 업데이트 후 호출
             onClose();
         },
         onError: (error) => {
+            console.error('Error updating profile:', error);
             toast.error('프로필 업데이트 중 오류가 발생했습니다.');
         },
     });
 
     const deleteMutation = useMutation({
         mutationFn: async () => {
-            await apiClient.delete('/member/delete');
+            await apiClient.delete('/member/delete', { withCredentials: true });
         },
         onSuccess: () => {
             toast.success('회원 탈퇴가 완료되었습니다.');
-            resetUserState(); // Recoil 상태 초기화
+            resetUserState();
             onClose();
         },
         onError: (error) => {
@@ -72,7 +91,16 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose }) => {
     });
 
     const handleSubmit = () => {
-        updateMutation.mutate(formData);
+        const data = new FormData();
+        data.append('nickname', formData.nickname);
+        data.append('region', formData.region);
+        data.append('part', formData.part);
+        data.append('type', formData.type);
+        data.append('introduction', formData.introduction);
+        if (formData.profileImage) {
+            data.append('profileImage', formData.profileImage);
+        }
+        updateMutation.mutate(data);
     };
 
     const handleDeleteAccount = () => {
@@ -91,7 +119,7 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose }) => {
                         <input
                             type="file"
                             name="profileImage"
-                            onChange={handleInputChange}
+                            onChange={handleFileChange}
                             className="w-full p-2 border rounded-lg"
                         />
                     </div>
@@ -147,7 +175,7 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose }) => {
                                 <option value="">세부 파트를 선택하세요</option>
                                 {filteredTypes.map((type) => (
                                     <option key={type} value={type}>
-                                        {types[type].name} {/* types[type].name 으로 변경 */}
+                                        {types[type].name}
                                     </option>
                                 ))}
                             </select>
