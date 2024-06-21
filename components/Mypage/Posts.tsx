@@ -21,8 +21,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
     const [isWritePostOpen, setWritePostOpen] = useState(false);
 
     const fetchPosts = async (): Promise<Post[]> => {
-        const endpoint = isOwner ? '/mypage/photo' : `/mypage/photo/${user.nickname}`;
-        const response = await apiClient.get(endpoint);
+        const response = await apiClient.get(`/mypage/photo/${user.nickname}`);
         return response.data;
     };
 
@@ -45,8 +44,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
     }
 
     const handlePostClick = async (post: Post) => {
-        const endpoint = isOwner ? `/mypage/photo/${post.id}` : `/mypage/photo/${user.nickname}/${post.id}`;
-        const response = await apiClient.get(endpoint);
+        const response = await apiClient.get(`/mypage/photo/${user.nickname}/${post.id}`);
         setSelectedPost(response.data);
     };
 
