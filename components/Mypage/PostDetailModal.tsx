@@ -1,4 +1,3 @@
-// components/PostDetailModal.tsx
 'use client';
 
 import React from 'react';
@@ -21,11 +20,19 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, onClose }
                         ✕
                     </button>
                 </div>
-                {post.image && <Image src={post.image} alt="Post" className="w-full h-60 object-cover mb-4" />}
+                {post.image && (
+                    <Image
+                        src={post.image}
+                        alt="Post"
+                        width={500}
+                        height={300}
+                        className="w-full h-60 object-cover mb-4"
+                    />
+                )}
                 <p className="mb-4">{post.text}</p>
                 <div>
                     <h3 className="font-bold mb-2">댓글</h3>
-                    {post.comments.length > 0 ? (
+                    {post.comments && post.comments.length > 0 ? (
                         <ul>
                             {post.comments.map((comment) => (
                                 <li key={comment.id} className="mb-2">
@@ -33,6 +40,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, onClose }
                                         <Image
                                             src={comment.userProfileImage}
                                             alt={comment.userNickname}
+                                            width={32}
+                                            height={32}
                                             className="w-8 h-8 rounded-full"
                                         />
                                         <p className="font-semibold">{comment.userNickname}</p>

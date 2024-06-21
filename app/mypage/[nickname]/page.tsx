@@ -22,7 +22,8 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    // isOwner 변수를 통해 현재 사용자가 자신의 페이지를 보고 있는지 확인
+    // isOwner 변수를 통해 현재 사용자가 자신의 페이지를 보고 있는지 확인함
+    // currentUser = 로그인 유저 => userState에 로그인시 저장된 유저
     const isOwner = currentUser.nickname === nickname;
 
     // 사용자 데이터를 가져오는 함수
@@ -44,6 +45,9 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
 
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
     const renderContent = () => {
+        if (!userData) {
+            return null; // userData가 정의되지 않은 경우 null을 반환함
+        }
         switch (activeTab) {
             case 'posts':
                 return <Posts user={userData} isOwner={isOwner} onWritePost={() => setWritePostOpen(true)} />;
