@@ -1,4 +1,3 @@
-// components/Modal/WritePostModal.tsx
 'use client';
 
 import React, { useState, ChangeEvent } from 'react';
@@ -10,9 +9,10 @@ import { userState } from '@/recoil/state/userState';
 
 interface WritePostModalProps {
     onClose: () => void;
+    onPostCreated: () => void;
 }
 
-const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
+const WritePostModal: React.FC<WritePostModalProps> = ({ onClose, onPostCreated }) => {
     const user = useRecoilValue(userState); // Recoil을 사용해 로그인된 사용자 정보 가져오기
     const [formData, setFormData] = useState({
         text: '',
@@ -28,10 +28,11 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
     };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
             setFormData((prevState) => ({
                 ...prevState,
-                image: e.target.files[0],
+                image: files[0],
             }));
         }
     };
@@ -43,6 +44,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose }) => {
         },
         onSuccess: () => {
             toast.success('게시물이 성공적으로 작성되었습니다.');
+            onPostCreated(); // 게시물 작성 성공 시 호출
             onClose();
         },
         onError: () => {

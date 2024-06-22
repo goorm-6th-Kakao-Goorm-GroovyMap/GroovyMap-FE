@@ -5,7 +5,7 @@ interface Coordinate {
 
 //연습 및 공연장소에서 필요함
 export interface Place {
-    id?: number;
+    id?: number | string;
     name: string;
     part: 'BAND' | 'DANCE' | 'VOCAL';
     coordinate: Coordinate;
@@ -36,6 +36,7 @@ export interface PracticePlaceResponse {
 // 마이페이지에서 User와 Post 인터페이스 추가
 export interface User {
     nickname: string;
+    profileImage?: string;
     profileUrl?: string;
     email?: string;
     region?: string;
@@ -70,6 +71,7 @@ export interface PerformanceRecord {
     type: string;
     latitude: number;
     longitude: number;
+    userNickname?: string;
     region: string;
     address: string;
     date: string;

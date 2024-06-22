@@ -5,18 +5,20 @@ import { useRecoilValue, useRecoilState, useSetRecoilState } from 'recoil';
 import { activeTabState, userState, myPageUserState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
 import { User } from '@/types/types';
+import { useParams } from 'next/navigation';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import Posts from '@/components/Mypage/Posts';
-// import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 import WritePostModal from '@/components/Mypage/Modal/WritePostModal';
 import SettingModal from '@/components/Mypage/Modal/SettingModal';
 import { FaCog } from 'react-icons/fa';
 import { areas, parts, types } from '@/constants/constants';
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
+import PerformanceRecord from '@/components/Mypage/PerformanceRecord';
 
-const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
-    const { nickname } = params;
+const MyPage: React.FC = () => {
+    const params = useParams();
+    const nickname = Array.isArray(params.nickname) ? params.nickname[0] : params.nickname; // 항상 string 값을 얻도록 보장
     const currentUser = useRecoilValue(userState);
     const [activeTab, setActiveTab] = useRecoilState(activeTabState);
     const setMyPageUser = useSetRecoilState(myPageUserState); // 마이페이지 유저 상태 설정
@@ -34,7 +36,7 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
 
     // React Query의 useQuery 훅을 사용하여 데이터를 가져옴
     const {
-        refetch, //리패치 추가함
+        refetch, //리패치 추가함 => 변경 내용 자동 업데이트 됨
         data: userData,
         isLoading,
         isError,
@@ -52,7 +54,7 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
         }
     }, [userData, setMyPageUser]);
 
-    // 프로필 이미지 URL을 절대 경로로 변환
+    // 프로필 이미지 URL 받아온거 => 절대 경로로 변환
     const getProfileImageUrl = (url: string) => {
         if (url.startsWith('http')) {
             return url; // 이미 절대 경로인 경우
@@ -68,8 +70,8 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
         switch (activeTab) {
             case 'posts':
                 return <Posts user={userData} isOwner={isOwner} onWritePost={() => setWritePostOpen(true)} />;
-            // case 'performance':
-            //     return <PerformanceRecord user={userData} isOwner={isOwner} />;
+            case 'performance':
+                return <PerformanceRecord user={userData} isOwner={isOwner} />;
             default:
                 return null;
         }
@@ -91,8 +93,8 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
     }
 
     return (
-        <div className="flex flex-col items-center min-h-screen bg-gray-50 p-4">
-            <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-8">
+        <div className="flex flex-col items-center min-h-screen p-4">
+            <div className="w-full max-w-4xl bg-white rounded-lg  p-8">
                 <div className="flex items-center mb-6">
                     {userData.profileImage ? (
                         <Image
@@ -145,7 +147,7 @@ const MyPage: React.FC<{ params: { nickname: string } }> = ({ params }) => {
                 </div>
                 <div className="mt-4">{renderContent()}</div>
             </div>
-            {isWritePostOpen && <WritePostModal onClose={() => setWritePostOpen(false)} />}
+            {isWritePostOpen && <WritePostModal onClose={() => setWritePostOpen(false)} onPostCreated={refetch} />}
             {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} onProfileUpdate={refetch} />}
         </div>
     );

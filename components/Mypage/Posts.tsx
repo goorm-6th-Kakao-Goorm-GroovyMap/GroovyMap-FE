@@ -1,7 +1,8 @@
+// components/Posts.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { FaPen } from 'react-icons/fa';
+import { FaCamera } from 'react-icons/fa';
 import PostDetailModal from './PostDetailModal';
 import WritePostModal from './Modal/WritePostModal';
 import { useQuery } from '@tanstack/react-query';
@@ -17,7 +18,7 @@ interface PostsProps {
 }
 
 const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
     const [isWritePostOpen, setWritePostOpen] = useState(false);
 
     const fetchPosts = async (): Promise<Post[]> => {
@@ -29,6 +30,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
         data: posts,
         isLoading,
         isError,
+        refetch, // refetch 추가
     } = useQuery<Post[]>({
         queryKey: ['posts', user.nickname],
         queryFn: fetchPosts,
@@ -43,59 +45,70 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
         return <p>게시물을 불러오는 데 실패했습니다.</p>;
     }
 
-    const handlePostClick = async (post: Post) => {
-        const response = await apiClient.get(`/mypage/photo/${user.nickname}/${post.id}`);
-        setSelectedPost(response.data);
+    const handlePostClick = (index: number) => {
+        setSelectedPostIndex(index);
+    };
+
+    const handleNextPost = () => {
+        if (selectedPostIndex !== null && selectedPostIndex < posts.length - 1) {
+            setSelectedPostIndex(selectedPostIndex + 1);
+        }
+    };
+
+    const handlePrevPost = () => {
+        if (selectedPostIndex !== null && selectedPostIndex > 0) {
+            setSelectedPostIndex(selectedPostIndex - 1);
+        }
+    };
+
+    const handlePostCreated = () => {
+        refetch();
     };
 
     return (
-        <div>
+        <div className="p-4">
             {isOwner && (
                 <div className="flex justify-end mb-4">
-                    <button onClick={() => setWritePostOpen(true)} className="text-purple-500 hover:text-purple-600">
-                        <FaPen size={18} />
+                    <button
+                        onClick={() => setWritePostOpen(true)}
+                        className="flex items-center text-purple-500 hover:text-purple-600"
+                    >
+                        <FaCamera className="mr-2" size={18} />
+                        <span>게시물 올리기</span>
                     </button>
                 </div>
             )}
-            <div className="grid grid-cols-1 gap-4">
-                {posts.length > 0 ? (
-                    posts.map((post) => (
-                        <div
-                            key={post.id}
-                            className="border p-4 rounded cursor-pointer"
-                            onClick={() => handlePostClick(post)}
-                        >
-                            {post.image && (
+            <div className="grid grid-cols-3 gap-4">
+                {posts.map((post, index) => (
+                    <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
+                        {post.image && (
+                            <div className="w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
                                     src={post.image}
                                     alt="Post Image"
-                                    width={500}
-                                    height={300}
-                                    className="w-full h-auto mb-4 rounded-lg"
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-lg"
                                 />
-                            )}
-                            <p>{post.text}</p>
-                            <div className="mt-2 text-gray-600">
-                                <span>작성자: {post.userNickname}</span>
-                                <div className="flex items-center mt-2">
-                                    <Image
-                                        src={post.userProfileImage}
-                                        alt="작성자 프로필"
-                                        width={32}
-                                        height={32}
-                                        className="w-8 h-8 rounded-full mr-2"
-                                    />
-                                    <span>{post.userNickname}</span>
-                                </div>
                             </div>
-                        </div>
-                    ))
-                ) : (
-                    <p>게시물이 없습니다.</p>
-                )}
+                        )}
+                    </div>
+                ))}
             </div>
-            {isWritePostOpen && <WritePostModal onClose={() => setWritePostOpen(false)} />}
-            {selectedPost && <PostDetailModal post={selectedPost} user={user} onClose={() => setSelectedPost(null)} />}
+            {isWritePostOpen && (
+                <WritePostModal onClose={() => setWritePostOpen(false)} onPostCreated={handlePostCreated} />
+            )}
+            {selectedPostIndex !== null && (
+                <PostDetailModal
+                    post={posts[selectedPostIndex]}
+                    user={user}
+                    onClose={() => setSelectedPostIndex(null)}
+                    onNext={handleNextPost}
+                    onPrev={handlePrevPost}
+                    hasNext={selectedPostIndex < posts.length - 1}
+                    hasPrev={selectedPostIndex > 0}
+                />
+            )}
         </div>
     );
 };

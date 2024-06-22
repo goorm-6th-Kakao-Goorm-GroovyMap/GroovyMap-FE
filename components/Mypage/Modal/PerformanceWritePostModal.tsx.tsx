@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { parts, types, areas } from '@/constants/constants';
@@ -24,7 +23,6 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
     const [type, setType] = useState('');
     const [region, setRegion] = useState('');
     const queryClient = useQueryClient();
-    const router = useRouter();
 
     const { mutate, status } = useMutation({
         mutationFn: async (newRecord: FormData) => {
@@ -37,17 +35,7 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
             queryClient.invalidateQueries({
                 queryKey: ['performanceRecords'],
             });
-            onRecordAdd({
-                id: data.id,
-                description: data.description,
-                address: data.address,
-                date: data.date,
-                part: data.part,
-                type: data.type,
-                region: data.region,
-                latitude: data.latitude,
-                longitude: data.longitude,
-            });
+            onRecordAdd(data);
             onClose();
         },
         onError: (error) => {

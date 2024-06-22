@@ -6,16 +6,18 @@ import { useMutation } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
 import { useRecoilState, useResetRecoilState } from 'recoil';
-import { myPageUserState } from '@/recoil/state/userState';
+import { myPageUserState, userState, LoginUser } from '@/recoil/state/userState';
+import { User } from '@/types/types';
 
 interface SettingModalProps {
     onClose: () => void;
-    onProfileUpdate: () => void; // 프로필 업데이트 후 호출할 함수
+    onProfileUpdate: () => void;
 }
 
 const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate }) => {
     const [myPageUser, setMyPageUser] = useRecoilState(myPageUserState);
     const resetUserState = useResetRecoilState(myPageUserState);
+    const [currentUser, setCurrentUser] = useRecoilState(userState);
     const [formData, setFormData] = useState({
         profileImage: null as File | null,
         nickname: myPageUser.nickname || '',
@@ -54,24 +56,27 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate })
 
     const updateMutation = useMutation({
         mutationFn: async (data: FormData) => {
-            console.log('Sending FormData:', data); // FormData 내용 확인
             const response = await apiClient.patch('/member/update', data, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
-                withCredentials: true, // 세션 유지 설정
+                withCredentials: true,
             });
             return response.data;
         },
         onSuccess: (data) => {
             setMyPageUser(data);
-            console.log(data);
+            // 현재 로그인된 유저 상태도 업데이트
+            setCurrentUser((prevUser: LoginUser) => ({
+                ...prevUser,
+                profileUrl: data.profileImage, // 프로필 이미지 업데이트
+                nickname: data.nickname, // 닉네임 업데이트
+            }));
             toast.success('프로필이 성공적으로 업데이트되었습니다.');
-            onProfileUpdate(); // 프로필 업데이트 후 호출
+            onProfileUpdate();
             onClose();
         },
         onError: (error) => {
-            console.error('Error updating profile:', error);
             toast.error('프로필 업데이트 중 오류가 발생했습니다.');
         },
     });
