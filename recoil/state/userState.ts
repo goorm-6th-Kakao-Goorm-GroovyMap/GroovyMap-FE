@@ -29,6 +29,7 @@ export const initialMyPageUserState: Partial<User> = {
     region: '',
     part: '',
     type: '',
+    profileUrl: '',
     profileImage: '',
     introduction: '',
     followers: 0,

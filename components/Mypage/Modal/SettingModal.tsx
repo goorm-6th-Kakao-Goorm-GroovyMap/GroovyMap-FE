@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { useRecoilState, useResetRecoilState } from 'recoil';
 import { myPageUserState, userState, LoginUser } from '@/recoil/state/userState';
 import { User } from '@/types/types';
+import { useRouter } from 'next/navigation';
 
 interface SettingModalProps {
     onClose: () => void;
@@ -15,6 +16,7 @@ interface SettingModalProps {
 }
 
 const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate }) => {
+    const router = useRouter();
     const [myPageUser, setMyPageUser] = useRecoilState(myPageUserState);
     const resetUserState = useResetRecoilState(myPageUserState);
     const [currentUser, setCurrentUser] = useRecoilState(userState);
@@ -69,12 +71,17 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate })
             // 현재 로그인된 유저 상태도 업데이트
             setCurrentUser((prevUser: LoginUser) => ({
                 ...prevUser,
-                profileUrl: data.profileImage, // 프로필 이미지 업데이트
+                profileUrl: data.profileImage || data.profileUrl, // 프로필 이미지 업데이트
                 nickname: data.nickname, // 닉네임 업데이트
             }));
             toast.success('프로필이 성공적으로 업데이트되었습니다.');
             onProfileUpdate();
             onClose();
+
+            // 닉네임이 변경되었을 때 바뀐 URL로 업데이트 해줌
+            if (currentUser.nickname !== data.nickname) {
+                router.push(`/mypage/${data.nickname}`);
+            }
         },
         onError: (error) => {
             toast.error('프로필 업데이트 중 오류가 발생했습니다.');

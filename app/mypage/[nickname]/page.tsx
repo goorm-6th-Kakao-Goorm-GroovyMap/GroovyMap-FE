@@ -55,17 +55,18 @@ const MyPage: React.FC = () => {
     }, [userData, setMyPageUser]);
 
     // 프로필 이미지 URL 받아온거 => 절대 경로로 변환
-    const getProfileImageUrl = (url: string) => {
+    const getProfileImageUrl = (user: User) => {
+        const url = user.profileImage || user.profileUrl || '';
         if (url.startsWith('http')) {
-            return url; // 이미 절대 경로인 경우
+            return url;
         }
-        return `http://localhost:8080${url}`; // 백엔드 도메인에 맞게 수정
+        return `http://localhost:8080${url}`; //ngrok 서버로 볼때 주소 변경하기
     };
 
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
     const renderContent = () => {
         if (!userData) {
-            return null; // userData가 정의되지 않은 경우 null을 반환함
+            return null; // userData가 정의되지 않은 경우 null을 반환
         }
         switch (activeTab) {
             case 'posts':
@@ -96,10 +97,10 @@ const MyPage: React.FC = () => {
         <div className="flex flex-col items-center min-h-screen p-4">
             <div className="w-full max-w-4xl bg-white rounded-lg  p-8">
                 <div className="flex items-center mb-6">
-                    {userData.profileImage ? (
+                    {userData.profileImage || userData.profileUrl ? (
                         <Image
-                            src={getProfileImageUrl(userData.profileImage)} // 절대 경로로 변환하여 이미지 표시
-                            width={96} // 적절한 width와 height를 설정하세요
+                            src={getProfileImageUrl(userData)}
+                            width={96}
                             height={96}
                             alt="Profile"
                             className="w-24 h-24 rounded-full mr-4"
