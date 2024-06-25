@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { FaHeart, FaRegHeart, FaStar, FaRegStar, FaUserCircle } from 'react-icons/fa'
+import { FaHeart, FaRegHeart, FaStar, FaRegStar, FaUserCircle, FaTrash } from 'react-icons/fa'
 import { VscFileMedia } from 'react-icons/vsc'
+import { useRecoilValue } from 'recoil'
+import { userState } from '@/recoil/state/userState'
 import apiClient from '@/api/apiClient'
 
 interface Post {
     id: number
-    userImage: string
+    profileImage: string
     author: string
     title: string
     content: string
-    fileNames: string[]
+    fileNames: string
     region: string
     part: string
     coordinates: {
@@ -27,13 +29,14 @@ interface ModalProps {
     show: boolean
     onClose: () => void
     post: Post | null
+    liked: boolean // 상위 컴포넌트로부터 전달받는 좋아요 상태
+    saved: boolean // 상위 컴포넌트로부터 전달받는 저장 상태
 }
 
-const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
-    const [likesCount, setLikesCount] = useState(post ? post.likesCount : 0)
-    const [savesCount, setSavesCount] = useState(post ? post.savesCount : 0)
-    const [liked, setLiked] = useState(false)
-    const [saved, setSaved] = useState(false)
+const Modal: React.FC<ModalProps> = ({ show, onClose, post, liked, saved }) => {
+    const currentUser = useRecoilValue(userState)
+    const [likesCount, setLikesCount] = useState(0)
+    const [savesCount, setSavesCount] = useState(0)
 
     useEffect(() => {
         if (post) {
@@ -47,22 +50,60 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
     }
 
     const handleLikeClick = async () => {
-        setLiked(!liked)
-        setLikesCount(liked ? likesCount - 1 : likesCount + 1)
+        if (!currentUser) {
+            alert('로그인이 필요합니다.')
+            return
+        }
+
+        const newLiked = !liked
+        setLikesCount(newLiked ? likesCount + 1 : likesCount - 1)
+
         try {
-            await apiClient.post(`/promotionboard/${post.id}/like`)
+            await apiClient.post(
+                `/promotionboard/${post.id}/like`,
+                { liked: newLiked },
+                {
+                    headers: { Authorization: `Bearer ${currentUser.token}` },
+                },
+            )
         } catch (error) {
             console.error('Error liking post:', error)
+            setLikesCount(newLiked ? likesCount - 1 : likesCount + 1)
         }
     }
 
     const handleSaveClick = async () => {
-        setSaved(!saved)
-        setSavesCount(saved ? savesCount - 1 : savesCount + 1)
+        if (!currentUser) {
+            alert('로그인이 필요합니다.')
+            return
+        }
+
+        const newSaved = !saved
+        setSavesCount(newSaved ? savesCount + 1 : savesCount - 1)
+
         try {
-            await apiClient.post(`/promotionboard/${post.id}/save`)
+            await apiClient.post(
+                `/promotionboard/${post.id}/save`,
+                { saved: newSaved },
+                {
+                    headers: { Authorization: `Bearer ${currentUser.token}` },
+                },
+            )
         } catch (error) {
             console.error('Error saving post:', error)
+            setSavesCount(newSaved ? savesCount - 1 : savesCount + 1)
+        }
+    }
+
+    const handleDeleteClick = async () => {
+        if (confirm('현재 게시물을 삭제할까요?')) {
+            try {
+                await apiClient.delete(`/promotionboard/${post.id}/delete`)
+                console.log(`Post ${post.id} deleted successfully`)
+                onClose()
+            } catch (error) {
+                console.error(`Failed to delete post ${post.id}:`, error)
+            }
         }
     }
 
@@ -79,23 +120,21 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         >
             <div className="bg-white p-6 rounded shadow-lg max-w-4xl w-full flex items-start">
                 <div className="w-1/2 pr-4">
-                    {post.fileNames.length > 0 ? (
-                        post.fileNames.map((fileName, index) =>
-                            fileName.endsWith('.mp4') ? (
-                                <video key={index} src={fileName} controls className="w-full h-full object-cover" />
-                            ) : (
-                                <div key={index} className="relative w-full h-[80vh]">
-                                    <Image
-                                        src={fileName}
-                                        alt={`media-${fileName}`}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        unoptimized
-                                        priority
-                                        loading="eager"
-                                    />
-                                </div>
-                            ),
+                    {post.fileNames ? (
+                        post.fileNames.endsWith('.mp4') ? (
+                            <video src={post.fileNames} controls className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="relative w-full h-[80vh]">
+                                <Image
+                                    src={post.fileNames}
+                                    alt={`media-${post.fileNames}`}
+                                    layout="fill"
+                                    objectFit="cover"
+                                    unoptimized
+                                    priority
+                                    loading="eager"
+                                />
+                            </div>
                         )
                     ) : (
                         <VscFileMedia size={48} className="text-gray-500 mb-4" />
@@ -126,9 +165,9 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
                     {/* 하단부 (footer) */}
                     <div className="flex-grow-0 flex-shrink-0 flex items-center justify-between w-full mb-4 border-t border-gray-300">
                         <div className="flex items-center space-x-2 m-2">
-                            {post.userImage ? (
+                            {post.profileImage ? (
                                 <Image
-                                    src={post.userImage}
+                                    src={post.profileImage}
                                     alt={post.author}
                                     width={32}
                                     height={32}
@@ -159,6 +198,11 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
                                 <span className="ml-1">{savesCount}</span>
                             </button>
                             <span className="text-gray-500">조회수 {post.viewCount}</span>
+                            {currentUser.nickname === post.author && (
+                                <button onClick={handleDeleteClick} className="flex items-center">
+                                    <FaTrash className="text-red-500" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -166,4 +210,5 @@ const Modal: React.FC<ModalProps> = ({ show, onClose, post }) => {
         </div>
     )
 }
+
 export default Modal

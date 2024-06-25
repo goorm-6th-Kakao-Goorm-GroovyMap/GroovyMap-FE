@@ -6,6 +6,8 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import apiClient from '@/api/apiClient'
 import axios from 'axios'
+import { useRecoilValue } from 'recoil'
+import { userState } from '@/recoil/state/userState'
 
 interface Coordinates {
     latitude: number | null
@@ -31,6 +33,7 @@ const postFormData = async (formData: FormData): Promise<any> => {
 
 export default function Write() {
     const router = useRouter()
+    const currentUser = useRecoilValue(userState)
     const [selectedType, setSelectedType] = useState<string>('ALL')
     const [address, setAddress] = useState<string>('')
     const [fileNames, setFileNames] = useState<File[]>([])
@@ -120,13 +123,14 @@ export default function Write() {
         formData.append('part', selectedType)
         formData.append('coordinates', JSON.stringify(coordinates))
         formData.append('content', (e.target as any).content.value.replace(/\n/g, '<br>'))
+        formData.append('author', currentUser.nickname) // 로그인된 사용자의 닉네임 추가
 
         try {
             await mutation.mutateAsync(formData)
-            alert('Form submitted successfully!')
+            alert('게시글이 등록되었습니다.')
             router.push('/promotion-place')
         } catch (error: any) {
-            alert(`Form submission failed: ${error.message}`)
+            alert(`등록되지 않았습니다.: ${error.message}`)
         }
     }
     return (

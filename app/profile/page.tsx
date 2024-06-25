@@ -1,135 +1,115 @@
 'use client'
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { IoMdSearch } from 'react-icons/io'
-import { FaRegEdit } from 'react-icons/fa'
 import { FaMapLocationDot } from 'react-icons/fa6'
 import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import PostItem from './post/postItem'
-import Modal from './post/postmodal'
-import apiClient from '@/api/apiClient'
-import axios from 'axios'
-import { areas, parts, markerImages } from '../../components/constants'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRecoilValue } from 'recoil'
+import UserProfile from './user/userprofile'
+import { areas, parts, markerImages } from '../../components/constants'
 import { userState } from '@/recoil/state/userState'
+import apiClient from '@/api/apiClient'
+import { FaRegEdit } from 'react-icons/fa'
 
-//추가사항-낙관적업데이트 적용하기
+//추가사항-삭제 1인 1등록만 가능
 
-interface Post {
+// User 인터페이스 정의
+interface User {
     id: number
+    memberId: number
     profileImage: string
-    author: string
-    title: string
-    content: string
-    fileNames: string
-    region: string
+    nickname: string
+    introduction: string
     part: string
-    coordinates: {
-        latitude: number
-        longitude: number
-    }
-    timestamp: string
-    likesCount: number
-    savesCount: number
-    viewCount: number
+    region: string
 }
 
+// 글로벌 Window 인터페이스에 kakao 속성 추가
 declare global {
     interface Window {
         kakao: any
     }
 }
 
-export default function PromotionPlace() {
+export default function ProfilePage() {
+    // useState를 사용하여 상태 관리
     const [showMap, setShowMap] = useState(false)
     const [selectedArea, setSelectedArea] = useState('ALL')
     const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'VOCAL' | 'DANCE'>('ALL')
-    const [showModal, setShowModal] = useState(false)
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null)
     const [currentPage, setCurrentPage] = useState(1)
-    const postsPerPage = 9
+    const [showConfirmation, setShowConfirmation] = useState(false)
+    const profilesPerPage = 9
     const mapRef = useRef<any>(null)
     const router = useRouter()
-    const currentUser = useRecoilValue(userState)
-    const [likedPosts, setLikedPosts] = useState<number[]>([])
-    const [savedPosts, setSavedPosts] = useState<number[]>([])
-
-    const fetchPosts = async (): Promise<Post[]> => {
-        try {
-            const response = await apiClient.get('/promotionboard')
-            let data = response.data
-
-            const baseUrl = `https://groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com/`
-            return data.map((post: any) => ({
-                ...post,
-                profileImage: post.profileImage,
-                fileNames: post.fileNames ? `${baseUrl}${post.fileNames}` : '', // fileNames를 절대 경로로 설정
-            }))
-        } catch (error: any) {
-            if (axios.isAxiosError(error)) {
-                throw new Error(`HTTP error! status: ${error.response?.status}`)
-            } else {
-                throw new Error(`HTTP error! status: ${error.message}`)
-            }
-        }
+    const queryClient = useQueryClient()
+    const user = useRecoilValue(userState)
+    // 프로필을 가져오는 함수 정의
+    const fetchProfiles = async (): Promise<User[]> => {
+        const response = await apiClient.get('/profile')
+        return response.data.map((profile: User) => ({
+            ...profile,
+            profileImage: profile.profileImage,
+        }))
     }
 
+    // React Query를 사용하여 프로필 데이터를 가져옴
     const {
-        data: posts,
+        data: profiles = [],
         error,
         isLoading,
-    } = useQuery<Post[], Error>({
-        queryKey: ['posts'],
-        queryFn: fetchPosts,
+    } = useQuery<User[], Error>({
+        queryKey: ['profiles'],
+        queryFn: fetchProfiles,
     })
 
-    //지도 버튼 핸들러
+    // 프로필 추가를 위한 뮤테이션 정의
+    const mutation = useMutation<User, Error>({
+        mutationFn: async () => {
+            const response = await apiClient.post('/profile/add')
+            return response.data
+        },
+        onSuccess: (data) => {
+            // 성공 시 프로필 목록을 갱신하고 확인 메시지 숨김
+            queryClient.invalidateQueries({
+                queryKey: ['profiles'],
+            })
+            setShowConfirmation(false)
+        },
+    })
+
+    // 지도 버튼 클릭 핸들러
     const handleMapButtonClick = () => {
         setShowMap(!showMap)
     }
-    //지역 드롭다운 핸들러
+
+    // 지역 선택 변경 핸들러
     const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedArea(e.target.value)
     }
-    //파트 드롭다운 핸들러
+
+    // 타입 선택 변경 핸들러
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const selectedValue = e.target.value as 'ALL' | 'BAND' | 'VOCAL' | 'DANCE'
         setSelectedType(selectedValue)
     }
-    //게시글 조회수
-    const handlePostClick = async (post: Post) => {
-        const updatedPost = { ...post, viewCount: post.viewCount + 1 }
-        setSelectedPost(updatedPost)
-        setShowModal(true)
-        setShowMap(false)
-        try {
-            const response = await apiClient.get(`/promotionboard/${post.id}`)
-            // 서버로부터 받은 최신 조회수로 상태를 업데이트합니다.
-            const freshViewCount = response.data.viewCount
-            setSelectedPost((prevPost) => ({
-                ...prevPost!,
-                viewCount: freshViewCount,
-            }))
-        } catch (error: any) {
-            console.error(`Failed to update view count for post ${post.id}:`, error)
-            const revertedPost = { ...post, viewCount: post.viewCount }
-            setSelectedPost(revertedPost)
-        }
+
+    // 프로필 클릭 핸들러
+    const handleProfileClick = (profile: User) => {
+        router.push(`/mypage/${profile.memberId}`)
     }
-    const handleCloseModal = () => {
-        setShowModal(false)
-        setSelectedPost(null)
-    }
-    //게시글 작성 버튼 핸들러
-    const handleWriteButtonClick = () => {
-        if (currentUser && currentUser.nickname && currentUser.profileUrl) {
-            router.push('/promotion-place/write')
-        } else {
+
+    // 프로필 추가 핸들러
+    const handleAddProfile = () => {
+        if (!user) {
+            // 로그인 상태 확인
             alert('로그인이 필요합니다.')
-            router.push('/login') // 로그인 페이지로 이동
+            router.push('/login') // 로그인 페이지로 리다이렉트
+            return
         }
+        mutation.mutate()
     }
+
+    // 지도를 초기화하는 함수
     const initializeMap = useCallback((): any => {
         if (!mapRef.current) {
             const container = document.getElementById('map')
@@ -144,39 +124,75 @@ export default function PromotionPlace() {
         return mapRef.current
     }, [selectedArea])
 
+    // 지도에 마커를 추가하는 함수
     const addMarkersToMap = useCallback(
-        (map: any, posts: Post[]): void => {
-            // 기존에 추가된 모든 마커 제거
+        (map: any, profiles: User[]): void => {
+            if (map.customOverlays) {
+                map.customOverlays.forEach((overlay: any) => overlay.setMap(null))
+            }
+
             if (map.markers) {
                 map.markers.forEach((marker: any) => marker.setMap(null))
             }
 
-            // 새로운 마커 배열 초기화
+            map.customOverlays = []
             map.markers = []
 
-            // 선택된 유형 필터링
-            const filteredPosts = selectedType === 'ALL' ? posts : posts.filter((post) => post.part === selectedType)
+            const filteredProfiles = profiles.filter((profile) => {
+                const typeMatch = selectedType === 'ALL' || profile.part.includes(selectedType)
+                return typeMatch
+            })
 
-            filteredPosts.forEach((post) => {
-                const markerPosition = new window.kakao.maps.LatLng(
-                    post.coordinates.latitude,
-                    post.coordinates.longitude,
-                )
+            const groupedProfiles = filteredProfiles.reduce((acc: any, profile) => {
+                const region = profile.region
+                if (!acc[region]) {
+                    acc[region] = []
+                }
+                acc[region].push(profile)
+                return acc
+            }, {})
+
+            Object.keys(groupedProfiles).forEach((region) => {
+                const profilesInRegion = groupedProfiles[region]
+                const area = areas[region]
+                const content = `<div style="padding:5px;z-index:1;background:white;border:1px solid black;">${profilesInRegion
+                    .map((profile: User) => `<div>${profile.nickname}</div>`)
+                    .join('')}</div>`
+
+                const position = new window.kakao.maps.LatLng(area.lat, area.lng)
                 const markerImage = new window.kakao.maps.MarkerImage(
-                    markerImages[post.part as 'BAND' | 'VOCAL' | 'DANCE'],
+                    markerImages[selectedType],
                     new window.kakao.maps.Size(24, 35),
                 )
                 const marker = new window.kakao.maps.Marker({
-                    position: markerPosition,
+                    position,
                     image: markerImage,
                 })
+
+                const customOverlay = new window.kakao.maps.CustomOverlay({
+                    position,
+                    content,
+                    yAnchor: 1,
+                    zIndex: 3,
+                })
+
+                window.kakao.maps.event.addListener(marker, 'mouseover', () => {
+                    customOverlay.setMap(map)
+                })
+
+                window.kakao.maps.event.addListener(marker, 'mouseout', () => {
+                    customOverlay.setMap(null)
+                })
+
                 marker.setMap(map)
                 map.markers.push(marker)
+                map.customOverlays.push(customOverlay)
             })
         },
         [selectedType],
     )
 
+    // 지도 표시 상태 변경에 따른 효과 처리
     useEffect(() => {
         if (showMap) {
             if (!mapRef.current) {
@@ -188,7 +204,7 @@ export default function PromotionPlace() {
                 script.onload = () => {
                     window.kakao.maps.load(() => {
                         const map = initializeMap()
-                        addMarkersToMap(map, posts || [])
+                        addMarkersToMap(map, profiles || [])
                     })
                 }
 
@@ -200,63 +216,59 @@ export default function PromotionPlace() {
                 const moveLatLon = new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng)
                 map.setCenter(moveLatLon)
                 map.setLevel(selectedArea === 'ALL' ? 8 : 4)
-                addMarkersToMap(map, posts || [])
+                addMarkersToMap(map, profiles || [])
             }
         }
-    }, [showMap, selectedArea, selectedType, posts, initializeMap, addMarkersToMap])
+    }, [showMap, selectedArea, selectedType, profiles, initializeMap, addMarkersToMap])
 
-    // 상태 초기화 부분 제거
+    // 지도 숨김 상태 변경에 따른 효과 처리
     useEffect(() => {
         if (mapRef.current && !showMap) {
             mapRef.current = null
         }
     }, [showMap])
 
-    //로그인한 유저가 좋아요와 저장하기 버튼을 누른 흔적(?)
-    useEffect(() => {
-        const fetchUserActivities = async () => {
-            if (!currentUser) return
-            try {
-                const response = await apiClient.get(`/promotionboard/myList`, {
-                    headers: { Authorization: `Bearer ${currentUser.token}` },
-                })
-                const { likePostIds, savePostIds } = response.data
-                setLikedPosts(likePostIds)
-                setSavedPosts(savePostIds)
-            } catch (error) {
-                console.error('Failed to fetch user activities:', error)
-            }
-        }
-
-        fetchUserActivities()
-    }, [currentUser])
-
-    //api 연결 확인용도
+    // 데이터 로딩 중 상태 표시
     if (isLoading) {
         return <div>Loading...</div>
     }
+
+    // 데이터 로딩 오류 상태 표시
     if (error) {
         return <div>Error fetching data: {error.message}</div>
     }
 
-    //최신순으로 게시물 정렬
-    const sortedPosts = (posts || []).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    const filteredPosts = sortedPosts.filter((post) => {
-        const areaMatch = selectedArea === 'ALL' || post.region === selectedArea
-        const typeMatch = selectedType === 'ALL' || post.part === selectedType
+    // 프로필 정렬 및 필터링
+    const sortedProfiles = (Array.isArray(profiles) ? profiles : []).sort(
+        (a, b) => b.id - a.id, // id를 기준으로 최신 순으로 정렬
+    )
+    const filteredProfiles = sortedProfiles.filter((profile) => {
+        const areaMatch = selectedArea === 'ALL' || profile.region === selectedArea
+        const typeMatch = selectedType === 'ALL' || profile.part.includes(selectedType)
         return areaMatch && typeMatch
     })
-    //게시글 최대 9개 이후는 페이지 넘어가기
-    const indexOfLastPost = currentPage * postsPerPage
-    const indexOfFirstPost = indexOfLastPost - postsPerPage
-    const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)
+
+    // 현재 페이지에 표시할 프로필 계산
+    const indexOfLastProfile = currentPage * profilesPerPage
+    const indexOfFirstProfile = indexOfLastProfile - profilesPerPage
+    const currentProfiles = filteredProfiles.slice(indexOfFirstProfile, indexOfLastProfile)
+
+    // 페이지 번호 계산
     const pageNumbers = []
-    for (let i = 1; i <= Math.ceil(filteredPosts.length / postsPerPage); i++) {
+    for (let i = 1; i <= Math.ceil(filteredProfiles.length / profilesPerPage); i++) {
         pageNumbers.push(i)
     }
+
+    // 페이지 변경 핸들러
     const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber)
     }
+
+    // 지역 이름 가져오기
+    const getAreaName = (regionKey: string) => areas[regionKey]?.name || regionKey
+
+    // 파트 이름 가져오기
+    const getPartName = (partKey: string) => parts[partKey]?.name || partKey
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -274,7 +286,7 @@ export default function PromotionPlace() {
                     </div>
                 </div>
                 <header className="mb-6">
-                    <h1 className="text-2xl font-bold text-purple-700">홍보게시판</h1>
+                    <h1 className="text-2xl font-bold text-purple-700">프로필 페이지</h1>
                 </header>
                 <section className="mb-6">
                     <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
@@ -317,7 +329,10 @@ export default function PromotionPlace() {
                             </button>
                             <button
                                 className="bg-purple-700 rounded-lg text-white py-2 px-4"
-                                onClick={handleWriteButtonClick}
+                                onClick={() => {
+                                    setShowMap(false)
+                                    setShowConfirmation(true)
+                                }}
                             >
                                 <FaRegEdit />
                             </button>
@@ -325,18 +340,15 @@ export default function PromotionPlace() {
                     </div>
                     {showMap && <div className="w-full h-96 border m-2" id="map"></div>}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {currentPosts.map((post) => (
-                            <div key={post.id} onClick={() => handlePostClick(post)}>
-                                <PostItem
-                                    postId={post.id}
-                                    profileImage={post.profileImage}
-                                    userName={post.author}
-                                    title={post.title}
-                                    fileNames={post.fileNames}
-                                    initialLikesCount={post.likesCount}
-                                    initialSavesCount={post.savesCount}
-                                    liked={likedPosts.includes(post.id)}
-                                    saved={savedPosts.includes(post.id)}
+                        {currentProfiles.map((profile) => (
+                            <div key={profile.id} onClick={() => handleProfileClick(profile)}>
+                                <UserProfile
+                                    memberId={profile.memberId}
+                                    profileImage={profile.profileImage ?? ''}
+                                    nickname={profile.nickname}
+                                    introduction={profile.introduction ?? ''}
+                                    part={getPartName(profile.part)}
+                                    region={getAreaName(profile.region)}
                                 />
                             </div>
                         ))}
@@ -356,13 +368,25 @@ export default function PromotionPlace() {
                     </div>
                 </section>
             </div>
-            <Modal
-                show={showModal}
-                onClose={handleCloseModal}
-                post={selectedPost}
-                liked={likedPosts.includes(selectedPost?.id || 0)} // liked 상태 전달
-                saved={savedPosts.includes(selectedPost?.id || 0)} // saved 상태 전달
-            />
+            {showConfirmation && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="bg-white rounded-lg p-6 w-1/2">
+                        <h2 className="text-lg font-bold mb-4">프로필 등록</h2>
+                        <p>프로필을 등록하시겠습니까?</p>
+                        <div className="flex justify-end mt-4">
+                            <button
+                                className="bg-gray-300 rounded-lg text-black py-2 px-4 mr-2"
+                                onClick={() => setShowConfirmation(false)}
+                            >
+                                취소
+                            </button>
+                            <button className="bg-green-500 rounded-lg text-white py-2 px-4" onClick={handleAddProfile}>
+                                예
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

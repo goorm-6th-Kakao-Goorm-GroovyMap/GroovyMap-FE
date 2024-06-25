@@ -1,5 +1,3 @@
-import Image from 'next/image';
-
 export default function Home() {
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">
@@ -12,5 +10,5 @@ export default function Home() {
                 </header>
             </div>
         </main>
-    );
+    )
 }
