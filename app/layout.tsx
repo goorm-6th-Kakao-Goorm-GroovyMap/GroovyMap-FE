@@ -30,7 +30,7 @@ export default function RootLayout({
 
     return (
         <html lang="kr" className="h-full">
-            <body className="h-full overflow-x-hidden">
+            <body className="h-full overflow-hidden">
                 <RecoilRoot>
                     <QueryClientProvider client={queryClient}>
                         <div className="main-layout flex h-full">
@@ -51,7 +51,7 @@ export default function RootLayout({
                                 ></div>
                             )}
                             {/* 메인 콘텐츠 */}
-                            <div className="flex-grow flex flex-col">{children}</div>
+                            <div className="flex-grow flex flex-col overflow-y-auto">{children}</div>
                             {/* 오른쪽 사이드바 */}
                             <div className="hidden md:block h-full">
                                 <RightSidebar />

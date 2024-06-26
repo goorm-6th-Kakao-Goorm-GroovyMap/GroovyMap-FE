@@ -61,6 +61,7 @@ export interface Post {
     comments: Comment[];
     userNickname: string;
     userProfileImage: string;
+    likes: number;
 }
 
 //마이페이지 공연기록 타입

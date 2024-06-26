@@ -66,28 +66,27 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate })
             });
             return response.data;
         },
-        onSuccess: (data) => {
+        onSuccess: async (data) => {
             setMyPageUser(data);
-            // 현재 로그인된 유저 상태도 업데이트
             setCurrentUser((prevUser: LoginUser) => ({
                 ...prevUser,
-                profileUrl: data.profileImage || data.profileUrl, // 프로필 이미지 업데이트
-                nickname: data.nickname, // 닉네임 업데이트
+                profileUrl: data.profileImage || data.profileUrl,
+                nickname: data.nickname,
             }));
-            toast.success('프로필이 성공적으로 업데이트되었습니다.');
-            onProfileUpdate();
-            onClose();
 
-            // 닉네임이 변경되었을 때 바뀐 URL로 업데이트 해줌
-            if (currentUser.nickname !== data.nickname) {
-                router.push(`/mypage/${data.nickname}`);
-            }
+            toast.success('프로필이 성공적으로 업데이트되었습니다.');
+            await onProfileUpdate();
+            // URL 이동
+            router.push(`/mypage/${data.nickname}`);
+
+            onClose();
         },
         onError: (error) => {
             toast.error('프로필 업데이트 중 오류가 발생했습니다.');
         },
     });
 
+    //회원 탈퇴
     const deleteMutation = useMutation({
         mutationFn: async () => {
             await apiClient.delete('/member/delete', { withCredentials: true });
@@ -115,16 +114,37 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate })
         updateMutation.mutate(data);
     };
 
+    //회원 탈퇴 확인 메시지
     const handleDeleteAccount = () => {
-        if (confirm('정말로 탈퇴하시겠습니까?')) {
-            deleteMutation.mutate();
-        }
+        toast(
+            <div className="flex flex-col items-center justify-center">
+                <p>정말로 탈퇴하시겠습니까?</p>
+                <div className="flex justify-around mt-2 ">
+                    <button
+                        onClick={() => {
+                            deleteMutation.mutate();
+                            toast.dismiss();
+                        }}
+                        className="bg-purple-500 text-white px-3 mr-3 py-1 rounded"
+                    >
+                        예
+                    </button>
+                    <button onClick={() => toast.dismiss()} className="bg-gray-300 px-3 py-1 rounded">
+                        아니오
+                    </button>
+                </div>
+            </div>,
+            {
+                closeButton: false,
+                autoClose: false,
+            }
+        );
     };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-4 rounded-lg shadow-lg">
-                <h2 className="text-xl font-bold mb-4">설정</h2>
+                <h2 className="text-xl font-bold mb-4">회원 정보 수정</h2>
                 <div className="space-y-4">
                     <div>
                         <label className="block font-semibold mb-2">프로필 사진</label>

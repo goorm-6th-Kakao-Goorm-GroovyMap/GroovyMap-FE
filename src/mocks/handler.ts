@@ -1,5 +1,6 @@
 import { rest } from 'msw';
 import { Post, PerformanceRecord } from '@/types/types';
+import image from 'next/image';
 
 interface User {
     email: string;
@@ -23,8 +24,8 @@ const users: User[] = [
         region: 'ALL',
         part: 'BAND',
         type: 'GUITAR',
-        profileImage: '',
-        profileUrl: '/profile1.jpeg',
+        profileImage: '/profile.jpeg',
+        profileUrl: '/profile.jpeg',
         introduction: '안녕하세요',
         followers: 100,
         following: 200,
@@ -58,6 +59,7 @@ const posts: Post[] = [
                 userProfileImage: '/profile.jpeg',
             },
         ],
+        likes: 10,
     },
     {
         id: '2',
@@ -73,6 +75,7 @@ const posts: Post[] = [
                 userProfileImage: '/profile.jpeg',
             },
         ],
+        likes: 5,
     },
 ];
 
@@ -87,6 +90,7 @@ const performanceRecords: PerformanceRecord[] = [
         region: '서울',
         address: 'Seoul, South Korea',
         date: '2023-06-01',
+        userNickname: 'lavie_music', // 추가
     },
     {
         id: '2',
@@ -98,6 +102,31 @@ const performanceRecords: PerformanceRecord[] = [
         region: '서울',
         address: 'Seoul, South Korea',
         date: '2023-07-01',
+        userNickname: 'lavie_music', // 추가
+    },
+    {
+        id: '3',
+        description: 'Third performance',
+        part: 'VOCAL',
+        type: 'POP',
+        latitude: 37.5685,
+        longitude: 126.979,
+        region: '서울',
+        address: 'Seoul, South Korea',
+        date: '2023-08-01',
+        userNickname: 'lavie_music', // 추가
+    },
+    {
+        id: '4',
+        description: 'Fourth performance',
+        part: 'BAND',
+        type: 'JAZZ',
+        latitude: 37.5695,
+        longitude: 126.976,
+        region: '서울',
+        address: 'Seoul, South Korea',
+        date: '2023-09-01',
+        userNickname: 'lavie_music', // 추가
     },
 ];
 
@@ -217,58 +246,29 @@ export const handlers = [
         return res(ctx.status(404), ctx.json({ message: 'User not found' }));
     }),
 
-    rest.patch('/member/update', async (req, res, ctx) => {
-        const body = await req.text();
-        const formData = parseMultipartFormData(body);
-        const nickname = formData.get('nickname') as string;
-        const region = formData.get('region') as string;
-        const part = formData.get('part') as string;
-        const type = formData.get('type') as string;
-        const introduction = formData.get('introduction') as string;
-        const imageFile = formData.get('profileImage') as File | null;
+    rest.patch('/member/update', (req, res, ctx) => {
+        const { nickname, profileImage, region, part, type, introduction } = req.body as User;
+        const user = users.find((user) => user.nickname === nickname);
+        if (user) {
+            user.profileImage = profileImage || user.profileImage;
+            user.region = region || user.region;
+            user.part = part || user.part;
+            user.type = type || user.type;
+            user.introduction = introduction || user.introduction;
 
-        const userIndex = users.findIndex((user) => user.nickname === nickname);
-
-        if (userIndex !== -1) {
-            // 이미지 처리 로직 (실제 서버에서는 파일을 서버에 저장하고 URL을 생성)
-            const imageUrl = imageFile ? `/images/${nickname}.jpeg` : users[userIndex].profileImage; // 예시 URL
-
-            // 사용자 정보 업데이트
-            const updatedUser = {
-                ...users[userIndex],
-                nickname,
-                region,
-                part,
-                type,
-                introduction,
-                profileImage: imageUrl,
-            };
-
-            users[userIndex] = updatedUser;
-            return res(ctx.status(200), ctx.json(updatedUser));
+            return res(
+                ctx.status(200),
+                ctx.json({
+                    profileImage: user.profileImage,
+                    nickname: user.nickname,
+                    region: user.region,
+                    part: user.part,
+                    type: user.type,
+                    introduction: user.introduction,
+                })
+            );
         }
-
         return res(ctx.status(404), ctx.json({ message: 'User not found' }));
-    }),
-
-    rest.post('/mypage/photo/write', async (req, res, ctx) => {
-        const body = await req.text();
-        const formData = parseMultipartFormData(body);
-        const text = formData.get('text') as string;
-        const userNickname = formData.get('userNickname') as string;
-        const imageFile = formData.get('image') as File | null;
-
-        const newPost: Post = {
-            id: (posts.length + 1).toString(),
-            text,
-            userNickname,
-            userProfileImage: users.find((user) => user.nickname === userNickname)?.profileImage || '',
-            image: imageFile ? `/images/${imageFile.name}` : null,
-            comments: [],
-        };
-
-        posts.push(newPost);
-        return res(ctx.status(201), ctx.json(newPost));
     }),
 
     rest.get('/mypage/photo/:nickname', async (req, res, ctx) => {
@@ -285,6 +285,7 @@ export const handlers = [
         }
         return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
     }),
+
     rest.post('/mypage/performance/write', async (req, res, ctx) => {
         const body = await req.text();
         const formData = parseMultipartFormData(body);
@@ -319,5 +320,17 @@ export const handlers = [
         const { nickname } = req.params as { nickname: string };
         const userRecords = performanceRecords.filter((record) => record.userNickname === nickname);
         return res(ctx.status(200), ctx.json(userRecords));
+    }),
+
+    rest.post('/mypage/photo/:postId/like', async (req, res, ctx) => {
+        const { postId } = req.params;
+        const post = posts.find((post) => post.id === postId);
+
+        if (post) {
+            post.likes += 1;
+            return res(ctx.status(200), ctx.json(post));
+        }
+
+        return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
     }),
 ];

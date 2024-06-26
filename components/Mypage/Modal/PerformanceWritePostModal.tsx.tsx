@@ -50,6 +50,11 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
     };
 
     const handleSubmit = () => {
+        if (!description || !address || !date || !part || !type || !region || !coordinate) {
+            toast.error('모든 필드를 입력해야 합니다.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('description', description);
         formData.append('address', address);
@@ -61,9 +66,18 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
             formData.append('latitude', coordinate.latitude.toString());
             formData.append('longitude', coordinate.longitude.toString());
         }
-        if (image) {
-            formData.append('image', image);
-        }
+
+        //콘솔에 확인
+        console.log('FormData to send:', {
+            description,
+            address,
+            date,
+            part,
+            type,
+            region,
+            latitude: coordinate?.latitude,
+            longitude: coordinate?.longitude,
+        });
         mutate(formData);
     };
 
@@ -141,7 +155,13 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-lg">
                 <h2 className="text-xl font-bold mb-4">공연 기록 추가</h2>
-
+                <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-2 border rounded-lg mb-4"
+                    rows={1}
+                    placeholder="공연 제목을 입력하세요."
+                ></textarea>
                 <input
                     type="text"
                     value={address}
@@ -199,13 +219,7 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
                         </option>
                     ))}
                 </select>
-                <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 border rounded-lg mb-4"
-                    rows={4}
-                    placeholder="공연 설명을 입력하세요."
-                ></textarea>
+
                 <div className="flex justify-end space-x-2">
                     <button onClick={onClose} className="bg-gray-200 py-2 px-4 rounded-lg">
                         취소

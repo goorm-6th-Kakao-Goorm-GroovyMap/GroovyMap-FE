@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaPlus } from 'react-icons/fa';
-import { useQuery } from '@tanstack/react-query';
+import { FaPlus, FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { useParams } from 'next/navigation';
 import PerformanceWritePostModal from './Modal/PerformanceWritePostModal.tsx';
-import { areas } from '@/constants/constants';
+import { areas, parts, types } from '@/constants/constants';
 import type { User, PerformanceRecord, Place } from '@/types/types';
 import Map from '@/components/Places/Map';
 import { updateMarkers } from '@/components/Places/UpdataMarkers';
+import { toast, ToastContainer } from 'react-toastify';
+import SkeletonLoader from '@/components/SkeletonLoader';
 
 interface PerformanceRecordProps {
     isOwner: boolean;
@@ -30,6 +32,7 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
     const [markers, setMarkers] = useState<any[]>([]);
     const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
 
     const endpoint = `/mypage/performance/${nickname}`;
 
@@ -92,7 +95,7 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                 clusterer,
                 setMarkers,
                 fetchPlaceDetails: async (id) => {
-                    console.log(`Fetching details for place ID: ${id}`);
+                    console.log(`공연 기록 장소 페치 아이디: ${id}`);
                 },
                 setSelectedPlace,
                 setIsModalOpen,
@@ -100,13 +103,66 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
         }
     };
 
+    //글 삭제 기능
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/mypage/performance/${id}`);
+        },
+        onSuccess: () => {
+            refetch();
+            toast.success('공연 기록이 성공적으로 삭제되었습니다.');
+        },
+        onError: () => {
+            toast.error('공연 기록 삭제 중 오류가 발생했습니다.');
+        },
+    });
+
+    //글 삭제 버튼 함수
+    const handleDelete = (id: string) => {
+        toast(
+            <div className="flex flex-col items-center justify-center">
+                <p>공연 기록을 삭제하시겠습니까?</p>
+                <div className="flex justify-around mt-2">
+                    <button
+                        onClick={() => {
+                            deleteMutation.mutate(id);
+                            toast.dismiss();
+                        }}
+                        className="bg-purple-500 text-white mr-3 px-3 py-1 rounded"
+                    >
+                        예
+                    </button>
+                    <button onClick={() => toast.dismiss()} className="bg-gray-300 px-3 py-1 rounded">
+                        아니오
+                    </button>
+                </div>
+            </div>,
+            {
+                closeButton: false,
+                autoClose: false,
+            }
+        );
+    };
+
+    const toggleExpand = (id: string) => {
+        setExpandedRecordId((prev) => (prev === id ? null : id));
+    };
+
+    //공연 기록 누르면 지도에서 위치로
+    const handlePlaceClick = (record: PerformanceRecord) => {
+        if (map) {
+            const moveLatLon = new window.kakao.maps.LatLng(record.latitude, record.longitude);
+            map.setCenter(moveLatLon);
+        }
+    };
+
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <SkeletonLoader />;
     }
 
     if (error) {
-        console.error('Error fetching performance records:', error);
-        return <div>Error loading performance records</div>;
+        console.error('공연 기록 페치 에러:', error);
+        return <div>공연 기록을 불러오는 데 에러가 발생했습니다.</div>;
     }
 
     return (
@@ -143,14 +199,51 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                 {records.length > 0 ? (
                     records.map((record) => (
                         <div key={record.id} className="border p-4 rounded">
-                            <p>{record.description}</p>
-                            <p>장소: {record.address}</p>
-                            <p>날짜: {record.date}</p>
-                            <p>지역: {areas[record.region]?.name}</p>
+                            <div
+                                className="flex justify-between items-center cursor-pointer"
+                                onClick={() => toggleExpand(record.id)}
+                            >
+                                <p>
+                                    <span onClick={() => handlePlaceClick(record)}> {record.description}</span>
+                                    <span className="text-gray-500 bg-gray-100 p-0.5 ml-1.5 mr-1.5">
+                                        {parts[record.part]?.name || record.part}
+                                    </span>
+                                    <span className="text-gray-500 bg-gray-100 p-0.5">
+                                        {types[record.type]?.name || record.type}
+                                    </span>
+                                </p>
+                                <button
+                                    onClick={() => handlePlaceClick(record)}
+                                    className="ml-4 text-purple-500 hover:text-purple-600"
+                                >
+                                    {expandedRecordId === record.id ? <FaChevronUp /> : <FaChevronDown />}
+                                </button>
+                            </div>
+                            {expandedRecordId === record.id && (
+                                <div className="mt-2 relative">
+                                    <p>
+                                        {record.address}, {record.date}{' '}
+                                    </p>
+                                    <p>
+                                        {areas[record.region]?.name || record.region},{' '}
+                                        {parts[record.part]?.name || record.part},{' '}
+                                        {types[record.type]?.name || record.type}
+                                    </p>
+
+                                    {isOwner && (
+                                        <button
+                                            onClick={() => handleDelete(record.id)} //id로 delete 요청
+                                            className="absolute bottom-2 right-2 bg-gray-300 text-gray-700 p-1 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                                        >
+                                            <FaTimes />
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ))
                 ) : (
-                    <div>No performance records available.</div>
+                    <div>공연 기록이 없습니다.</div>
                 )}
             </div>
             {isWritePostOpen && (

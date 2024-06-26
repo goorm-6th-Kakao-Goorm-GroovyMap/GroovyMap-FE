@@ -60,7 +60,7 @@ const MyPage: React.FC = () => {
         if (url.startsWith('http')) {
             return url;
         }
-        return `http://localhost:8080${url}`; //ngrok 서버로 볼때 주소 변경하기
+        return `https://localhost:3000${url}`; //ngrok 서버/실제 백엔드 주소 변경하기
     };
 
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
@@ -97,7 +97,7 @@ const MyPage: React.FC = () => {
         <div className="flex flex-col items-center min-h-screen p-4">
             <div className="w-full max-w-4xl bg-white rounded-lg  p-8">
                 <div className="flex items-center mb-6">
-                    {userData.profileImage || userData.profileUrl ? (
+                    {userData.profileImage ? (
                         <Image
                             src={getProfileImageUrl(userData)}
                             width={96}

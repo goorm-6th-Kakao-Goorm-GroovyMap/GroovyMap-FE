@@ -43,6 +43,12 @@ const RightSidebar = () => {
         }
     };
 
+    const getProfileImageUrl = (userProfileUrl: string | undefined) => {
+        if (!userProfileUrl) return '';
+        if (userProfileUrl.startsWith('http')) return userProfileUrl;
+        return `https://localhost:3000${userProfileUrl}`;
+    };
+
     if (!isMounted) {
         return null;
     }
@@ -61,7 +67,7 @@ const RightSidebar = () => {
                             {user.profileUrl ? (
                                 <div className="w-8 h-8 rounded-full overflow-hidden">
                                     <Image
-                                        src={user.profileUrl}
+                                        src={getProfileImageUrl(user.profileUrl)}
                                         alt="User Profile"
                                         layout="fill"
                                         objectFit="cover"
