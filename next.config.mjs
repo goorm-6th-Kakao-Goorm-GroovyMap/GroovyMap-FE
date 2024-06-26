@@ -9,6 +9,11 @@ const nextConfig = {
         loader: 'default',
         path: '/_next/image',
     },
-}
+    webpack5: true,
+    webpack: (config, options) => {
+        config.cache = false;
+        return config;
+    },
+};
 
-export default nextConfig
+export default nextConfig;
