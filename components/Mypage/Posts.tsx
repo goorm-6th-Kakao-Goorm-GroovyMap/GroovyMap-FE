@@ -158,7 +158,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
                         {post.image && (
                             <div className="w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
-                                    src={post.image}
+                                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.image}`}
                                     alt="Post Image"
                                     layout="fill"
                                     objectFit="cover"

@@ -71,7 +71,13 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, onClose, 
                 </button>
                 {post.image && (
                     <div className="relative w-full h-96 mb-4">
-                        <Image src={post.image} alt="Post" layout="fill" objectFit="cover" className="rounded-lg" />
+                        <Image
+                            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
+                            alt="Post"
+                            layout="fill"
+                            objectFit="cover"
+                            className="rounded-lg"
+                        />
                         <div className="absolute bottom-2 right-2 flex items-center space-x-2">
                             <button
                                 onClick={handleLikeClick}

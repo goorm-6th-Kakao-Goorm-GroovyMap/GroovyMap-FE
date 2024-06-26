@@ -60,7 +60,8 @@ const MyPage: React.FC = () => {
         if (url.startsWith('http')) {
             return url;
         }
-        return `https://localhost:3000${url}`; //ngrok 서버/실제 백엔드 주소 변경하기
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:3000';
+        return `${backendUrl}${url}`;
     };
 
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
