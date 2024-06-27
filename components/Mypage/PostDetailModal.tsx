@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Post, User } from '@/types/types';
 import Image from 'next/image';
-import { FaHeart } from 'react-icons/fa';
+import { FaHeart, FaTimes } from 'react-icons/fa';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
 
 interface PostDetailModalProps {
     postId: string;
-    user: User;
+    currentUser: User; // 현재 로그인한 사용자 정보
+    user: User; // 마이페이지의 주인 정보
     onClose: () => void;
     onNext: () => void;
     onPrev: () => void;
@@ -21,6 +22,7 @@ interface PostDetailModalProps {
 const PostDetailModal: React.FC<PostDetailModalProps> = ({
     postId,
     user,
+    currentUser,
     onClose,
     onNext,
     onPrev,
@@ -29,6 +31,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
+    const [comment, setComment] = useState('');
 
     const handleClickOutside = (event: React.MouseEvent) => {
         if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -36,7 +39,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         }
     };
 
-    // 데이터 받아옴
     const {
         data: post,
         error,
@@ -94,6 +96,51 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         likeMutation.mutate();
     };
 
+    //댓글 추가 요청
+    const commentMutation = useMutation({
+        mutationFn: async (newComment: string) => {
+            const response = await apiClient.post(`/mypage/photo/${postId}/comments`, { text: newComment });
+            return response.data;
+        },
+        onSuccess: () => {
+            setComment('');
+            refetch(); // 댓글 등록 후 포스트 정보를 다시 가져옴
+            toast.success('댓글이 성공적으로 등록되었습니다.');
+        },
+        onError: () => {
+            toast.error('댓글 등록 중 오류가 발생했습니다.');
+        },
+    });
+
+    const handleCommentSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!comment.trim()) {
+            toast.error('댓글을 입력해주세요.');
+            return;
+        }
+        commentMutation.mutate(comment);
+    };
+
+    //댓글 삭제 요청
+    const deleteCommentMutation = useMutation({
+        mutationFn: async (id: string) => {
+            const response = await apiClient.delete(`/mypage/photo/${postId}/comments/${id}`);
+            return response.data;
+        },
+        onSuccess: () => {
+            refetch(); // 댓글 삭제 후 포스트 정보를 다시 가져옴
+            toast.success('댓글이 성공적으로 삭제되었습니다.');
+        },
+        onError: () => {
+            toast.error('댓글 삭제 중 오류가 발생했습니다.');
+        },
+    });
+
+    // 댓글 삭제
+    const handleCommentDelete = (id: string) => {
+        deleteCommentMutation.mutate(id);
+    };
+
     if (!post) {
         return <div>로딩 중...</div>;
     }
@@ -146,7 +193,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                     </h2>
                     <p className="mb-4">{post.text}</p>
 
-                    <div>
+                    <div className="p-4">
                         <h3 className="font-bold mb-2">댓글</h3>
                         {post.comments && post.comments.length > 0 ? (
                             <ul>
@@ -161,6 +208,15 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                                                 className="w-8 h-8 rounded-full"
                                             />
                                             <p className="font-semibold">{comment.userNickname}</p>
+                                            {/* 댓글 작성자만 삭제할 수 있도록, 댓글 유저 닉네임과 로그인 유저 닉네임이 같은 경우*/}
+                                            {comment.userNickname === currentUser.nickname && (
+                                                <button
+                                                    onClick={() => handleCommentDelete(comment.id)}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    <FaTimes />
+                                                </button>
+                                            )}
                                         </div>
                                         <p>{comment.text}</p>
                                     </li>
@@ -170,6 +226,18 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             <p>댓글이 없습니다.</p>
                         )}
                     </div>
+                    <form onSubmit={handleCommentSubmit} className="mt-4">
+                        <input
+                            type="text"
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder="댓글을 입력하세요..."
+                            className="w-full p-2 border rounded mb-2"
+                        />
+                        <button type="submit" className="bg-purple-500 text-white px-4 py-2 rounded">
+                            댓글 등록
+                        </button>
+                    </form>
                 </div>
                 {hasPrev && (
                     <button

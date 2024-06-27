@@ -13,12 +13,13 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 interface PostsProps {
+    currentUser: User; // 현재 로그인한 사용자
     isOwner: boolean;
     user: User;
     onWritePost: () => void;
 }
 
-const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
+const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }) => {
     const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const queryClient = useQueryClient();
@@ -202,8 +203,12 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
             {selectedPostIndex !== null && (
                 <PostDetailModal
                     postId={posts[selectedPostIndex].id} // postId 전달
-                    user={user}
-                    onClose={() => setSelectedPostIndex(null)}
+                    // user={user}
+                    user={currentUser} // 로그인한 사용자 정보 전달
+                    onClose={() => {
+                        setSelectedPostIndex(null);
+                        refetch(); // 모달 닫을 때 전체 목록을 다시 가져옴
+                    }}
                     onNext={handleNextPost}
                     onPrev={handlePrevPost}
                     hasNext={selectedPostIndex < posts.length - 1}
