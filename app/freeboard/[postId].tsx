@@ -28,13 +28,21 @@ const PostPage: React.FC = () => {
 
     useEffect(() => {
         const fetchPost = async () => {
-            const response = await apiClient.get(`/freeboard/${postId}`);
-            setPost(response.data);
+            try {
+                const response = await apiClient.get(`/freeboard/${postId}`);
+                setPost(response.data);
+            } catch (error) {
+                console.error('Failed to fetch post:', error);
+            }
         };
 
         const fetchComments = async () => {
-            const response = await apiClient.get(`/freeboard/${postId}/comment`);
-            setComments(response.data);
+            try {
+                const response = await apiClient.get(`/freeboard/${postId}/comment`);
+                setComments(response.data);
+            } catch (error) {
+                console.error('Failed to fetch comments:', error);
+            }
         };
 
         if (postId) {
@@ -45,8 +53,12 @@ const PostPage: React.FC = () => {
 
     const handleDeleteClick = async () => {
         if (post) {
-            await apiClient.delete(`/freeboard/${post.id}`);
-            router.push('/freeboard');
+            try {
+                await apiClient.delete(`/freeboard/${post.id}`);
+                router.push('/freeboard');
+            } catch (error) {
+                console.error('Failed to delete post:', error);
+            }
         }
     };
 
@@ -58,23 +70,33 @@ const PostPage: React.FC = () => {
 
     const handleCommentSubmit = async () => {
         if (post) {
-            await apiClient.post(`/freeboard/${post.id}/comment`, {
-                author: currentUser.nickname,
-                content: commentContent,
-            });
-            setCommentContent('');
-            const response = await apiClient.get(`/freeboard/${postId}/comment`);
-            setComments(response.data);
+            try {
+                await apiClient.post(`/freeboard/${post.id}/comment`, {
+                    author: currentUser.nickname,
+                    content: commentContent,
+                });
+                setCommentContent('');
+                const response = await apiClient.get(`/freeboard/${postId}/comment`);
+                setComments(response.data);
+            } catch (error) {
+                console.error('Failed to submit comment:', error);
+            }
         }
     };
 
     const handleLikeClick = async () => {
         if (post) {
-            await apiClient.post(`/freeboard/${post.id}/like`);
-            const response = await apiClient.get(`/freeboard/${post.id}`);
-            setPost(response.data);
+            try {
+                await apiClient.post(`/freeboard/${post.id}/like`);
+                const response = await apiClient.get(`/freeboard/${post.id}`);
+                setPost(response.data);
+            } catch (error) {
+                console.error('Failed to like post:', error);
+            }
         }
     };
+
+    if (!post) return <div>Loading...</div>;
 
     return (
         <div className="p-4">
