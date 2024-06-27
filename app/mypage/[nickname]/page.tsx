@@ -24,9 +24,7 @@ const MyPage: React.FC = () => {
     const setMyPageUser = useSetRecoilState(myPageUserState); // 마이페이지 유저 상태 설정
     const [isWritePostOpen, setWritePostOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-    // isOwner 변수를 통해 현재 사용자가 자신의 페이지를 보고 있는지 확인함
-    const isOwner = currentUser.nickname === nickname;
+    const [isOwner, setIsOwner] = useState(false);
 
     // 사용자 데이터를 가져오는 함수
     const fetchUserData = async (nickname: string): Promise<User> => {
@@ -48,11 +46,11 @@ const MyPage: React.FC = () => {
 
     // userData가 변경될 때마다 myPageUserState를 업데이트함
     useEffect(() => {
-        if (userData) {
+        if (userData && currentUser) {
             setMyPageUser(userData);
-            console.log(userData);
+            setIsOwner(currentUser.nickname === userData.nickname);
         }
-    }, [userData, setMyPageUser]);
+    }, [userData, currentUser, setMyPageUser]);
 
     // 프로필 이미지 URL 받아온거 => 절대 경로로 변환
     const getProfileImageUrl = (user: User) => {
@@ -60,7 +58,7 @@ const MyPage: React.FC = () => {
         if (url.startsWith('http')) {
             return url;
         }
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:3000';
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
         return `${backendUrl}${url}`;
     };
 

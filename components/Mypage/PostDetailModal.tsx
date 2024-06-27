@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Post, User } from '@/types/types';
 import Image from 'next/image';
 import { FaHeart } from 'react-icons/fa';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
 
 interface PostDetailModalProps {
-    post: Post;
+    postId: string;
     user: User;
     onClose: () => void;
     onNext: () => void;
@@ -18,7 +18,15 @@ interface PostDetailModalProps {
     hasPrev: boolean;
 }
 
-const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, onClose, onNext, onPrev, hasNext, hasPrev }) => {
+const PostDetailModal: React.FC<PostDetailModalProps> = ({
+    postId,
+    user,
+    onClose,
+    onNext,
+    onPrev,
+    hasNext,
+    hasPrev,
+}) => {
     const modalRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
 
@@ -28,37 +36,71 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({ post, user, onClose, 
         }
     };
 
+    // 데이터 받아옴
+    const {
+        data: post,
+        error,
+        refetch,
+    } = useQuery<Post>({
+        queryKey: ['postDetail', postId],
+        queryFn: async () => {
+            const response = await apiClient.get(`/mypage/photo/${user.nickname}/${postId}`);
+            return response.data;
+        },
+        enabled: !!postId,
+    });
+
+    useEffect(() => {
+        if (postId) {
+            refetch();
+        }
+    }, [postId, refetch]);
+
     const likeMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post(`/mypage/photo/${post.id}/like`);
+            const response = await apiClient.post(`/mypage/photo/${postId}/like`);
             return response.data;
         },
         onMutate: async () => {
-            await queryClient.cancelQueries({ queryKey: ['posts', user.nickname] });
-            const previousPosts = queryClient.getQueryData<Post[]>(['posts', user.nickname]);
+            await queryClient.cancelQueries({ queryKey: ['postDetail', postId] });
+            const previousPost = queryClient.getQueryData<Post>(['postDetail', postId]);
 
-            if (previousPosts) {
-                queryClient.setQueryData<Post[]>(['posts', user.nickname], (oldPosts) =>
-                    oldPosts?.map((p) => (p.id === post.id ? { ...p, likes: p.likes + 1 } : p))
-                );
+            if (previousPost) {
+                queryClient.setQueryData<Post>(['postDetail', postId], (oldPost) => {
+                    if (oldPost) {
+                        return {
+                            ...oldPost,
+                            likes: oldPost.likes + 1,
+                        };
+                    }
+                    return oldPost;
+                });
             }
 
-            return { previousPosts };
+            return { previousPost };
         },
         onError: (err, _, context) => {
-            if (context?.previousPosts) {
-                queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
+            if (context?.previousPost) {
+                queryClient.setQueryData<Post>(['postDetail', postId], context.previousPost);
             }
             toast.error('좋아요 중 오류가 발생했습니다.');
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
+            queryClient.invalidateQueries({ queryKey: ['postDetail', postId] });
         },
     });
 
     const handleLikeClick = () => {
         likeMutation.mutate();
     };
+
+    if (!post) {
+        return <div>로딩 중...</div>;
+    }
+
+    if (error) {
+        return <div>게시물을 불러오는 중 오류가 발생했습니다.</div>;
+    }
 
     return (
         <div

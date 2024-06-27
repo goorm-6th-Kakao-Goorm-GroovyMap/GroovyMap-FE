@@ -45,8 +45,8 @@ const RightSidebar = () => {
 
     const getProfileImageUrl = (userProfileUrl: string | undefined) => {
         if (!userProfileUrl) return '';
-        if (userProfileUrl.startsWith('http')) return userProfileUrl;
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:3000';
+        if (typeof userProfileUrl === 'string' && userProfileUrl.startsWith('http')) return userProfileUrl;
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
         return `${backendUrl}${userProfileUrl}`;
     };
 

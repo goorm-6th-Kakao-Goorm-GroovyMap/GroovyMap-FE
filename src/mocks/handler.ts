@@ -33,10 +33,10 @@ const users: User[] = [
     {
         email: 'newuser@example.com',
         password: 'password123!',
-        nickname: 'newuser',
+        nickname: 'lee',
         region: 'ALL',
         part: 'VOCAL',
-        profileImage: '/profile.jpeg',
+        profileImage: '/band.png',
         profileUrl: '/profile2.jpeg',
         introduction: 'New user bio',
         followers: 50,

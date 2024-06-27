@@ -25,7 +25,11 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
 
     const fetchPosts = async (): Promise<Post[]> => {
         const response = await apiClient.get(`/mypage/photo/${user.nickname}`);
-        return response.data;
+        const posts = response.data.myPagePhotoDtos.map((dto: any) => ({
+            id: dto.id,
+            image: dto.photoUrl, // photoUrl을 image로 매핑시킴 => 코드상에서 image로 쓰기 때문에
+        }));
+        return posts;
     };
 
     const {
@@ -158,7 +162,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
                         {post.image && (
                             <div className="w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
-                                    src={`${process.env.NEXT_PUBLIC_API_URL}${post.image}`}
+                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
                                     alt="Post Image"
                                     layout="fill"
                                     objectFit="cover"
@@ -197,7 +201,7 @@ const Posts: React.FC<PostsProps> = ({ isOwner, user, onWritePost }) => {
             )}
             {selectedPostIndex !== null && (
                 <PostDetailModal
-                    post={posts[selectedPostIndex]}
+                    postId={posts[selectedPostIndex].id} // postId 전달
                     user={user}
                     onClose={() => setSelectedPostIndex(null)}
                     onNext={handleNextPost}
