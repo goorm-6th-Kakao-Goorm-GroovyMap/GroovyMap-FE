@@ -82,7 +82,7 @@ const posts: Post[] = [
 const performanceRecords: PerformanceRecord[] = [
     {
         id: '1',
-        description: 'First performance',
+        description: '첫번째 공연입니다',
         part: 'BAND',
         type: 'ROCK',
         latitude: 37.5665,
@@ -118,6 +118,30 @@ const performanceRecords: PerformanceRecord[] = [
     },
     {
         id: '4',
+        description: 'Fourth performance',
+        part: 'BAND',
+        type: 'JAZZ',
+        latitude: 37.5695,
+        longitude: 126.976,
+        region: '서울',
+        address: 'Seoul, South Korea',
+        date: '2023-09-01',
+        userNickname: 'lavie_music', // 추가
+    },
+    {
+        id: '5',
+        description: 'Fourth performance',
+        part: 'BAND',
+        type: 'JAZZ',
+        latitude: 37.5695,
+        longitude: 126.976,
+        region: '서울',
+        address: 'Seoul, South Korea',
+        date: '2023-09-01',
+        userNickname: 'lavie_music', // 추가
+    },
+    {
+        id: '6',
         description: 'Fourth performance',
         part: 'BAND',
         type: 'JAZZ',

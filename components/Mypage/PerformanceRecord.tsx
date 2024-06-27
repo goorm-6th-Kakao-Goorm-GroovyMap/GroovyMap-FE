@@ -33,6 +33,12 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
     const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1); //페이지 네이션 상태관리
+    const recordsPerPage = 5;
+    const totalPages = Math.ceil(records.length / recordsPerPage);
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const currentRecords = records.slice(indexOfFirstRecord, indexOfLastRecord);
 
     const endpoint = `/mypage/performance/${nickname}`;
 
@@ -156,6 +162,7 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
         }
     };
 
+    //로딩시 스켈레톤
     if (isLoading) {
         return <SkeletonLoader />;
     }
@@ -164,6 +171,25 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
         console.error('공연 기록 페치 에러:', error);
         return <div>공연 기록을 불러오는 데 에러가 발생했습니다.</div>;
     }
+
+    //페이지 네이션 함수
+    const renderPagination = () => {
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => setCurrentPage(i)}
+                    className={`mx-1 px-3 py-1 rounded ${
+                        i === currentPage ? 'bg-purple-500 text-white' : 'bg-gray-300 text-gray-700'
+                    }`}
+                >
+                    {i}
+                </button>
+            );
+        }
+        return <div className="flex justify-center mt-4">{pages}</div>;
+    };
 
     return (
         <div>
@@ -196,15 +222,20 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                 />
             </div>
             <div className="grid grid-cols-1 gap-4">
-                {records.length > 0 ? (
-                    records.map((record) => (
+                {currentRecords.length > 0 ? (
+                    currentRecords.map((record) => (
                         <div key={record.id} className="border p-4 rounded">
                             <div
                                 className="flex justify-between items-center cursor-pointer"
                                 onClick={() => toggleExpand(record.id)}
                             >
                                 <p>
-                                    <span onClick={() => handlePlaceClick(record)}> {record.description}</span>
+                                    <span
+                                        className="font-bold hover:text-purple-500 cursor-pointer"
+                                        onClick={() => handlePlaceClick(record)}
+                                    >
+                                        {record.description}
+                                    </span>{' '}
                                     <span className="text-gray-500 bg-gray-100 p-0.5 ml-1.5 mr-1.5">
                                         {parts[record.part]?.name || record.part}
                                     </span>
@@ -246,9 +277,11 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
                     <div>공연 기록이 없습니다.</div>
                 )}
             </div>
+            {renderPagination()} {/* 페이지네이션 추가 */}
             {isWritePostOpen && (
                 <PerformanceWritePostModal onClose={() => setWritePostOpen(false)} onRecordAdd={handleRecordAdd} />
             )}
+            <ToastContainer position="top-center" limit={1} /> {/* ToastContainer 추가 */}
         </div>
     );
 };
