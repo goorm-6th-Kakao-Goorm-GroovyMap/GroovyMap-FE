@@ -1,22 +1,9 @@
 'use client';
-import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { Post } from './types';
-import apiClient from '@/api/apiClient';
+
+import React from 'react';
 import PostList from './postlist';
 
 const FreeBoard: React.FC = () => {
-    const [posts, setPosts] = useState<Post[]>([]);
-
-    useEffect(() => {
-        const fetchPosts = async () => {
-            const response = await apiClient.get('/freeboard/posts');
-            setPosts(response.data);
-        };
-
-        fetchPosts();
-    }, []);
-
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">
             <div className="content flex-1 w-full max-w-4xl">
@@ -35,7 +22,7 @@ const FreeBoard: React.FC = () => {
                 <header className="header mb-6">
                     <h1 className="text-2xl font-bold text-purple-700">자유게시판</h1>
                 </header>
-                <PostList posts={posts} />
+                <PostList />
             </div>
         </main>
     );

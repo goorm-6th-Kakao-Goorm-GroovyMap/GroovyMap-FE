@@ -2,50 +2,34 @@
 
 import React, { useState } from 'react';
 import apiClient from '@/api/apiClient';
-import { Post } from './types';
+import { useRouter } from 'next/router';
+import ImageUpload from './ImageUpload';
 
-interface WritePostFormProps {
-    postId: string;
-    setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
-    updatePostList: () => void;
-    toggleWriting: () => void;
-}
-
-const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList, toggleWriting }) => {
+const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [image, setImage] = useState<File | null>(null);
+    const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const router = useRouter();
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleImageUpload = (url: string) => {
+        setImageUrls([...imageUrls, url]);
+    };
 
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('content', content);
-        formData.append('timestamp', new Date().toISOString());
-        formData.append('viewCount', '0');
+    const handleSubmit = async () => {
+        const htmlContent = `
+        <h1>${title}</h1>
+        ${imageUrls.map((url) => `<img src="${url}" alt="Post Image"/>`).join('')}
+        <p>${content}</p>
+      `;
 
         try {
-            const response = await apiClient.post(`/freeboard/write`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'ngrok-skip-browser-warning': '69420',
-                },
+            await apiClient.post('/freeboard/write', {
+                title,
+                content: htmlContent,
             });
-
-            if (response.status === 201) {
-                const newPost = response.data;
-                setPosts((prev) => [...prev, newPost]);
-                setTitle('');
-                setContent('');
-
-                updatePostList();
-                toggleWriting();
-            } else {
-                console.error('error', response.statusText);
-            }
+            router.push('/freeboard');
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Failed to write post:', error);
         }
     };
 
@@ -76,7 +60,8 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                     placeholder="내용을 입력하세요."
                 />
             </div>
-            <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded">
+            <ImageUpload onImageUpload={handleImageUpload} />
+            <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded" onClick={handleSubmit}>
                 글쓰기
             </button>
         </form>

@@ -1,7 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Post, Comment } from './types';
 import apiClient from '@/api/apiClient';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
+
+interface Comment {
+    id: number;
+    author: string;
+    content: string;
+}
+
+interface Post {
+    id: number;
+    title: string;
+    content: string; // HTML content
+    author: string;
+    likes: number;
+}
 
 const PostPage: React.FC = () => {
     const [post, setPost] = useState<Post | null>(null);
@@ -9,15 +24,16 @@ const PostPage: React.FC = () => {
     const [commentContent, setCommentContent] = useState('');
     const router = useRouter();
     const { postId } = router.query;
+    const currentUser = useRecoilValue(userState);
 
     useEffect(() => {
         const fetchPost = async () => {
-            const response = await apiClient.get(`/freeboard/posts/${postId}`);
+            const response = await apiClient.get(`/freeboard/${postId}`);
             setPost(response.data);
         };
 
         const fetchComments = async () => {
-            const response = await apiClient.get(`/freeboard/posts/${postId}/comments`);
+            const response = await apiClient.get(`/freeboard/${postId}/comment`);
             setComments(response.data);
         };
 
@@ -27,51 +43,76 @@ const PostPage: React.FC = () => {
         }
     }, [postId]);
 
-    const handleAddComment = async () => {
-        try {
-            await apiClient.post(`/freeboard/posts/${postId}/comments`, { content: commentContent });
-            setCommentContent('');
-            const response = await apiClient.get(`/freeboard/posts/${postId}/comments`);
-            setComments(response.data);
-        } catch (error) {
-            console.error('Failed to add comment:', error);
+    const handleDeleteClick = async () => {
+        if (post) {
+            await apiClient.delete(`/freeboard/${post.id}`);
+            router.push('/freeboard');
         }
     };
 
-    if (!post) return <div>Loading...</div>;
+    const handleEditClick = () => {
+        if (post) {
+            router.push(`/freeboard/edit/${post.id}`);
+        }
+    };
+
+    const handleCommentSubmit = async () => {
+        if (post) {
+            await apiClient.post(`/freeboard/${post.id}/comment`, {
+                author: currentUser.nickname,
+                content: commentContent,
+            });
+            setCommentContent('');
+            const response = await apiClient.get(`/freeboard/${postId}/comment`);
+            setComments(response.data);
+        }
+    };
+
+    const handleLikeClick = async () => {
+        if (post) {
+            await apiClient.post(`/freeboard/${post.id}/like`);
+            const response = await apiClient.get(`/freeboard/${post.id}`);
+            setPost(response.data);
+        }
+    };
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
-            <p>{post.content}</p>
-            {post.image && <img src={post.image} alt="Post image" className="mt-4" />}
-            <div className="flex justify-between items-center mt-4">
-                <button onClick={() => apiClient.post(`/api/freeboard/posts/${postId}/like`)}>
-                    좋아요 {post.likes}
-                </button>
-                <button onClick={() => apiClient.post(`/api/freeboard/posts/${postId}/bookmark`)}>
-                    북마크 {post.bookmarks}
-                </button>
-            </div>
-            <h3 className="text-xl font-bold border-t mt-4">댓글</h3>
-            <div className="mb-4">
-                {comments.map((comment) => (
-                    <div key={comment.id} className="border-b border-t py-2">
-                        <p className="font-bold">{comment.author}</p>
-                        <p>{comment.content}</p>
-                    </div>
-                ))}
-            </div>
-            <div className="mb-4">
+            <button onClick={() => router.push('/freeboard')} className="bg-gray-200 p-2 rounded mb-4">
+                뒤로가기
+            </button>
+            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            {currentUser.nickname === post.author && (
+                <div className="flex space-x-4">
+                    <button onClick={handleEditClick} className="flex items-center">
+                        수정
+                    </button>
+                    <button onClick={handleDeleteClick} className="flex items-center">
+                        삭제
+                    </button>
+                </div>
+            )}
+            <button onClick={handleLikeClick} className="flex items-center">
+                {post.likes}
+            </button>
+            <div>
                 <textarea
                     className="border p-2 w-full"
                     placeholder="댓글을 입력하세요"
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
                 ></textarea>
-                <button className="bg-purple-700 text-white py-2 px-4 mt-2" onClick={handleAddComment}>
+                <button onClick={handleCommentSubmit} className="bg-purple-700 text-white py-2 px-4 mt-2">
                     댓글 작성
                 </button>
+            </div>
+            <div className="comments">
+                {comments.map((comment) => (
+                    <div key={comment.id} className="comment">
+                        <p>{comment.content}</p>
+                        <p>{comment.author}</p>
+                    </div>
+                ))}
             </div>
         </div>
     );

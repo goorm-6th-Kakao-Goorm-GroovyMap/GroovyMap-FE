@@ -10,8 +10,6 @@
     },
     "dependencies": {
         "@nextui-org/react": "^2.4.1",
-        "@tanstack/react-query": "^5.40.1",
-        "@tanstack/react-query-devtools": "^5.40.1",
         "@types/luxon": "^3.4.2",
         "axios": "^1.7.2",
         "canvas-confetti": "^1.9.3",
@@ -32,6 +30,8 @@
         "zustand": "^4.5.2"
     },
     "devDependencies": {
+        "@tanstack/react-query": "^5.48.0",
+        "@tanstack/react-query-devtools": "^5.48.0",
         "@types/canvas-confetti": "^1.6.4",
         "@types/js-cookie": "^3.0.6",
         "@types/next": "^9.0.0",

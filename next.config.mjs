@@ -9,9 +9,10 @@ const nextConfig = {
         loader: 'default',
         path: '/_next/image',
     },
-    webpack5: true,
-    webpack: (config, options) => {
-        config.cache = false;
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            config.cache = false;
+        }
         return config;
     },
 };
