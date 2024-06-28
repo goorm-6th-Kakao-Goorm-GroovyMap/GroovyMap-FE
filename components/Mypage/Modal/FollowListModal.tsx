@@ -14,7 +14,6 @@ interface FollowListModalProps {
     nickname: string;
     type: 'followers' | 'following';
     onClose: () => void;
-    id: string;
 }
 
 const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClose }) => {
@@ -88,13 +87,15 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
     };
 
     // 프로필 이미지 띄워줄때 URL 받아온거 => 절대 경로로 변환
-    const getProfileImageUrl = (user: User) => {
-        const url = user.profileImage || '';
-        if (url.startsWith('http')) {
-            return url;
+    const getProfileImageUrl = (profileImage?: string) => {
+        if (!profileImage) {
+            return '';
+        }
+        if (profileImage.startsWith('http')) {
+            return profileImage;
         }
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
-        return `${backendUrl}${url}`;
+        return `${backendUrl}${profileImage}`;
     };
 
     return (
@@ -103,11 +104,11 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
                 <h2 className="text-xl font-bold mb-4">{type === 'followers' ? '팔로워' : '팔로잉'}</h2>
                 <ul>
                     {users.map((user) => (
-                        <li key={user.nickname} className="flex items-center justify-between mb-2">
+                        <li key={user.id} className="flex items-center justify-between mb-2">
                             <div className="flex items-center">
                                 {user.profileImage ? (
                                     <Image
-                                        src={getProfileImageUrl(user)} // 기본 프로필 이미지 사용
+                                        src={getProfileImageUrl(user.profileImage)}
                                         alt={`${user.nickname}'s profile image`}
                                         width={40}
                                         height={40}

@@ -35,6 +35,7 @@ export interface PracticePlaceResponse {
 
 // 마이페이지에서 User와 Post 인터페이스 추가
 export interface User {
+    id: string;
     nickname: string;
     profileImage?: string;
     profileUrl?: string;
@@ -78,10 +79,4 @@ export interface PerformanceRecord {
     region: string;
     address: string;
     date: string;
-}
-
-//팔로워 팔로잉 사람 목록
-export interface FollowRelation {
-    followerNickname: string;
-    followingNickname: string;
 }
