@@ -43,8 +43,8 @@ export interface User {
     part?: string;
     type?: string;
     introduction?: string;
-    followers: string[]; // 팔로워 닉네임 목록
-    following: string[]; // 팔로잉 닉네임 목록
+    followers: number; // 팔로워 닉네임 목록
+    following: number; // 팔로잉 닉네임 목록
 }
 
 export interface Comment {

@@ -14,6 +14,7 @@ interface FollowListModalProps {
     nickname: string;
     type: 'followers' | 'following';
     onClose: () => void;
+    id: string;
 }
 
 const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClose }) => {
@@ -60,14 +61,14 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
         return <div>Error loading {type} list.</div>;
     }
 
-    const handleDeleteClick = (nickname: string) => {
+    const handleDeleteClick = (id: string) => {
         toast(
             <div className="flex flex-col items-center justify-center">
                 <p>정말로 팔로우를 삭제하시겠습니까?</p>
                 <div className="flex justify-around mt-2 mr-3">
                     <button
                         onClick={() => {
-                            deleteFollowMutation.mutate(nickname);
+                            deleteFollowMutation.mutate(id);
                             toast.dismiss();
                         }}
                         className="bg-red-500 text-white px-4 py-1 rounded"
@@ -86,6 +87,16 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
         );
     };
 
+    // 프로필 이미지 띄워줄때 URL 받아온거 => 절대 경로로 변환
+    const getProfileImageUrl = (user: User) => {
+        const url = user.profileImage || '';
+        if (url.startsWith('http')) {
+            return url;
+        }
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
+        return `${backendUrl}${url}`;
+    };
+
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-4 rounded-lg shadow-lg w-full max-w-md">
@@ -96,8 +107,8 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
                             <div className="flex items-center">
                                 {user.profileImage ? (
                                     <Image
-                                        src={user.profileImage} // 기본 프로필 이미지 사용
-                                        alt={user.nickname}
+                                        src={getProfileImageUrl(user)} // 기본 프로필 이미지 사용
+                                        alt={`${user.nickname}'s profile image`}
                                         width={40}
                                         height={40}
                                         className="w-10 h-10 rounded-full mr-2"
@@ -125,7 +136,7 @@ const FollowListModal: React.FC<FollowListModalProps> = ({ nickname, type, onClo
                                 </button>
                                 {type === 'following' && (
                                     <button
-                                        onClick={() => handleDeleteClick(user.nickname)}
+                                        onClick={() => handleDeleteClick(user.id)}
                                         className="bg-gray-200 text-gray-500 px-2 py-2 rounded-lg"
                                     >
                                         <FaTimes size={16} />
