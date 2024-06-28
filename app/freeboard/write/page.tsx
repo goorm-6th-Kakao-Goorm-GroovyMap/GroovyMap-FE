@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import apiClient from '@/api/apiClient';
-import { useRouter } from 'next/router';
-import ImageUpload from './ImageUpload';
+import { useRouter } from 'next/navigation';
+import ImageUpload from '../ImageUpload';
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
