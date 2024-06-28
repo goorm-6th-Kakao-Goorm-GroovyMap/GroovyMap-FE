@@ -52,17 +52,19 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             return response.data;
         },
         enabled: !!postId,
+        refetchOnWindowFocus: false, // 탭 변경 시 자동으로 refetch 하지 않도록 설정
     });
 
     useEffect(() => {
         if (post) {
-            refetch();
+            setIsLiked(post.isLiked);
+            setLikes(post.likes);
         }
-    }, [post, refetch]);
+    }, [post]);
 
     const likeMutation = useMutation({
-        mutationFn: async (postId: string) => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/like`, { withCredentials: true });
+        mutationFn: async () => {
+            const response = await apiClient.post(`/mypage/photo/${postId}/like`, {}, { withCredentials: true });
             return response.data;
         },
         onMutate: async () => {
@@ -91,32 +93,32 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     });
 
     const unlikeMutation = useMutation({
-        mutationFn: async (postId: string) => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`, { withCredentials: true });
+        mutationFn: async () => {
+            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`, {}, { withCredentials: true });
             return response.data;
         },
-        onMutate: async (postId: string) => {
-            await queryClient.cancelQueries({ queryKey: ['posts', user.nickname] });
-            const previousPosts = queryClient.getQueryData<Post[]>(['posts', user.nickname]);
+        onMutate: async () => {
+            await queryClient.cancelQueries({ queryKey: ['postDetail', postId] });
+            const previousPost = queryClient.getQueryData<Post>(['postDetail', postId]);
 
-            if (previousPosts) {
-                queryClient.setQueryData<Post[]>(['posts', user.nickname], (oldPosts) =>
-                    oldPosts?.map((post) =>
-                        post.id === postId ? { ...post, likes: post.likes - 1, isLiked: false } : post
-                    )
-                );
+            if (previousPost) {
+                queryClient.setQueryData<Post>(['postDetail', postId], {
+                    ...previousPost,
+                    likes: !previousPost.isLiked ? previousPost.likes + 1 : previousPost.likes - 1,
+                    isLiked: !previousPost.isLiked,
+                });
             }
 
-            return { previousPosts };
+            return { previousPost };
         },
-        onError: (err, postId, context) => {
-            if (context?.previousPosts) {
-                queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
+        onError: (err, _, context) => {
+            if (context?.previousPost) {
+                queryClient.setQueryData<Post>(['postDetail', postId], context.previousPost);
             }
             toast.error('좋아요 취소 중 오류가 발생했습니다.');
         },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
+            queryClient.invalidateQueries({ queryKey: ['postDetail', postId] });
         },
     });
 
@@ -218,7 +220,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             >
                                 <FaHeart />
                             </button>
-                            <span className="text-gray-700">{likes}</span>
+                            <span className="text-gray-700">{post.likes}</span>
                         </div>
                     </div>
                 )}
