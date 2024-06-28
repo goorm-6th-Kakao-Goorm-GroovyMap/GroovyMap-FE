@@ -6,7 +6,8 @@ interface Post {
     id: number;
     title: string;
     content: string;
-    likes: number;
+    likesCount: number;
+    savesCount: number;
     author: string;
 }
 
@@ -35,7 +36,8 @@ const PostList: React.FC = () => {
                     <div key={post.id} onClick={() => handlePostClick(post.id)}>
                         <h2>{post.title}</h2>
                         <p>{post.content}</p>
-                        <p>Likes: {post.likes}</p>
+                        <p>Likes: {post.likesCount}</p>
+                        <p>Saves: {post.savesCount}</p>
                     </div>
                 ))}
             </div>

@@ -17,7 +17,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
     const handleUpload = async () => {
         if (selectedFile) {
             const formData = new FormData();
-            formData.append('file', selectedFile);
+            formData.append('fileNames', selectedFile);
 
             try {
                 const response = await apiClient.post('/upload', formData, {

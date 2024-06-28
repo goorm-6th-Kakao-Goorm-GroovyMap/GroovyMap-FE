@@ -16,7 +16,8 @@ interface Post {
     title: string;
     content: string; // HTML content
     author: string;
-    likes: number;
+    likesCount: number;
+    savesCount: number;
 }
 
 const PostPage: React.FC = () => {
@@ -116,7 +117,7 @@ const PostPage: React.FC = () => {
                 </div>
             )}
             <button onClick={handleLikeClick} className="flex items-center">
-                {post.likes}
+                {post.likesCount}
             </button>
             <div>
                 <textarea
