@@ -48,7 +48,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     } = useQuery<Post>({
         queryKey: ['postDetail', postId],
         queryFn: async () => {
-            const response = await apiClient.get(`/mypage/photo/${user.nickname}/${postId}`);
+            const response = await apiClient.get(`/mypage/photo/${user.nickname}/${postId}`, { withCredentials: true });
             return response.data;
         },
         enabled: !!postId,
@@ -61,7 +61,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     }, [post, refetch]);
 
     const likeMutation = useMutation({
-        mutationFn: async () => {
+        mutationFn: async (postId: string) => {
             const response = await apiClient.post(`/mypage/photo/${postId}/like`, { withCredentials: true });
             return response.data;
         },
@@ -90,8 +90,42 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         },
     });
 
-    const handleLikeClick = () => {
-        likeMutation.mutate();
+    const unlikeMutation = useMutation({
+        mutationFn: async (postId: string) => {
+            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`, { withCredentials: true });
+            return response.data;
+        },
+        onMutate: async (postId: string) => {
+            await queryClient.cancelQueries({ queryKey: ['posts', user.nickname] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', user.nickname]);
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', user.nickname], (oldPosts) =>
+                    oldPosts?.map((post) =>
+                        post.id === postId ? { ...post, likes: post.likes - 1, isLiked: false } : post
+                    )
+                );
+            }
+
+            return { previousPosts };
+        },
+        onError: (err, postId, context) => {
+            if (context?.previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
+            }
+            toast.error('좋아요 취소 중 오류가 발생했습니다.');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
+        },
+    });
+
+    const handleLikeClick = (postId: string, isLiked: boolean) => {
+        if (isLiked) {
+            unlikeMutation.mutate(postId);
+        } else {
+            likeMutation.mutate(postId);
+        }
     };
 
     const commentMutation = useMutation({
@@ -176,10 +210,11 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                         />
                         <div className="absolute bottom-2 right-2 flex items-center space-x-2">
                             <button
-                                onClick={handleLikeClick}
-                                className={`bg-white p-1 rounded-full hover:bg-gray-200 transition-colors ${
-                                    isLiked ? 'text-red-600' : 'text-gray-400'
-                                }`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLikeClick(postId, post.isLiked);
+                                }}
+                                className={`bg-white ${post.isLiked ? 'text-red-500' : 'text-gray-500'} p-1 rounded-full hover:bg-gray-200 transition-colors`}
                             >
                                 <FaHeart />
                             </button>

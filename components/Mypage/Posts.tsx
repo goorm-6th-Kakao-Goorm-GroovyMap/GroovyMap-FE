@@ -48,7 +48,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            await apiClient.delete(`/mypage/photo/${id}`);
+            await apiClient.delete(`/mypage/photo/${id}`, { withCredentials: true });
         },
         onSuccess: () => {
             refetch();
@@ -61,7 +61,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
 
     const likeMutation = useMutation({
         mutationFn: async (postId: string) => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/like`);
+            const response = await apiClient.post(`/mypage/photo/${postId}/like`, { withCredentials: true });
             return response.data;
         },
         onMutate: async (postId: string) => {
@@ -91,7 +91,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
 
     const unlikeMutation = useMutation({
         mutationFn: async (postId: string) => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`);
+            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`, { withCredentials: true });
             return response.data;
         },
         onMutate: async (postId: string) => {
