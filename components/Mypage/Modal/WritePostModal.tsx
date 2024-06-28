@@ -39,7 +39,12 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose, onPostCreated 
 
     const mutation = useMutation({
         mutationFn: async (data: FormData) => {
-            const response = await apiClient.post('/mypage/photo/write', data);
+            const response = await apiClient.post('/mypage/photo/write', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                withCredentials: true,
+            });
             return response.data;
         },
         onSuccess: () => {
@@ -55,7 +60,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose, onPostCreated 
     const handleSubmit = () => {
         const data = new FormData();
         data.append('text', formData.text);
-        data.append('userNickname', user.nickname); // 닉네임 추가
+        // data.append('userNickname', user.nickname); // 닉네임 추가
         if (formData.image) {
             data.append('image', formData.image);
         }
@@ -73,7 +78,7 @@ const WritePostModal: React.FC<WritePostModalProps> = ({ onClose, onPostCreated 
                     className="w-full p-2 border rounded-lg mb-4"
                     placeholder="내용을 입력하세요"
                 />
-                <input type="file" onChange={handleFileChange} className="w-full mb-4" />
+                <input type="file" name="Image" onChange={handleFileChange} className="w-full mb-4" />
                 <div className="flex justify-end space-x-2">
                     <button onClick={onClose} className="bg-gray-200 py-2 px-4 rounded-lg">
                         취소

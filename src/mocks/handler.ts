@@ -1,6 +1,5 @@
 import { rest } from 'msw';
-import { Post, PerformanceRecord } from '@/types/types';
-import image from 'next/image';
+import { Post, PerformanceRecord, FollowRelation } from '@/types/types';
 
 interface User {
     email: string;
@@ -12,8 +11,8 @@ interface User {
     profileImage?: string;
     profileUrl?: string;
     introduction?: string;
-    followers?: number;
-    following?: number;
+    followers: number;
+    following: number;
 }
 
 const users: User[] = [
@@ -27,62 +26,72 @@ const users: User[] = [
         profileImage: '/profile.jpeg',
         profileUrl: '/profile.jpeg',
         introduction: '안녕하세요',
-        followers: 100,
-        following: 200,
+        followers: 1,
+        following: 1,
     },
     {
         email: 'newuser@example.com',
-        password: 'password123!',
+        password: '123',
         nickname: 'lee',
         region: 'ALL',
         part: 'VOCAL',
         profileImage: '/band.png',
         profileUrl: '/profile2.jpeg',
         introduction: 'New user bio',
-        followers: 50,
-        following: 100,
+        followers: 1,
+        following: 1,
+    },
+    {
+        email: 'example3@example.com',
+        password: 'password123!',
+        nickname: 'example3',
+        region: 'ALL',
+        part: 'DRUM',
+        profileImage: '/drum.png',
+        profileUrl: '/profile3.jpeg',
+        introduction: 'Example user bio',
+        followers: 1,
+        following: 1,
+    },
+    {
+        email: 'example4@example.com',
+        password: 'password123!',
+        nickname: 'example4',
+        region: 'ALL',
+        part: 'BASS',
+        profileImage: '/bass.png',
+        profileUrl: '/profile4.jpeg',
+        introduction: 'Example user bio',
+        followers: 1,
+        following: 1,
+    },
+    {
+        email: 'example5@example.com',
+        password: 'password123!',
+        nickname: 'example5',
+        region: 'ALL',
+        part: 'PIANO',
+        profileImage: '/piano.png',
+        profileUrl: '/profile5.jpeg',
+        introduction: 'Example user bio',
+        followers: 1,
+        following: 1,
     },
 ];
 
-const posts: Post[] = [
-    {
-        id: '1',
-        text: '첫 번째 게시물',
-        image: '/dance.png',
-        userNickname: 'lavie_music',
-        userProfileImage: '/profile.jpeg',
-        comments: [
-            {
-                id: '22',
-                text: '첫 번째 댓글',
-                userNickname: 'newuser',
-                userProfileImage: '/profile.jpeg',
-            },
-        ],
-        likes: 10,
-    },
-    {
-        id: '2',
-        text: '두 번째 게시물',
-        image: '/band.png',
-        userNickname: 'lavie_music',
-        userProfileImage: '/profile.jpeg',
-        comments: [
-            {
-                id: '11',
-                text: '첫 번째 댓글',
-                userNickname: 'newuser',
-                userProfileImage: '/profile.jpeg',
-            },
-        ],
-        likes: 5,
-    },
+let followRelations: FollowRelation[] = [
+    { followerNickname: 'lee', followingNickname: 'lavie_music' },
+    { followerNickname: 'example3', followingNickname: 'lavie_music' },
+    { followerNickname: 'example4', followingNickname: 'lavie_music' },
+    { followerNickname: 'lavie_music', followingNickname: 'example3' },
+    { followerNickname: 'lavie_music', followingNickname: 'example4' },
+    { followerNickname: 'lavie_music', followingNickname: 'example5' },
 ];
 
 const performanceRecords: PerformanceRecord[] = [
     {
         id: '1',
-        description: '첫번째 공연입니다',
+        description: 'First performance',
         part: 'BAND',
         type: 'ROCK',
         latitude: 37.5665,
@@ -90,108 +99,10 @@ const performanceRecords: PerformanceRecord[] = [
         region: '서울',
         address: 'Seoul, South Korea',
         date: '2023-06-01',
-        userNickname: 'lavie_music', // 추가
+        userNickname: 'lavie_music',
     },
-    {
-        id: '2',
-        description: 'Second performance',
-        part: 'DANCE',
-        type: 'HIPHOP',
-        latitude: 37.5675,
-        longitude: 126.977,
-        region: '서울',
-        address: 'Seoul, South Korea',
-        date: '2023-07-01',
-        userNickname: 'lavie_music', // 추가
-    },
-    {
-        id: '3',
-        description: 'Third performance',
-        part: 'VOCAL',
-        type: 'POP',
-        latitude: 37.5685,
-        longitude: 126.979,
-        region: '서울',
-        address: 'Seoul, South Korea',
-        date: '2023-08-01',
-        userNickname: 'lavie_music', // 추가
-    },
-    {
-        id: '4',
-        description: 'Fourth performance',
-        part: 'BAND',
-        type: 'JAZZ',
-        latitude: 37.5695,
-        longitude: 126.976,
-        region: '서울',
-        address: 'Seoul, South Korea',
-        date: '2023-09-01',
-        userNickname: 'lavie_music', // 추가
-    },
-    {
-        id: '5',
-        description: 'Fourth performance',
-        part: 'BAND',
-        type: 'JAZZ',
-        latitude: 37.5695,
-        longitude: 126.976,
-        region: '서울',
-        address: 'Seoul, South Korea',
-        date: '2023-09-01',
-        userNickname: 'lavie_music', // 추가
-    },
-    {
-        id: '6',
-        description: 'Fourth performance',
-        part: 'BAND',
-        type: 'JAZZ',
-        latitude: 37.5695,
-        longitude: 126.976,
-        region: '서울',
-        address: 'Seoul, South Korea',
-        date: '2023-09-01',
-        userNickname: 'lavie_music', // 추가
-    },
+    // ...other records
 ];
-
-// 유틸리티 함수: 본문을 FormData로 변환
-const parseMultipartFormData = (body: string): FormData => {
-    const formData = new FormData();
-    const boundary = body.split('\r\n')[0];
-    const parts = body.split(boundary).filter((part) => part.trim() !== '--' && part.trim() !== '');
-
-    parts.forEach((part) => {
-        const [rawHeaders, rawValue] = part.split('\r\n\r\n');
-        const headers = rawHeaders.split('\r\n').reduce(
-            (acc, header) => {
-                const [key, value] = header.split(': ');
-                acc[key.toLowerCase()] = value;
-                return acc;
-            },
-            {} as Record<string, string>
-        );
-
-        if (headers['content-disposition']) {
-            const nameMatch = headers['content-disposition'].match(/name="(.+?)"/);
-            const filenameMatch = headers['content-disposition'].match(/filename="(.+?)"/);
-
-            if (nameMatch) {
-                const name = nameMatch[1];
-                const value = rawValue.slice(0, -2); // Remove the trailing CRLF
-
-                if (filenameMatch) {
-                    const filename = filenameMatch[1];
-                    const file = new File([value], filename, { type: headers['content-type'] });
-                    formData.append(name, file);
-                } else {
-                    formData.append(name, value);
-                }
-            }
-        }
-    });
-
-    return formData;
-};
 
 export const handlers = [
     rest.post('/login', async (req, res, ctx) => {
@@ -249,7 +160,6 @@ export const handlers = [
 
     rest.get('/mypage/:nickname', async (req, res, ctx) => {
         const { nickname } = req.params as { nickname: string };
-        console.log('Fetching user with nickname:', nickname);
         const user = users.find((user) => user.nickname === nickname);
         if (user) {
             return res(
@@ -295,66 +205,69 @@ export const handlers = [
         return res(ctx.status(404), ctx.json({ message: 'User not found' }));
     }),
 
-    rest.get('/mypage/photo/:nickname', async (req, res, ctx) => {
-        const { nickname } = req.params as { nickname: string };
-        const userPosts = posts.filter((post) => post.userNickname === nickname);
-        return res(ctx.status(200), ctx.json(userPosts));
-    }),
+    rest.post('/mypage/following', async (req, res, ctx) => {
+        const { nickname, followNickname } = req.body as { nickname: string; followNickname: string };
+        const user = users.find((user) => user.nickname === nickname);
+        const targetUser = users.find((user) => user.nickname === followNickname);
 
-    rest.get('/mypage/photo/:nickname/:postId', async (req, res, ctx) => {
-        const { nickname, postId } = req.params as { nickname: string; postId: string };
-        const post = posts.find((post) => post.userNickname === nickname && post.id === postId);
-        if (post) {
-            return res(ctx.status(200), ctx.json(post));
+        if (user && targetUser) {
+            if (
+                !followRelations.some(
+                    (rel) => rel.followerNickname === nickname && rel.followingNickname === followNickname
+                )
+            ) {
+                followRelations.push({ followerNickname: nickname, followingNickname: followNickname });
+                user.following += 1;
+                targetUser.followers += 1;
+            }
+            return res(ctx.status(200), ctx.json({ success: true }));
         }
-        return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
+        return res(ctx.status(404), ctx.json({ success: false, message: 'User not found' }));
     }),
 
-    rest.post('/mypage/performance/write', async (req, res, ctx) => {
-        const body = await req.text();
-        const formData = parseMultipartFormData(body);
-        const description = formData.get('description') as string;
-        const address = formData.get('address') as string;
-        const date = formData.get('date') as string;
-        const part = formData.get('part') as string;
-        const type = formData.get('type') as string;
-        const region = formData.get('region') as string;
-        const latitude = parseFloat(formData.get('latitude') as string);
-        const longitude = parseFloat(formData.get('longitude') as string);
-        const userNickname = formData.get('userNickname') as string;
+    rest.delete('/mypage/unfollow', async (req, res, ctx) => {
+        const { nickname, followNickname } = req.body as { nickname: string; followNickname: string };
+        const user = users.find((user) => user.nickname === nickname);
+        const targetUser = users.find((user) => user.nickname === followNickname);
 
-        const newRecord: PerformanceRecord = {
-            id: (performanceRecords.length + 1).toString(),
-            description,
-            address,
-            date,
-            part: part as 'BAND' | 'DANCE' | 'VOCAL',
-            type,
-            region,
-            latitude,
-            longitude,
-            userNickname,
-        };
-
-        performanceRecords.push(newRecord);
-        return res(ctx.status(201), ctx.json(newRecord));
-    }),
-
-    rest.get('/mypage/performance/:nickname', async (req, res, ctx) => {
-        const { nickname } = req.params as { nickname: string };
-        const userRecords = performanceRecords.filter((record) => record.userNickname === nickname);
-        return res(ctx.status(200), ctx.json(userRecords));
-    }),
-
-    rest.post('/mypage/photo/:postId/like', async (req, res, ctx) => {
-        const { postId } = req.params;
-        const post = posts.find((post) => post.id === postId);
-
-        if (post) {
-            post.likes += 1;
-            return res(ctx.status(200), ctx.json(post));
+        if (user && targetUser) {
+            followRelations = followRelations.filter(
+                (rel) => !(rel.followerNickname === nickname && rel.followingNickname === followNickname)
+            );
+            user.following -= 1;
+            targetUser.followers -= 1;
+            return res(ctx.status(200), ctx.json({ success: true }));
         }
+        return res(ctx.status(404), ctx.json({ success: false, message: 'User not found' }));
+    }),
 
-        return res(ctx.status(404), ctx.json({ message: 'Post not found' }));
+    rest.get('/mypage/:nickname/followers', async (req, res, ctx) => {
+        const { nickname } = req.params as { nickname: string };
+        const user = users.find((user) => user.nickname === nickname);
+
+        if (user) {
+            const followers = followRelations
+                .filter((rel) => rel.followingNickname === nickname)
+                .map((rel) => users.find((u) => u.nickname === rel.followerNickname))
+                .filter(Boolean) as User[];
+
+            return res(ctx.status(200), ctx.json(followers));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
+    }),
+
+    rest.get('/mypage/:nickname/following', async (req, res, ctx) => {
+        const { nickname } = req.params as { nickname: string };
+        const user = users.find((user) => user.nickname === nickname);
+
+        if (user) {
+            const following = followRelations
+                .filter((rel) => rel.followerNickname === nickname)
+                .map((rel) => users.find((u) => u.nickname === rel.followingNickname))
+                .filter(Boolean) as User[];
+
+            return res(ctx.status(200), ctx.json(following));
+        }
+        return res(ctx.status(404), ctx.json({ message: 'User not found' }));
     }),
 ];

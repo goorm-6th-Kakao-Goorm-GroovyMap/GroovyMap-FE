@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 
 interface PostDetailModalProps {
     postId: string;
-    currentUser: User; // 현재 로그인한 사용자 정보
+    currentUser?: User; // 현재 로그인한 사용자 정보
     user: User; // 마이페이지의 주인 정보
     onClose: () => void;
     onNext: () => void;
@@ -32,6 +32,8 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     const modalRef = useRef<HTMLDivElement>(null);
     const queryClient = useQueryClient();
     const [comment, setComment] = useState('');
+    const [isLiked, setIsLiked] = useState(false);
+    const [likes, setLikes] = useState(0);
 
     const handleClickOutside = (event: React.MouseEvent) => {
         if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -53,14 +55,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
     });
 
     useEffect(() => {
-        if (postId) {
+        if (post) {
             refetch();
         }
-    }, [postId, refetch]);
+    }, [post, refetch]);
 
     const likeMutation = useMutation({
         mutationFn: async () => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/like`);
+            const response = await apiClient.post(`/mypage/photo/${postId}/like`, { withCredentials: true });
             return response.data;
         },
         onMutate: async () => {
@@ -68,14 +70,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             const previousPost = queryClient.getQueryData<Post>(['postDetail', postId]);
 
             if (previousPost) {
-                queryClient.setQueryData<Post>(['postDetail', postId], (oldPost) => {
-                    if (oldPost) {
-                        return {
-                            ...oldPost,
-                            likes: oldPost.likes + 1,
-                        };
-                    }
-                    return oldPost;
+                queryClient.setQueryData<Post>(['postDetail', postId], {
+                    ...previousPost,
+                    likes: previousPost.isLiked ? previousPost.likes - 1 : previousPost.likes + 1,
+                    isLiked: !previousPost.isLiked,
                 });
             }
 
@@ -96,15 +94,18 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         likeMutation.mutate();
     };
 
-    //댓글 추가 요청
     const commentMutation = useMutation({
         mutationFn: async (newComment: string) => {
-            const response = await apiClient.post(`/mypage/photo/${postId}/comments`, { text: newComment });
+            const response = await apiClient.post(
+                `/mypage/photo/${postId}/comments`,
+                { text: newComment },
+                { withCredentials: true }
+            );
             return response.data;
         },
         onSuccess: () => {
             setComment('');
-            refetch(); // 댓글 등록 후 포스트 정보를 다시 가져옴
+            refetch();
             toast.success('댓글이 성공적으로 등록되었습니다.');
         },
         onError: () => {
@@ -121,14 +122,15 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         commentMutation.mutate(comment);
     };
 
-    //댓글 삭제 요청
     const deleteCommentMutation = useMutation({
         mutationFn: async (id: string) => {
-            const response = await apiClient.delete(`/mypage/photo/${postId}/comments/${id}`);
+            const response = await apiClient.delete(`/mypage/photo/${postId}/comments/${id}`, {
+                withCredentials: true,
+            });
             return response.data;
         },
         onSuccess: () => {
-            refetch(); // 댓글 삭제 후 포스트 정보를 다시 가져옴
+            refetch();
             toast.success('댓글이 성공적으로 삭제되었습니다.');
         },
         onError: () => {
@@ -136,7 +138,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         },
     });
 
-    // 댓글 삭제
     const handleCommentDelete = (id: string) => {
         deleteCommentMutation.mutate(id);
     };
@@ -149,51 +150,61 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         return <div>게시물을 불러오는 중 오류가 발생했습니다.</div>;
     }
 
+    //유저 프로필 이미지 가져오기
+    const getProfileImageUrl = (userProfileUrl: string | undefined) => {
+        if (!userProfileUrl) return '';
+        if (typeof userProfileUrl === 'string' && userProfileUrl.startsWith('http')) return userProfileUrl;
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
+        return `${backendUrl}${userProfileUrl}`;
+    };
+
     return (
         <div
             className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
             onClick={handleClickOutside}
         >
             <div ref={modalRef} className="relative bg-white p-4 rounded-lg shadow-lg w-full max-w-2xl">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-                    ✕
-                </button>
                 {post.image && (
                     <div className="relative w-full h-96 mb-4">
                         <Image
                             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
                             alt="Post"
-                            layout="fill"
-                            objectFit="cover"
+                            fill
+                            style={{ objectFit: 'contain' }}
+                            sizes="(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             className="rounded-lg"
                         />
                         <div className="absolute bottom-2 right-2 flex items-center space-x-2">
                             <button
                                 onClick={handleLikeClick}
-                                className="bg-white text-red-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                className={`bg-white p-1 rounded-full hover:bg-gray-200 transition-colors ${
+                                    isLiked ? 'text-red-600' : 'text-gray-400'
+                                }`}
                             >
                                 <FaHeart />
                             </button>
-                            <span className="text-gray-700">{post.likes}</span>
+                            <span className="text-gray-700">{likes}</span>
                         </div>
                     </div>
                 )}
                 <div className="p-4">
                     <h2 className="text-xl font-bold mb-2">
-                        <div className="flex items-center mb-4">
+                        <div className="relative flex items-center mb-4">
                             <Image
-                                src={post.userProfileImage}
-                                alt={post.userNickname}
+                                src={getProfileImageUrl(user.profileImage)}
+                                alt={user.nickname}
                                 width={32}
                                 height={32}
+                                priority
+                                style={{ objectFit: 'cover' }}
                                 className="w-8 h-8 rounded-full mr-2"
                             />
-                            <h2 className="text-xl font-bold">{post.userNickname}</h2>
+                            <h2 className="text-xl font-bold">{user.nickname}</h2>
                         </div>
                     </h2>
                     <p className="mb-4">{post.text}</p>
 
-                    <div className="p-4">
+                    <div className="">
                         <h3 className="font-bold mb-2">댓글</h3>
                         {post.comments && post.comments.length > 0 ? (
                             <ul>
@@ -201,15 +212,22 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                                     <li key={comment.id} className="mb-2">
                                         <div className="flex items-center space-x-2">
                                             <Image
-                                                src={comment.userProfileImage}
+                                                src={getProfileImageUrl(comment.userProfileImage)}
                                                 alt={comment.userNickname}
                                                 width={32}
                                                 height={32}
                                                 className="w-8 h-8 rounded-full"
                                             />
-                                            <p className="font-semibold">{comment.userNickname}</p>
-                                            {/* 댓글 작성자만 삭제할 수 있도록, 댓글 유저 닉네임과 로그인 유저 닉네임이 같은 경우*/}
-                                            {comment.userNickname === currentUser.nickname && (
+                                            <div className="flex-1">
+                                                <p className="text-sm">
+                                                    <span className="font-semibold">{comment.userNickname}</span>{' '}
+                                                    {comment.text}
+                                                </p>
+                                                <span className="text-xs text-gray-500">
+                                                    {new Date(comment.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            {comment.userNickname === currentUser?.nickname && (
                                                 <button
                                                     onClick={() => handleCommentDelete(comment.id)}
                                                     className="text-red-500 hover:text-red-700"
@@ -218,7 +236,6 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                                                 </button>
                                             )}
                                         </div>
-                                        <p>{comment.text}</p>
                                     </li>
                                 ))}
                             </ul>
@@ -226,7 +243,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             <p>댓글이 없습니다.</p>
                         )}
                     </div>
-                    <form onSubmit={handleCommentSubmit} className="mt-4">
+                    <form onSubmit={handleCommentSubmit} className="mt-4 justify-right">
                         <input
                             type="text"
                             value={comment}

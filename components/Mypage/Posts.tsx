@@ -28,7 +28,9 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
         const response = await apiClient.get(`/mypage/photo/${user.nickname}`);
         const posts = response.data.myPagePhotoDtos.map((dto: any) => ({
             id: dto.id,
-            image: dto.photoUrl, // photoUrl을 image로 매핑시킴 => 코드상에서 image로 쓰기 때문에
+            image: dto.photoUrl,
+            likes: dto.likes,
+            isLiked: dto.isLiked, // 좋아요 상태 추가
         }));
         return posts;
     };
@@ -68,7 +70,9 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
 
             if (previousPosts) {
                 queryClient.setQueryData<Post[]>(['posts', user.nickname], (oldPosts) =>
-                    oldPosts?.map((post) => (post.id === postId ? { ...post, likes: post.likes + 1 } : post))
+                    oldPosts?.map((post) =>
+                        post.id === postId ? { ...post, likes: post.likes + 1, isLiked: true } : post
+                    )
                 );
             }
 
@@ -85,8 +89,42 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
         },
     });
 
-    const handleLikeClick = (postId: string) => {
-        likeMutation.mutate(postId);
+    const unlikeMutation = useMutation({
+        mutationFn: async (postId: string) => {
+            const response = await apiClient.post(`/mypage/photo/${postId}/unlike`);
+            return response.data;
+        },
+        onMutate: async (postId: string) => {
+            await queryClient.cancelQueries({ queryKey: ['posts', user.nickname] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', user.nickname]);
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', user.nickname], (oldPosts) =>
+                    oldPosts?.map((post) =>
+                        post.id === postId ? { ...post, likes: post.likes - 1, isLiked: false } : post
+                    )
+                );
+            }
+
+            return { previousPosts };
+        },
+        onError: (err, postId, context) => {
+            if (context?.previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
+            }
+            toast.error('좋아요 취소 중 오류가 발생했습니다.');
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
+        },
+    });
+
+    const handleLikeClick = (postId: string, isLiked: boolean) => {
+        if (isLiked) {
+            unlikeMutation.mutate(postId);
+        } else {
+            likeMutation.mutate(postId);
+        }
     };
 
     if (isLoading) {
@@ -161,13 +199,15 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                 {posts.map((post, index) => (
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
                         {post.image && (
-                            <div className="w-full h-0" style={{ paddingBottom: '100%' }}>
+                            <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
                                     src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
                                     alt="Post Image"
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-lg"
+                                    fill
+                                    priority
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                    style={{ objectFit: 'cover' }}
+                                    className="rounded-sm"
                                 />
                             </div>
                         )}
@@ -175,9 +215,9 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleLikeClick(post.id);
+                                    handleLikeClick(post.id, post.isLiked);
                                 }}
-                                className="bg-white text-red-500 p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                className={`bg-white ${post.isLiked ? 'text-red-500' : 'text-gray-500'} p-1 rounded-full hover:bg-gray-200 transition-colors`}
                             >
                                 <FaHeart />
                             </button>
@@ -203,8 +243,8 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
             {selectedPostIndex !== null && (
                 <PostDetailModal
                     postId={posts[selectedPostIndex].id} // postId 전달
-                    // user={user}
-                    user={currentUser} // 로그인한 사용자 정보 전달
+                    user={user}
+                    currentUser={currentUser} // 로그인한 사용자 정보 전달
                     onClose={() => {
                         setSelectedPostIndex(null);
                         refetch(); // 모달 닫을 때 전체 목록을 다시 가져옴

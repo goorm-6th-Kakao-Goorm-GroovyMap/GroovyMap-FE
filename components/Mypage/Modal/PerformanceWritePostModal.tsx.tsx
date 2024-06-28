@@ -28,6 +28,7 @@ const PerformanceWritePostModal: React.FC<PerformanceWritePostModalProps> = ({ o
         mutationFn: async (newRecord: FormData) => {
             const response = await apiClient.post(`/mypage/performance/write`, newRecord, {
                 headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true,
             });
             return response.data;
         },

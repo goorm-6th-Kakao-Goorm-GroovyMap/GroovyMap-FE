@@ -78,8 +78,8 @@ const SettingModal: React.FC<SettingModalProps> = ({ onClose, onProfileUpdate })
             await onProfileUpdate();
             // URL 이동
             router.push(`/mypage/${data.nickname}`);
-
-            onClose();
+            //데이터의 닉네임이 바뀐거나, 바뀌지 않은거나 둘다
+            onClose(); //모달창 닫김
         },
         onError: (error) => {
             toast.error('프로필 업데이트 중 오류가 발생했습니다.');

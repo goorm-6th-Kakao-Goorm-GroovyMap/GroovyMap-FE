@@ -43,8 +43,8 @@ export interface User {
     part?: string;
     type?: string;
     introduction?: string;
-    followers?: number;
-    following?: number;
+    followers: string[]; // 팔로워 닉네임 목록
+    following: string[]; // 팔로잉 닉네임 목록
 }
 
 export interface Comment {
@@ -52,6 +52,7 @@ export interface Comment {
     text: string;
     userNickname: string;
     userProfileImage: string;
+    createdAt: string;
 }
 
 export interface Post {
@@ -62,6 +63,7 @@ export interface Post {
     userNickname: string;
     userProfileImage: string;
     likes: number;
+    isLiked: boolean;
 }
 
 //마이페이지 공연기록 타입
@@ -76,4 +78,10 @@ export interface PerformanceRecord {
     region: string;
     address: string;
     date: string;
+}
+
+//팔로워 팔로잉 사람 목록
+export interface FollowRelation {
+    followerNickname: string;
+    followingNickname: string;
 }

@@ -112,7 +112,7 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
     //글 삭제 기능
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            await apiClient.delete(`/mypage/performance/${id}`);
+            await apiClient.delete(`/mypage/performance/${id}`, { withCredentials: true });
         },
         onSuccess: () => {
             refetch();

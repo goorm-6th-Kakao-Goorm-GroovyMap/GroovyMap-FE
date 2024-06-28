@@ -66,12 +66,13 @@ const RightSidebar = () => {
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="w-8 h-8 rounded-full overflow-hidden">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden">
                                     <Image
                                         src={getProfileImageUrl(user.profileUrl)}
                                         alt="User Profile"
-                                        layout="fill"
-                                        objectFit="cover"
+                                        fill
+                                        priority
+                                        style={{ objectFit: 'cover' }} // objectFit 대체
                                         className="rounded-full"
                                     />
                                 </div>
