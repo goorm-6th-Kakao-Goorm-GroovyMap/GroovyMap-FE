@@ -8,10 +8,12 @@ import { IoMdSearch } from 'react-icons/io';
 import Recruit_post from './PostList';
 import WritePostForm from './WritePostForm';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
-import PostContent from './Post/[postId]/postContent';
+import PostContent from './Post/[postId]/page';
 import { useParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import KakaoMap from './kakaoMap';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
 
 const Recruit_page: React.FC = () => {
     const [isMapVisible, setIsMapVisible] = useState(false);
@@ -26,8 +28,7 @@ const Recruit_page: React.FC = () => {
     const { postId } = useParams<{ postId: string }>();
     const [locations, setLocations] = useState<Location[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-
-    const authorId = 1;
+    const currentUser = useRecoilValue(userState);
 
     const fetchPosts = async () => {
         try {
@@ -44,18 +45,22 @@ const Recruit_page: React.FC = () => {
         }
     };
 
+    const fetchComments = async (postId: number) => {
+        try {
+            const response = await apiClient.get(`/recruitboard/${postId}/comments`);
+            if (response.status === 200) {
+                setComments((prev) => ({ ...prev, [postId]: response.data }));
+            } else {
+                console.error(response.statusText);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
+
     useEffect(() => {
         if (selectedPost !== null) {
-            const fetchComments = async () => {
-                try {
-                    const response = await apiClient.post(`/recruitboard/${selectedPost}/comment`);
-                    setComments((prev) => ({ ...prev, [selectedPost]: response.data }));
-                } catch (error) {
-                    console.error(error);
-                }
-            };
-
-            fetchComments();
+            fetchComments(selectedPost);
         }
     }, [selectedPost]);
 
@@ -77,13 +82,13 @@ const Recruit_page: React.FC = () => {
         setLocations(locations);
     }, [posts]);
 
-    const handleAddComment = async (postId: number, authorId: number, content: string, date: string) => {
+    const handleAddComment = async (postId: number, content: string, date: string) => {
         try {
             const response = await apiClient.post(`/recruitboard/${postId}/comment`, {
                 postId,
-                authorId,
+                authorId: currentUser.nickname,
                 content,
-                date: date,
+                date,
             });
 
             if (response.status === 200) {
@@ -264,7 +269,7 @@ const Recruit_page: React.FC = () => {
                                       comments={comments[selectedPost] || []}
                                       addComment={handleAddComment}
                                       goBack={handleGoBack}
-                                      authorId={authorId}
+                                      authorId={currentUser.nickname}
                                   />
                               )
                             : isPosting && <Recruit_post posts={filteredPosts} onPostClick={handlePostClick} />}

@@ -12,6 +12,7 @@ interface WritePostFormProps {
 }
 
 const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList, toggleWriting }) => {
+    const [author] = useState('');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [region, setRegion] = useState('');
@@ -28,6 +29,7 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
         event.preventDefault();
 
         const formData = new FormData();
+        formData.append('author', author);
         formData.append('title', title);
         formData.append('content', content);
         formData.append('region', region);
