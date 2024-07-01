@@ -49,6 +49,13 @@ const RightSidebar = () => {
         }
     };
 
+    const getProfileImageUrl = (userProfileUrl: string | undefined) => {
+        if (!userProfileUrl) return '';
+        if (typeof userProfileUrl === 'string' && userProfileUrl.startsWith('http')) return userProfileUrl;
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
+        return `${backendUrl}${userProfileUrl}`;
+    };
+
     if (!isMounted) {
         return null;
     }
@@ -65,17 +72,18 @@ const RightSidebar = () => {
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden">
                                     <Image
-                                        src={user.profileUrl}
+                                        src={getProfileImageUrl(user.profileUrl)}
                                         alt="User Profile"
-                                        layout="fill"
-                                        objectFit="cover"
+                                        fill
+                                        priority
+                                        style={{ objectFit: 'cover' }} // objectFit 대체
                                         className="rounded-full"
                                     />
                                 </div>
                             ) : (
-                                <div className="w-10 h-10 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                <div className="w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full">
                                     {user.nickname.charAt(0).toUpperCase()}
                                 </div>
                             )}

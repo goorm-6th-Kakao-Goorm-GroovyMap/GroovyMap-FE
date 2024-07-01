@@ -37,7 +37,10 @@ const Login = () => {
             return response.data;
         },
         onSuccess: async (data) => {
-            toast.success('로그인에 성공했습니다!');
+            if (!toast.isActive('loginSuccess')) {
+                // toastId를 사용하여 중복 방지
+                toast.success('로그인에 성공했습니다!', { toastId: 'loginSuccess' });
+            }
             confetti({
                 particleCount: 100,
                 spread: 160,
@@ -49,15 +52,21 @@ const Login = () => {
                     nickname: userInfoResponse.data.nickname,
                     profileUrl: userInfoResponse.data.profileUrl, // profileUrl로
                 });
-                router.push(`/`);
+                router.push(`/mypage/${userInfoResponse.data.nickname}`);
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
-                toast.error('유저 정보를 가져오는 데 실패했습니다.');
+                if (!toast.isActive('userInfoError')) {
+                    // toastId를 사용하여 중복 방지
+                    toast.error('유저 정보를 가져오는 데 실패했습니다.', { toastId: 'userInfoError' });
+                }
             }
         },
         onError: (error) => {
             console.log('Error during login:', error);
-            toast.error('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.');
+            if (!toast.isActive('loginError')) {
+                // toastId를 사용하여 중복 방지
+                toast.error('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.', { toastId: 'loginError' });
+            }
         },
     });
 

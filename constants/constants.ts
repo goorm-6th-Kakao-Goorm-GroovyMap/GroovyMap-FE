@@ -45,7 +45,7 @@ export const types: Record<string, { name: string }> = {
     KEYBOARD: { name: '건반' },
     HIPHOP: { name: '힙합' },
     JAZZ: { name: '재즈' },
-    ROCKING: { name: '락킹' },
+    LOCKING: { name: '락킹' },
     // 필요한 다른 타입 추가
 };
 

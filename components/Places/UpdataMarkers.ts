@@ -46,7 +46,11 @@ export const updateMarkers = <T extends Place>({
         });
 
         const infowindow = new window.kakao.maps.InfoWindow({
-            content: `<div style="padding:5px;">${place.name}</div>`,
+            content: ` <div style="padding:5px;">
+            <strong>${place.name}</strong>
+            <br>
+            <span>${place.part}</span>
+        </div>`,
         });
 
         window.kakao.maps.event.addListener(marker, 'mouseover', () => {
