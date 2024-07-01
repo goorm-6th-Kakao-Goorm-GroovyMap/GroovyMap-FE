@@ -26,10 +26,10 @@ import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 
 const markerImages: { [key: string]: string } = {
-    BAND: '/guitar.svg',
-    DANCE: '/guitar.svg',
-    VOCAL: '/guitar.svg',
-    default: '/guitar.svg',
+    BAND: '/band.svg',
+    DANCE: '/dance.svg',
+    VOCAL: '/singing.svg',
+    default: '/band.svg',
 };
 
 const PerformancePlace: React.FC = () => {
@@ -82,8 +82,8 @@ const PerformancePlace: React.FC = () => {
     const addPlaceMutation = useMutation<PerformancePlace, Error, Omit<PerformancePlace, 'id'>>({
         mutationFn: addPerformancePlace,
         onSuccess: async (newPlace) => {
-            if (!newPlace.id) {
-                console.error('Returned ID is undefined.');
+            if (!newPlace.id || typeof newPlace.id !== 'number') {
+                // 여기서 newPlace.id가 number 타입인지 확인                console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }

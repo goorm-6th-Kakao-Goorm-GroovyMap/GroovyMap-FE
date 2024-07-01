@@ -7,13 +7,11 @@ const { persistAtom } = recoilPersist();
 export const initialUserState: LoginUser = {
     nickname: '',
     profileUrl: '',
-    token: '',
 };
 
 export interface LoginUser {
     nickname: string; //
     profileUrl: string;
-    token: string;
 }
 
 // 유저 정보 상태
