@@ -31,6 +31,8 @@ const MyPage: React.FC = () => {
     const [isOwner, setIsOwner] = useState(false);
     const [isFollowListOpen, setIsFollowListOpen] = useState(false);
     const [followListType, setFollowListType] = useState<'followers' | 'following'>('followers');
+    const [followersCount, setFollowersCount] = useState<number>(0);
+    const [followingCount, setFollowingCount] = useState<number>(0);
 
     // 사용자 데이터를 가져오는 함수
     const fetchUserData = async (nickname: string): Promise<User> => {
@@ -50,11 +52,13 @@ const MyPage: React.FC = () => {
         enabled: !!nickname, // nickname이 존재할 때만 쿼리를 실행
     });
 
-    // userData가 변경될 때마다 myPageUserState를 업데이트함
+    // userData가 변경될 때마다 myPageUserState를 업데이트함, 팔로우 팔로잉 숫자도 업데이트
     useEffect(() => {
         if (userData && currentUser) {
             setMyPageUser(userData);
             setIsOwner(currentUser.nickname === userData.nickname);
+            setFollowersCount(userData.followers);
+            setFollowingCount(userData.following);
         }
     }, [userData, currentUser, setMyPageUser]);
 
@@ -74,7 +78,7 @@ const MyPage: React.FC = () => {
 
         try {
             const response = await apiClient.post(
-                '/mypage/following',
+                `/mypage/following/${userData.nickname}`, // URL에 마이페이지 유저의 닉네임 포함
                 {
                     nickname: currentUser.nickname,
                     followNickname: userData.nickname, // 현재 로그인 유저가 보고 있는 마이페이지 유저를 팔로잉 함.
@@ -83,12 +87,27 @@ const MyPage: React.FC = () => {
             );
             if (response.data.success) {
                 refetch(); // 팔로우 후 리패치하여 UI 업데이트
-                toast.success(`${userData.nickname}님을 팔로우 하였습니다.`);
+                setFollowersCount((prev) => prev + 1); // 팔로워 숫자 증가
+                if (!toast.isActive('followSuccess')) {
+                    // toastId를 사용하여 중복 방지
+                    toast.success(`${userData.nickname}님을 팔로우 하였습니다.`, { toastId: 'followSuccess' });
+                }
             }
         } catch (error) {
             console.error('팔로우 중 오류가 발생했습니다:', error);
-            toast.error('팔로우 중 오류가 발생했습니다.');
+            if (!toast.isActive('followError')) {
+                // toastId를 사용하여 중복 방지
+                toast.error('팔로우 중 오류가 발생했습니다.', { toastId: 'followError' });
+            }
         }
+    };
+
+    const updateFollowerCounts = (delta: number) => {
+        setFollowersCount((prevCount) => prevCount + delta);
+    };
+
+    const updateFollowingCounts = (delta: number) => {
+        setFollowingCount((prevCount) => prevCount + delta);
     };
 
     // 활성화된 탭에 따라 콘텐츠를 렌더링하는 함수
@@ -162,7 +181,7 @@ const MyPage: React.FC = () => {
                                         setIsFollowListOpen(true);
                                     }}
                                 >
-                                    {userData.followers}명
+                                    {followersCount}명
                                 </button>
                             </span>
                             <span className="font-semibold">
@@ -175,7 +194,7 @@ const MyPage: React.FC = () => {
                                         setIsFollowListOpen(true);
                                     }}
                                 >
-                                    {userData.following}명
+                                    {followingCount}명
                                 </button>
                             </span>
                         </div>
@@ -242,7 +261,12 @@ const MyPage: React.FC = () => {
             {/* 팔로우 팔로잉 리스트 모달 오픈 true 일때 */}
             {isFollowListOpen && (
                 //팔로우 팔로잉 타입 전달, 유저 닉네임 전달
-                <FollowListModal nickname={nickname} type={followListType} onClose={() => setIsFollowListOpen(false)} />
+                <FollowListModal
+                    updateFollowingCounts={updateFollowingCounts} // 팔로잉 업데이트 함수 전달
+                    nickname={nickname}
+                    type={followListType}
+                    onClose={() => setIsFollowListOpen(false)}
+                />
             )}
         </div>
     );

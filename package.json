@@ -40,6 +40,7 @@
         "@types/uuid": "^9.0.8",
         "eslint": "^8",
         "eslint-config-next": "14.2.3",
+        "file-loader": "^6.2.0",
         "msw": "^0.29.0",
         "postcss": "^8",
         "prettier": "3.3.0",

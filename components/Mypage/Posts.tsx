@@ -6,14 +6,14 @@ import PostDetailModal from './PostDetailModal';
 import WritePostModal from './Modal/WritePostModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
-import { User, Post } from '@/types/types';
+import { User, Post, LoginUser } from '@/types/types';
 import Image from 'next/image';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 interface PostsProps {
-    currentUser: User; // 현재 로그인한 사용자
+    currentUser: LoginUser; // 현재 로그인한 사용자
     isOwner: boolean;
     user: User;
     onWritePost: () => void;
@@ -52,7 +52,10 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
         },
         onSuccess: () => {
             refetch();
-            toast.success('게시물이 성공적으로 삭제되었습니다.');
+            if (!toast.isActive('deleteSuccess')) {
+                // toastId를 사용하여 중복 방지
+                toast.success('게시물이 성공적으로 삭제되었습니다.', { toastId: 'deleteSuccess' });
+            }
         },
         onError: () => {
             toast.error('게시물 삭제 중 오류가 발생했습니다.');
@@ -82,7 +85,10 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
             if (context?.previousPosts) {
                 queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
             }
-            toast.error('좋아요 중 오류가 발생했습니다.');
+            if (!toast.isActive('likeError')) {
+                // toastId를 사용하여 중복 방지
+                toast.error('좋아요 중 오류가 발생했습니다.', { toastId: 'likeError' });
+            }
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
@@ -112,7 +118,10 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
             if (context?.previousPosts) {
                 queryClient.setQueryData<Post[]>(['posts', user.nickname], context.previousPosts);
             }
-            toast.error('좋아요 취소 중 오류가 발생했습니다.');
+            if (!toast.isActive('unlikeError')) {
+                // toastId를 사용하여 중복 방지
+                toast.error('좋아요 취소 중 오류가 발생했습니다.', { toastId: 'unlikeError' });
+            }
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['posts', user.nickname] });
@@ -181,6 +190,11 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
         );
     };
 
+    const isVideo = (image: string) => {
+        const videoExtensions = ['.mp4'];
+        return videoExtensions.some((ext) => image.toLowerCase().includes(ext));
+    };
+
     return (
         <div className="p-4">
             <ToastContainer position="top-center" limit={1} />
@@ -198,7 +212,24 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {posts.map((post, index) => (
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
-                        {post.image && (
+                        {isVideo(post.image as string) ? (
+                            <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
+                                <video
+                                    controls
+                                    muted
+                                    autoPlay
+                                    playsInline
+                                    preload="auto"
+                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                    className="rounded-sm"
+                                >
+                                    <source
+                                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
+                                        type="video/mp4"
+                                    />
+                                </video>
+                            </div>
+                        ) : (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
                                     src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
@@ -237,6 +268,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                     </div>
                 ))}
             </div>
+
             {isWritePostOpen && (
                 <WritePostModal onClose={() => setWritePostOpen(false)} onPostCreated={handlePostCreated} />
             )}

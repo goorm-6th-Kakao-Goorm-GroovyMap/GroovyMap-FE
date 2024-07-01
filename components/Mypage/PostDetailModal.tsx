@@ -122,12 +122,14 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         },
     });
 
-    const handleLikeClick = (postId: string, isLiked: boolean) => {
+    const handleLikeClick = () => {
         if (isLiked) {
-            unlikeMutation.mutate(postId);
+            unlikeMutation.mutate();
         } else {
-            likeMutation.mutate(postId);
+            likeMutation.mutate();
         }
+        setIsLiked(!isLiked);
+        setLikes(likes + (isLiked ? -1 : 1));
     };
 
     const commentMutation = useMutation({
@@ -194,13 +196,43 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
         return `${backendUrl}${userProfileUrl}`;
     };
 
+    //비디오 변환
+    const isVideo = (image: string) => {
+        const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
+        return videoExtensions.some((ext) => image.toLowerCase().includes(ext));
+    };
+
     return (
         <div
             className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
             onClick={handleClickOutside}
         >
             <div ref={modalRef} className="relative bg-white p-4 rounded-lg shadow-lg w-full max-w-2xl">
-                {post.image && (
+                {isVideo(post.image as string) ? (
+                    <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
+                        <video
+                            controls
+                            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                            className="rounded-sm"
+                        >
+                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/mp4" />
+                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/webm" />
+                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/ogg" />
+                        </video>
+                        <div className="absolute bottom-2 right-2 flex items-center space-x-2">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLikeClick();
+                                }}
+                                className={`bg-white ${isLiked ? 'text-red-500' : 'text-gray-500'} p-1 rounded-full hover:bg-gray-200 transition-colors`}
+                            >
+                                <FaHeart />
+                            </button>
+                            <span className="text-gray-700">{post.likes}</span>
+                        </div>
+                    </div>
+                ) : (
                     <div className="relative w-full h-96 mb-4">
                         <Image
                             src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
@@ -214,9 +246,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleLikeClick(postId, post.isLiked);
+                                    handleLikeClick();
                                 }}
-                                className={`bg-white ${post.isLiked ? 'text-red-500' : 'text-gray-500'} p-1 rounded-full hover:bg-gray-200 transition-colors`}
+                                className={`bg-white ${isLiked ? 'text-red-500' : 'text-gray-500'} p-1 rounded-full hover:bg-gray-200 transition-colors`}
                             >
                                 <FaHeart />
                             </button>

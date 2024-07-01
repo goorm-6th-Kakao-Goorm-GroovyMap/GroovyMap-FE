@@ -47,6 +47,7 @@ const PerformanceRecord: React.FC<PerformanceRecordProps> = ({ user, isOwner }) 
         queryFn: async () => {
             const response = await apiClient.get(endpoint);
             return response.data;
+            console.log(response.data);
         },
         enabled: !!nickname,
     });

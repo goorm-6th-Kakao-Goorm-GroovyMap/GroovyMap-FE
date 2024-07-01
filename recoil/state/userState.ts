@@ -3,23 +3,22 @@ import { recoilPersist } from 'recoil-persist';
 import { User } from '@/types/types'; // User 타입 임포트
 const { persistAtom } = recoilPersist();
 
-//로그인 유저와 마이페이지 유저상태 따로
-
 //로그인했을때 받아오는 상태
 export const initialUserState: LoginUser = {
     nickname: '',
     profileUrl: '',
-}; //회원정보 받아오는 부분들 수정함
+};
 
 export interface LoginUser {
     nickname: string; //
     profileUrl: string;
 }
+
 // 유저 정보 상태
 export const userState = atom({
     key: 'userState',
     default: initialUserState,
-    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
 
 // 마이페이지에서 관리하는 유저 상태
@@ -35,6 +34,7 @@ export const initialMyPageUserState: Partial<User> = {
     followers: 0,
     following: 0,
 };
+
 //마이페이지 유저
 export const myPageUserState = atom({
     key: 'myPageUserState',
@@ -45,5 +45,5 @@ export const myPageUserState = atom({
 export const activeTabState = atom({
     key: 'activeTabState',
     default: 'posts', // 기본값을 'posts'로 설정
-    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
