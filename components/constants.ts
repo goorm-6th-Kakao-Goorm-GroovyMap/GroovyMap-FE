@@ -1,4 +1,4 @@
-//지역구
+// constants.ts
 export const areas: Record<string, { name: string; lat: number; lng: number }> = {
     ALL: { name: '서울 전체', lat: 37.5665, lng: 126.978 },
     YONGSANGU: { name: '용산구', lat: 37.5326, lng: 126.9906 },
@@ -23,35 +23,18 @@ export const areas: Record<string, { name: string; lat: number; lng: number }> =
     EUNPYEONGGU: { name: '은평구', lat: 37.6176, lng: 126.9227 },
     JUNGGU: { name: '중구', lat: 37.5633, lng: 126.9978 },
     JUNGNANGGU: { name: '중랑구', lat: 37.6063, lng: 127.0924 },
-};
+}
 
-//분야, 분야별 타입 선택할떄 쓰기위해서 추가함
-export const parts: Record<string, { name: string; types?: string[] }> = {
-    ALL: { name: '전체', types: [] },
-    VOCAL: { name: '노래', types: [] },
-    BAND: { name: '밴드', types: ['GUITAR', 'KEYBOARD', 'BASSE', 'VOCAL'] },
-    DANCE: { name: '댄스', types: ['HIPHOP', 'JAZZ', 'LOCKING'] },
-};
-
-//분야별 파트타입 추가
-export const types: Record<string, { name: string }> = {
+export const parts: Record<string, { name: string }> = {
     ALL: { name: '전체' },
     BAND: { name: '밴드' },
-    VOCAL: { name: '보컬' },
+    VOCAL: { name: '음악' },
     DANCE: { name: '춤' },
-    GUITAR: { name: '기타' },
-    DRUM: { name: '드럼' },
-    BASSE: { name: '베이스' },
-    KEYBOARD: { name: '건반' },
-    HIPHOP: { name: '힙합' },
-    JAZZ: { name: '재즈' },
-    LOCKING: { name: '락킹' },
-    // 필요한 다른 타입 추가
-};
+}
 
 export const markerImages: { [key in 'ALL' | 'BAND' | 'VOCAL' | 'DANCE']: string } = {
     ALL: '/guitar.svg',
     BAND: '/guitar.svg',
     VOCAL: '/guitar.svg',
     DANCE: '/guitar.svg',
-};
+}

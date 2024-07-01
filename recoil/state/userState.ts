@@ -45,5 +45,5 @@ export const myPageUserState = atom({
 export const activeTabState = atom({
     key: 'activeTabState',
     default: 'posts', // 기본값을 'posts'로 설정
-    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });

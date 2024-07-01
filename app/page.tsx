@@ -1,8 +1,3 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
-import Image from 'next/image';
-
 export default function Home() {
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">

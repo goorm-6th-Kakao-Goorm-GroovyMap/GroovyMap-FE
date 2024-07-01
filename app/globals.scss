@@ -69,3 +69,16 @@ button {
 .tailwind-swal-button {
     @apply bg-purple-700 text-white px-4 py-2 rounded-md; /* 버튼 스타일 조정 */
 }
+
+//프로필페이지
+.backface-hidden {
+    backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+    transform: rotateY(180deg);
+}
+
+.transform-style-3d {
+    transform-style: preserve-3d;
+}

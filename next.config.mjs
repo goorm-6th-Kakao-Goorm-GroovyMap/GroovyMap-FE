@@ -6,7 +6,7 @@ const nextConfig = {
         NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
     },
     images: {
-        domains: ['localhost', 'mk.kakaocdn.net'], // 'localhost:8080'을 'localhost'로 수정
+        domains: ['mk.kakaocdn.net', 'localhost', 'groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com'],
         loader: 'default',
         path: '/_next/image',
     },
