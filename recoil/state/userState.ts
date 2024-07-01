@@ -12,6 +12,7 @@ export const initialUserState: LoginUser = {
 export interface LoginUser {
     nickname: string; //
     profileUrl: string;
+    token?: string; // token 속성 추가
 }
 
 // 유저 정보 상태
