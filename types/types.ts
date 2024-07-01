@@ -33,6 +33,13 @@ export interface PracticePlaceResponse {
     practicePlacePosts: PracticePlace[];
 }
 
+// 로그인 유저 타입 추가
+export interface LoginUser {
+    nickname: string;
+    profileUrl: string;
+}
+
+
 // 마이페이지에서 User와 Post 인터페이스 추가
 export interface User {
     id: string;

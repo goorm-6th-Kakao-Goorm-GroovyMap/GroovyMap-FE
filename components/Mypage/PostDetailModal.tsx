@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Post, User } from '@/types/types';
+import { LoginUser, Post, User } from '@/types/types';
 import Image from 'next/image';
 import { FaHeart, FaTimes } from 'react-icons/fa';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,7 +10,7 @@ import { toast } from 'react-toastify';
 
 interface PostDetailModalProps {
     postId: string;
-    currentUser?: User; // 현재 로그인한 사용자 정보
+    currentUser?: LoginUser; // 현재 로그인한 사용자 정보
     user: User; // 마이페이지의 주인 정보
     onClose: () => void;
     onNext: () => void;

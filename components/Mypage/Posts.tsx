@@ -186,6 +186,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
             {
                 closeButton: false,
                 autoClose: false,
+                toastId: 'deleteConfirm', // toastId 추가하여 중복 방지
             }
         );
     };
