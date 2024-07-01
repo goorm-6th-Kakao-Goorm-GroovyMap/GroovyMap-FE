@@ -215,9 +215,9 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                             style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                             className="rounded-sm"
                         >
-                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/mp4" />
-                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/webm" />
-                            <source src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`} type="video/ogg" />
+                            <source src={post.image} type="video/mp4" />
+                            <source src={post.image} type="video/webm" />
+                            <source src={post.image} type="video/ogg" />
                         </video>
                         <div className="absolute bottom-2 right-2 flex items-center space-x-2">
                             <button
@@ -235,7 +235,7 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
                 ) : (
                     <div className="relative w-full h-96 mb-4">
                         <Image
-                            src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
+                            src={post.image || '/path/to/default/image.jpg'} // 기본 이미지를 설정
                             alt="Post"
                             fill
                             style={{ objectFit: 'contain' }}

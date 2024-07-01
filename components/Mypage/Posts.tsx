@@ -192,7 +192,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
     };
 
     const isVideo = (image: string) => {
-        const videoExtensions = ['.mp4'];
+        const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
         return videoExtensions.some((ext) => image.toLowerCase().includes(ext));
     };
 
@@ -215,7 +215,15 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
                         {isVideo(post.image as string) ? (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
-                                <video src={post.image} controls className="w-full h-full object-cover" />
+                                <video
+                                    controls
+                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                                    className="rounded-sm"
+                                >
+                                    <source src={post.image} type="video/mp4" />
+                                    <source src={post.image} type="video/webm" />
+                                    <source src={post.image} type="video/ogg" />
+                                </video>{' '}
                             </div>
                         ) : (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
