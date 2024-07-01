@@ -215,25 +215,12 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
                         {isVideo(post.image as string) ? (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
-                                <video
-                                    controls
-                                    muted
-                                    autoPlay
-                                    playsInline
-                                    preload="auto"
-                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                                    className="rounded-sm"
-                                >
-                                    <source
-                                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
-                                        type="video/mp4"
-                                    />
-                                </video>
+                                <video src={post.image} controls className="w-full h-full object-cover" />
                             </div>
                         ) : (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
-                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
+                                    src={post.image || '/path/to/default/image.jpg'} // 기본 이미지를 설정
                                     alt="Post Image"
                                     fill
                                     priority
