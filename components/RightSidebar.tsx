@@ -42,6 +42,15 @@ const RightSidebar = () => {
         }
     };
 
+    // DM 아이콘 클릭 시 DM 목록 페이지로 이동
+    const handleDMClick = () => {
+        if (user.nickname) {
+            router.push(`/dm/${user.nickname}`);
+        } else {
+            router.push('/login');
+        }
+    };
+
     // 마이페이지 버튼 클릭 시 동적으로 사용자 마이페이지로 이동하기 추가
     const handleMyPageClick = () => {
         if (user.nickname) {
@@ -61,52 +70,52 @@ const RightSidebar = () => {
     }
 
     return (
-        <div className="w-64 bg-purple-50 p-6 flex flex-col justify-between h-full">
-            <div className="flex flex-row items-center justify-around mb-6 mt-6">
-                <FaPaperPlane size={24} className="text-black cursor-pointer" />
-                <FaBell size={24} className="text-black cursor-pointer" />
-                <div className="relative">
+        <div className='w-64 bg-purple-50 p-6 flex flex-col justify-between h-full'>
+            <div className='flex flex-row items-center justify-around mb-6 mt-6'>
+                <FaPaperPlane size={24} className='text-black cursor-pointer' onClick={handleDMClick} />
+                <FaBell size={24} className='text-black cursor-pointer' />
+                <div className='relative'>
                     {user.nickname ? ( // user 객체의 nickname 속성이 있는지 확인하여 로그인 상태인지 판단
                         <div
-                            className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
+                            className='relative bg-purple-700 p-2 rounded-full cursor-pointer'
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                                <div className='relative w-8 h-8 rounded-full overflow-hidden'>
                                     <Image
                                         src={getProfileImageUrl(user.profileUrl)}
-                                        alt="User Profile"
+                                        alt='User Profile'
                                         fill
                                         priority
                                         style={{ objectFit: 'cover' }} // objectFit 대체
-                                        className="rounded-full"
+                                        className='rounded-full'
                                     />
                                 </div>
                             ) : (
-                                <div className="w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                <div className='w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full'>
                                     {user.nickname.charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="bg-purple-700 p-2 rounded-full cursor-pointer" onClick={handleUserIconClick}>
-                            <IoMdPerson size={24} className="text-white" />
+                        <div className='bg-purple-700 p-2 rounded-full cursor-pointer' onClick={handleUserIconClick}>
+                            <IoMdPerson size={24} className='text-white' />
                         </div>
                     )}
                     {showMenu && (
                         <div
-                            className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50"
+                            className='absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50'
                             onMouseEnter={() => setShowMenu(true)}
                             onMouseLeave={() => setShowMenu(false)}
                         >
                             <button
-                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                className='block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100'
                                 onClick={handleMyPageClick}
                             >
                                 마이페이지
                             </button>
                             <button
-                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                className='block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100'
                                 onClick={handleLogout}
                             >
                                 로그아웃
@@ -115,8 +124,8 @@ const RightSidebar = () => {
                     )}
                 </div>
             </div>
-            <div className="bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center">
-                <p className="text-gray-700 font-semibold text-xl">버스킹 링크</p>
+            <div className='bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center'>
+                <p className='text-gray-700 font-semibold text-xl'>버스킹 링크</p>
             </div>
         </div>
     );
