@@ -6,12 +6,12 @@ import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
 
 import Recruit_post from './PostList';
-import WritePostForm from './WritePostForm';
+import WritePostForm from './write/page';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
 import PostContent from './Post/[postId]/page';
 import { useParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
-import KakaoMap from './kakaoMap';
+// import KakaoMap from './kakaoMap';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 
@@ -47,7 +47,7 @@ const Recruit_page: React.FC = () => {
 
     const fetchComments = async (postId: number) => {
         try {
-            const response = await apiClient.get(`/recruitboard/${postId}/comments`);
+            const response = await apiClient.get(`/recruitboard/${postId}/comment`);
             if (response.status === 200) {
                 setComments((prev) => ({ ...prev, [postId]: response.data }));
             } else {
@@ -82,11 +82,11 @@ const Recruit_page: React.FC = () => {
         setLocations(locations);
     }, [posts]);
 
-    const handleAddComment = async (postId: number, content: string, date: string) => {
+    const handleAddComment = async (postId: number, authorId: string, content: string, date: string) => {
         try {
             const response = await apiClient.post(`/recruitboard/${postId}/comment`, {
                 postId,
-                authorId: currentUser.nickname,
+                commentAuthor: currentUser.nickname,
                 content,
                 date,
             });
@@ -260,7 +260,7 @@ const Recruit_page: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    {isMapVisible && <KakaoMap isVisible={isMapVisible} posts={posts} />}
+                    {/* {isMapVisible && <KakaoMap isVisible={isMapVisible} posts={posts} />} */}
                     <div className="border p-4">
                         {selectedPost
                             ? isPosting && (

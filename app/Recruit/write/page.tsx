@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FieldPositionMapping, Post } from './types';
+import { FieldPositionMapping, Post } from '../types';
 import apiClient from '@/api/apiClient';
 
 interface WritePostFormProps {

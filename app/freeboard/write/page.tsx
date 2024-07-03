@@ -1,33 +1,99 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import apiClient from '@/api/apiClient';
 import { useRouter } from 'next/navigation';
-import ImageUpload from '../ImageUpload';
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+import { Quill } from 'react-quill';
+import ImageUploader from 'quill-image-uploader';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
+
+Quill.register('modules/imageUploader', ImageUploader);
+
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
+    const [likesCount, setLikesCount] = useState('');
+    const [savesCount, setSavesCount] = useState('');
+    const [viewCount, setViewCount] = useState('');
+    const [timestamp, setTimestamp] = useState('');
     const [content, setContent] = useState('');
-    const [imageUrls, setImageUrls] = useState<string[]>([]);
+    const currentUser = useRecoilValue(userState);
     const router = useRouter();
 
-    const handleImageUpload = (url: string) => {
-        setImageUrls([...imageUrls, url]);
+    const handleImageUpload = async (file: File) => {
+        const formData = new FormData();
+        formData.append('fileNames', file);
+        try {
+            const response = await apiClient.post('/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data.url;
+        } catch (error) {
+            console.error('Image upload failed:', error);
+            throw error;
+        }
     };
 
-    const handleSubmit = async () => {
-        const htmlContent = `
-        <h1>${title}</h1>
-        ${imageUrls.map((url) => `<img src="${url}" alt="Post Image"/>`).join('')}
-        <p>${content}</p>
-      `;
+    const modules = useMemo(
+        () => ({
+            toolbar: [
+                [{ header: '1' }, { header: '2' }, { font: [] }],
+                [{ size: [] }],
+                ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['link', 'image', 'video'],
+                ['clean'],
+            ],
+            imageUploader: {
+                upload: handleImageUpload,
+            },
+        }),
+        []
+    );
+
+    const formats = [
+        'header',
+        'font',
+        'size',
+        'bold',
+        'italic',
+        'underline',
+        'strike',
+        'blockquote',
+        'list',
+        'bullet',
+        'link',
+        'image',
+        'video',
+    ];
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('author', currentUser.nickname);
+        formData.append('content', content);
+        formData.append('likesCount', likesCount);
+        formData.append('savesCount', savesCount);
+        formData.append('viewCount', viewCount);
+        formData.append('timestamp', timestamp);
 
         try {
-            await apiClient.post('/freeboard/write', {
-                title,
-                content: htmlContent,
+            const response = await apiClient.post('/freeboard/write', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            router.push('/freeboard');
+
+            const newPostId = response.data.id;
+            router.push(`/freeboard/${newPostId}`);
         } catch (error) {
             console.error('Failed to write post:', error);
         }
@@ -52,16 +118,9 @@ const WritePostForm: React.FC = () => {
                 <label htmlFor="content" className="block font-bold mb-1">
                     내용:
                 </label>
-                <textarea
-                    id="content"
-                    className="w-full border rounded p-2"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    placeholder="내용을 입력하세요."
-                />
+                <ReactQuill value={content} onChange={setContent} modules={modules} formats={formats} />
             </div>
-            <ImageUpload onImageUpload={handleImageUpload} />
-            <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded" onClick={handleSubmit}>
+            <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded">
                 글쓰기
             </button>
         </form>

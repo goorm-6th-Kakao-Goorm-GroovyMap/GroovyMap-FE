@@ -78,3 +78,29 @@ export const regionCenters: { [key: string]: { name: string; lat: number; lng: n
     JUNGGU: { name: '중구', lat: 37.5633, lng: 126.9978 },
     JUNGNANGGU: { name: '중랑구', lat: 37.6063, lng: 127.0924 },
 };
+
+declare namespace kakao.maps {
+    class LatLng {
+        constructor(lat: number, lng: number);
+    }
+
+    class Map {
+        constructor(container: HTMLElement | null, options: MapOptions);
+    }
+
+    interface MapOptions {
+        center: LatLng;
+        level: number;
+    }
+
+    class Marker {
+        constructor(options: MarkerOptions);
+        setMap(map: Map | null): void;
+    }
+
+    interface MarkerOptions {
+        position: LatLng;
+    }
+
+    function load(callback: () => void): void;
+}

@@ -35,9 +35,6 @@ const PostList: React.FC = () => {
                 {posts.map((post) => (
                     <div key={post.id} onClick={() => handlePostClick(post.id)}>
                         <h2>{post.title}</h2>
-                        <p>{post.content}</p>
-                        <p>Likes: {post.likesCount}</p>
-                        <p>Saves: {post.savesCount}</p>
                     </div>
                 ))}
             </div>

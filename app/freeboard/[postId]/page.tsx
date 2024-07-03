@@ -1,9 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
+import { DateTime } from 'luxon';
 
 interface Comment {
     id: number;
@@ -14,10 +15,11 @@ interface Comment {
 interface Post {
     id: number;
     title: string;
-    content: string; // HTML content
+    content: string;
     author: string;
     likesCount: number;
     savesCount: number;
+    date: string;
 }
 
 const PostPage: React.FC = () => {
@@ -25,7 +27,7 @@ const PostPage: React.FC = () => {
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentContent, setCommentContent] = useState('');
     const router = useRouter();
-    const { postId } = router.query;
+    const { postId } = useParams<{ postId: string }>();
     const currentUser = useRecoilValue(userState);
 
     useEffect(() => {
@@ -53,7 +55,7 @@ const PostPage: React.FC = () => {
         }
     }, [postId]);
 
-    const handleDeleteClick = async () => {
+    const handleDeletePost = async () => {
         if (post) {
             try {
                 await apiClient.delete(`/freeboard/${post.id}`);
@@ -64,18 +66,21 @@ const PostPage: React.FC = () => {
         }
     };
 
-    const handleEditClick = () => {
-        if (post) {
-            router.push(`/freeboard/edit/${post.id}`);
-        }
-    };
+    // const handleEditClick = () => {
+    //     if (post) {
+    //         router.push(`/freeboard/edit/${post.id}`);
+    //     }
+    // };
 
     const handleCommentSubmit = async () => {
+        const now = DateTime.local().toISO();
         if (post) {
             try {
                 await apiClient.post(`/freeboard/${post.id}/comment`, {
-                    author: currentUser.nickname,
+                    postId,
+                    commentAuthor: currentUser.nickname,
                     content: commentContent,
+                    now,
                 });
                 setCommentContent('');
                 const response = await apiClient.get(`/freeboard/${postId}/comment`);
@@ -86,7 +91,7 @@ const PostPage: React.FC = () => {
         }
     };
 
-    const handleLikeClick = async () => {
+    const handleLikePost = async () => {
         if (post) {
             try {
                 await apiClient.post(`/freeboard/${post.id}/like`);
@@ -98,43 +103,67 @@ const PostPage: React.FC = () => {
         }
     };
 
+    const handleSavePost = async () => {
+        if (post) {
+            try {
+                await apiClient.post(`/freeboard/${post.id}/save`);
+                const response = await apiClient.get(`/freeboard/${post.id}`);
+                setPost(response.data);
+            } catch (error) {
+                console.error('Failed to like post:', error);
+            }
+        }
+    };
+
     if (!post) return <div>Loading...</div>;
 
     return (
-        <div className="p-4">
-            <button onClick={() => router.push('/freeboard')} className="bg-gray-200 p-2 rounded mb-4">
-                뒤로가기
+        <div className="p-4 bg-white rounded-lg shadow-md">
+            <button onClick={() => router.push('/freeboard')} className="bg-gray-200 py-2 px-4 rounded mb-4">
+                &lt; 뒤로가기
             </button>
-            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+            <div className="text-sm text-gray-600 mb-4">
+                <p>작성자: {post.author}</p>
+                {/* <p>작성일: {DateTime.fromISO(post.createdAt).toLocaleString(DateTime.DATE_SHORT)}</p> */}
+            </div>
+            <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
             {currentUser.nickname === post.author && (
-                <div className="flex space-x-4">
-                    <button onClick={handleEditClick} className="flex items-center">
-                        수정
-                    </button>
-                    <button onClick={handleDeleteClick} className="flex items-center">
+                <div className="flex space-x-4 mb-4">
+                    {/* <button onClick={handleEditClick} className="flex items-center">수정</button> */}
+                    <button onClick={handleDeletePost} className="flex items-center text-red-500 hover:text-red-700">
                         삭제
                     </button>
                 </div>
             )}
-            <button onClick={handleLikeClick} className="flex items-center">
-                {post.likesCount}
-            </button>
-            <div>
+            <div className="flex items-center space-x-4 mb-4">
+                <button onClick={handleLikePost} className="flex items-center text-gray-600 hover:text-purple-700">
+                    좋아요 {post.likesCount}
+                </button>
+                <button onClick={handleSavePost} className="flex items-center text-gray-600 hover:text-purple-700">
+                    북마크 {post.savesCount}
+                </button>
+            </div>
+            <div className="mb-4">
                 <textarea
-                    className="border p-2 w-full"
+                    className="border w-full p-2"
+                    rows={4}
                     placeholder="댓글을 입력하세요"
                     value={commentContent}
                     onChange={(e) => setCommentContent(e.target.value)}
-                ></textarea>
+                />
                 <button onClick={handleCommentSubmit} className="bg-purple-700 text-white py-2 px-4 mt-2">
                     댓글 작성
                 </button>
             </div>
             <div className="comments">
                 {comments.map((comment) => (
-                    <div key={comment.id} className="comment">
-                        <p>{comment.content}</p>
-                        <p>{comment.author}</p>
+                    <div key={comment.id} className="border-b py-2">
+                        <p className="font-semibold">{comment.author}</p>
+                        <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
+                        <p className="text-xs text-gray-400">
+                            {/* {DateTime.fromISO(comment.createdAt).toLocaleString(DateTime.DATETIME_MED)} */}
+                        </p>
                     </div>
                 ))}
             </div>
