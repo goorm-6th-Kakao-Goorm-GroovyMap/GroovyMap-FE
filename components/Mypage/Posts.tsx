@@ -11,7 +11,7 @@ import Image from 'next/image';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import '@/app/globals.scss';
 interface PostsProps {
     currentUser: LoginUser; // 현재 로그인한 사용자
     isOwner: boolean;
@@ -214,16 +214,12 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                 {posts.map((post, index) => (
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
                         {isVideo(post.image as string) ? (
-                            <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
-                                <video
-                                    controls
-                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                                    className="rounded-sm"
-                                >
+                            <div className="square-video-container">
+                                <video controls className="rounded-sm">
                                     <source src={post.image} type="video/mp4" />
                                     <source src={post.image} type="video/webm" />
                                     <source src={post.image} type="video/ogg" />
-                                </video>{' '}
+                                </video>
                             </div>
                         ) : (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>

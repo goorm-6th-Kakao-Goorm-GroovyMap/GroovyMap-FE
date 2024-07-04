@@ -82,3 +82,392 @@ button {
 .transform-style-3d {
     transform-style: preserve-3d;
 }
+
+//메인페이지 스타일링
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.animated-title {
+    animation: fadeInUp 1s ease-out;
+}
+
+.highlight {
+    background-color: rgb(170, 0, 255);
+    animation: fadeInUp 1s ease-out;
+}
+
+.text-stroke {
+    -webkit-text-stroke: 1px black;
+}
+
+/* 마이페이지 모달 및 동영상 크기 조절 */
+
+.modal-container {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.square-video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%; /* Maintain aspect ratio */
+    background-color: black; /* Fallback color in case video doesn't load */
+    overflow: hidden;
+    max-height: 80vh; /* Limit the height to prevent the modal from being too tall */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.square-video-container video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+    object-fit: cover; /* Cover to maintain aspect ratio */
+}
+
+//
+:root {
+    --color-bg1: hsl(0, 0%, 100%); /* 밝은 연보라색 */
+    --color-bg2: #ececff; /* 더 밝은 연보라색 */
+    --color1: 120, 170, 255; /* 더 진한 파란색 */
+    --color2: 180, 130, 255; /* 더 진한 보라색 */
+    --color3: 140, 140, 255; /* 더 진한 파란색 */
+    --color4: 110, 200, 255; /* 더 진한 하늘색 */
+    --color5: 130, 90, 180; /* 더 진한 보라색 */
+    --color-interactive: 190, 140, 255; /* 더 진한 보라색 */
+    --circle-size: 80%;
+    --blending: hard-light;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    background: #fff;
+    overflow: hidden;
+}
+
+h1,
+h2,
+h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+}
+
+.gradient-bg {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(40deg, var(--color-bg1), var(--color-bg2));
+    top: 0;
+    left: 0;
+}
+
+.noise {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+    opacity: 0.1;
+}
+
+.gradients-container {
+    filter: url(#goo) blur(40px);
+    width: 100%;
+    height: 100%;
+}
+
+.g1,
+.g2,
+.g3,
+.g4,
+.g5,
+.interactive {
+    position: absolute;
+    width: var(--circle-size);
+    height: var(--circle-size);
+    top: calc(50% - var(--circle-size) / 2);
+    left: calc(50% - var(--circle-size) / 2);
+    border-radius: 50%;
+    mix-blend-mode: var(--blending);
+}
+
+.g1 {
+    background: radial-gradient(circle at center, rgba(var(--color1), 0.8) 0, rgba(var(--color1), 0) 50%);
+    animation: moveVertical 30s ease infinite;
+}
+
+.g2 {
+    background: radial-gradient(circle at center, rgba(var(--color2), 0.8) 0, rgba(var(--color2), 0) 50%);
+    transform-origin: calc(50% - 400px);
+    animation: moveInCircle 20s reverse infinite;
+}
+
+.g3 {
+    background: radial-gradient(circle at center, rgba(var(--color3), 0.8) 0, rgba(var(--color3), 0) 50%);
+    top: calc(50% - var(--circle-size) / 2 + 200px);
+    left: calc(50% - var(--circle-size) / 2 - 500px);
+    transform-origin: calc(50% + 400px);
+    animation: moveInCircle 40s linear infinite;
+}
+
+.g4 {
+    background: radial-gradient(circle at center, rgba(var(--color4), 0.8) 0, rgba(var(--color4), 0) 50%);
+    transform-origin: calc(50% - 200px);
+    animation: moveHorizontal 40s ease infinite;
+    opacity: 0.7;
+}
+
+.g5 {
+    background: radial-gradient(circle at center, rgba(var(--color5), 0.8) 0, rgba(var(--color5), 0) 50%);
+    width: calc(var(--circle-size) * 2);
+    height: calc(var(--circle-size) * 2);
+    transform-origin: calc(50% - 800px) calc(50% + 200px);
+    animation: moveInCircle 20s ease infinite;
+}
+
+.interactive {
+    background: radial-gradient(
+        circle at center,
+        rgba(var(--color-interactive), 0.8) 0,
+        rgba(var(--color-interactive), 0) 50%
+    );
+    width: 100%;
+    height: 100%;
+    top: -50%;
+    left: -50%;
+    opacity: 0.7;
+}
+
+@keyframes moveInCircle {
+    0% {
+        transform: rotate(0deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes moveVertical {
+    0% {
+        transform: translateY(-50%);
+    }
+    50% {
+        transform: translateY(50%);
+    }
+    100% {
+        transform: translateY(-50%);
+    }
+}
+
+@keyframes moveHorizontal {
+    0% {
+        transform: translateX(-50%) translateY(-10%);
+    }
+    50% {
+        transform: translateX(50%) translateY(10%);
+    }
+    100% {
+        transform: translateX(-50%) translateY(-10%);
+    }
+}
+
+// .button-custom {
+//     border: 0.7px solid hsl(0, 0%, 31%);
+//     transition:
+//         color 0.3s ease,
+//         border-color 0.3s ease,
+//         background-color 0.3s ease;
+// }
+
+// .button-custom:hover {
+//     color: white;
+//     border-color: #9e1fff; /* 보라색으로 변경 */
+//     background-color: hsl(274, 100%, 56%); /* 보라색으로 변경 */
+// }
+
+// .content-container {
+//     width: 100%;
+//     max-width: 900px;
+//     margin: 0 auto;
+// }
+
+// .content-container .relative {
+//     position: relative;
+//     width: 100%;
+//     padding-bottom: 56.25%;
+// }
+
+// .content-container .absolute {
+//     position: absolute;
+//     bottom: 4px;
+//     right: 4px;
+//     width: 40px;
+//     height: 40px;
+//     background-color: #282828;
+//     border-radius: 50%;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+// }
+
+// .content-container .absolute:hover {
+//     background-color: #505050;
+// }
+
+// .content-container .absolute .material-symbols-outlined {
+//     color: white;
+//     font-size: 24px;
+// }
+
+/* Custom CSS for additional styling */
+
+.content-container {
+    position: relative;
+    width: 100%;
+}
+
+button-custom {
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    transition:
+        background-color 0.3s,
+        color 0.3s;
+}
+
+button-custom:hover {
+    background-color: #f3f3f3;
+}
+
+button-custom.active {
+    background-color: #6b21a8;
+    color: white;
+}
+
+button-custom.transition-colors {
+    transition:
+        background-color 0.3s,
+        color 0.3s;
+}
+
+button-custom.duration-300 {
+    transition-duration: 0.3s;
+}
+
+button-custom.mr-2 {
+    margin-right: 0.5rem;
+}
+
+button-custom.py-2 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+button-custom.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+button-custom.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+button-custom.shadow-md {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+button-custom.mb-4 {
+    margin-bottom: 1rem;
+}
+
+button-custom.text-black {
+    color: black;
+}
+
+button-custom.bg-purple-500 {
+    background-color: #6b21a8;
+}
+
+button-custom.text-white {
+    color: white;
+}
+
+button-custom:hover.bg-purple-700 {
+    background-color: #4a148c;
+}
+
+button-custom.transition {
+    transition: all 0.3s;
+}
+
+button-custom.rounded-full {
+    border-radius: 9999px;
+}
+
+button-custom.p-2 {
+    padding: 0.5rem;
+}
+
+//오버레이
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.map-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.map-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.map-description {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    text-align: center;
+    font-size: 16px;
+    color: #333;
+    display: none;
+}
+
+.map-description.visible {
+    display: block;
+}

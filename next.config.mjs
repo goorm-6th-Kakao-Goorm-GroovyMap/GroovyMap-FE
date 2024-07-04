@@ -6,12 +6,7 @@ const nextConfig = {
         NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
     },
     images: {
-        domains: [
-            'mk.kakaocdn.net',
-            'localhost',
-            '79df-180-66-235-215.ngrok-free.app',
-            'groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com',
-        ],
+        domains: ['mk.kakaocdn.net', 'localhost', 'groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com'],
         loader: 'default',
         path: '/_next/image',
     },

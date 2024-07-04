@@ -7,6 +7,7 @@ import { FaHeart, FaTimes } from 'react-icons/fa';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
+import '@/app/globals.scss';
 
 interface PostDetailModalProps {
     postId: string;
@@ -207,14 +208,10 @@ const PostDetailModal: React.FC<PostDetailModalProps> = ({
             className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
             onClick={handleClickOutside}
         >
-            <div ref={modalRef} className="relative bg-white p-4 rounded-lg shadow-lg w-full max-w-2xl">
+            <div ref={modalRef} className="modal-container relative bg-white p-4 rounded-lg shadow-lg w-full max-w-2xl">
                 {isVideo(post.image as string) ? (
-                    <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
-                        <video
-                            controls
-                            style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                            className="rounded-sm"
-                        >
+                    <div className="square-video-container">
+                        <video controls className="rounded-sm">
                             <source src={post.image} type="video/mp4" />
                             <source src={post.image} type="video/webm" />
                             <source src={post.image} type="video/ogg" />
