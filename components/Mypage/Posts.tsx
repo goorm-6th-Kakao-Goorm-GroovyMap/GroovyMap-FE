@@ -11,7 +11,7 @@ import Image from 'next/image';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import '@/app/globals.scss';
 interface PostsProps {
     currentUser: LoginUser; // 현재 로그인한 사용자
     isOwner: boolean;
@@ -192,7 +192,7 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
     };
 
     const isVideo = (image: string) => {
-        const videoExtensions = ['.mp4'];
+        const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv'];
         return videoExtensions.some((ext) => image.toLowerCase().includes(ext));
     };
 
@@ -214,26 +214,17 @@ const Posts: React.FC<PostsProps> = ({ currentUser, isOwner, user, onWritePost }
                 {posts.map((post, index) => (
                     <div key={post.id} className="relative cursor-pointer" onClick={() => handlePostClick(index)}>
                         {isVideo(post.image as string) ? (
-                            <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
-                                <video
-                                    controls
-                                    muted
-                                    autoPlay
-                                    playsInline
-                                    preload="auto"
-                                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                                    className="rounded-sm"
-                                >
-                                    <source
-                                        src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
-                                        type="video/mp4"
-                                    />
+                            <div className="square-video-container">
+                                <video controls className="rounded-sm">
+                                    <source src={post.image} type="video/mp4" />
+                                    <source src={post.image} type="video/webm" />
+                                    <source src={post.image} type="video/ogg" />
                                 </video>
                             </div>
                         ) : (
                             <div className="relative w-full h-0" style={{ paddingBottom: '100%' }}>
                                 <Image
-                                    src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${post.image}`}
+                                    src={post.image || '/path/to/default/image.jpg'} // 기본 이미지를 설정
                                     alt="Post Image"
                                     fill
                                     priority
