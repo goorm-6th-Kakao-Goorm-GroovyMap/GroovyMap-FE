@@ -2,22 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // 라우터 임포트
 
 const Home = () => {
+    const router = useRouter();
     const [activeButton, setActiveButton] = useState('공연/연습장소');
     const [isMapHovered, setIsMapHovered] = useState(false);
 
     useEffect(() => {
-        const interBubble = document.querySelector('.interactive');
+        const interBubble = document.querySelector('.interactive') as HTMLElement | null;
         let curX = 0;
         let curY = 0;
         let tgX = 0;
         let tgY = 0;
 
         const move = () => {
-            curX += (tgX - curX) / 20;
-            curY += (tgY - curY) / 20;
-            interBubble.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+            if (interBubble) {
+                curX += (tgX - curX) / 20;
+                curY += (tgY - curY) / 20;
+                interBubble.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+            }
             requestAnimationFrame(move);
         };
 
@@ -29,8 +33,12 @@ const Home = () => {
         move();
     }, []);
 
-    const handleButtonClick = (button) => {
+    const handleButtonClick = (button: string) => {
         setActiveButton(button);
+    };
+
+    const handleButtonUrlClick = (url: string) => {
+        router.push(url);
     };
 
     const handleMouseEnter = () => {
@@ -55,6 +63,8 @@ const Home = () => {
                                 src="/map.png"
                                 alt="Map"
                                 fill
+                                priority
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
@@ -64,20 +74,25 @@ const Home = () => {
                                     분야별, 공연 장소를 찾아보세요{' '}
                                 </p>
                             </div>
-                            <div className="absolute bottom-4 right-4">
-                                <button className="cursor-pointer p-2 rounded-full bg-purple-500 text-white hover:bg-purple-700 transition">
-                                    &rarr;
-                                </button>
-                            </div>
+
                             {isMapHovered && (
                                 <Image
                                     src="/markers2.png"
                                     alt="Markers"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     style={{ objectFit: 'contain' }}
                                     className="absolute top-0 left-0 w-full h-full"
                                 />
                             )}
+                        </div>
+                        <div className="absolute bottom-4 right-4">
+                            <button
+                                onClick={() => handleButtonUrlClick('/performance-place')}
+                                className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                            >
+                                &rarr;
+                            </button>
                         </div>
                     </div>
                 );
@@ -93,36 +108,48 @@ const Home = () => {
                                 src="/map.png"
                                 alt="Map"
                                 fill
+                                priority
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
-                            <Image
-                                src="/profileImage.png"
-                                alt="Profile"
-                                width={150}
-                                height={150}
-                                className="absolute z-50 top-14 right-48  shadow-lg"
-                            />
+                            <div className="profile-image-wrapper absolute z-50 top-14 right-48">
+                                <Image
+                                    src="/profileImage.png"
+                                    alt="Profile"
+                                    priority
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                    style={{ objectFit: 'cover' }}
+                                    className="profile-image shadow-lg"
+                                />
+                            </div>
+
                             <div className="absolute bottom-28 right-40 bg-white py-4 px-6 rounded-lg">
                                 <p className="text-purple-600">
                                     기타, 건반, 키보드, 드럼, 댄스 등, <br />
                                     다양한 분야의 사람들과 교류하세요.{' '}
                                 </p>
                             </div>
-                            <div className="absolute bottom-4 right-4">
-                                <button className="cursor-pointer p-2 rounded-full bg-purple-500 text-white hover:bg-purple-700 transition">
-                                    &rarr;
-                                </button>
-                            </div>
+
                             {isMapHovered && (
                                 <Image
                                     src="/markers.png"
                                     alt="Markers"
                                     fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                     style={{ objectFit: 'contain' }}
                                     className="absolute top-0 left-0 w-full h-full"
                                 />
                             )}
+                        </div>
+                        <div className="absolute bottom-4 right-4">
+                            <button
+                                onClick={() => handleButtonUrlClick('/profile')}
+                                className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                            >
+                                &rarr;
+                            </button>
                         </div>
                     </div>
                 );
@@ -134,11 +161,18 @@ const Home = () => {
                                 src="/recruitImage.png"
                                 alt="Recruit"
                                 fill
+                                priority
+                                quality={100}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // 각 화면 크기에 맞는 크기로 설정
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
+
                             <div className="absolute bottom-4 right-4">
-                                <button className="p-2 rounded-full bg-purple-500 text-white hover:bg-purple-700 transition">
+                                <button
+                                    onClick={() => handleButtonUrlClick('/Recruit')}
+                                    className="cursor-pointer px-4 py-2  rounded-xl bg-gray-200 text-purple-700 hover:bg-purple-700 hover:text-white transition"
+                                >
                                     &rarr;
                                 </button>
                             </div>
@@ -153,11 +187,17 @@ const Home = () => {
                                 src="/promotionImage.png"
                                 alt="Promote"
                                 fill
+                                priority
+                                quality={100}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // 각 화면 크기에 맞는 크기로 설정
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
                             <div className="absolute bottom-4 right-4">
-                                <button className="p-2 rounded-full bg-purple-500 text-white hover:bg-purple-700 transition">
+                                <button
+                                    onClick={() => handleButtonUrlClick('/promotion-place')}
+                                    className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                                >
                                     &rarr;
                                 </button>
                             </div>
@@ -185,7 +225,7 @@ const Home = () => {
                             <br /> 함께 공연을 만들어보세요.
                         </p>
                     </div>
-                    <svg viewBox="0 0 100% 100%" xmlns="http://www.w3.org/2000/svg" className="noise z-0">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" className="noise z-0">
                         <filter id="noiseFilter">
                             <feTurbulence
                                 type="fractalNoise"
