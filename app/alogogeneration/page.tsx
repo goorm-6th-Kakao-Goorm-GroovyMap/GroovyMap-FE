@@ -133,6 +133,7 @@ const AiLogoGeneration: React.FC = () => {
                                         src={image}
                                         width={24}
                                         height={18}
+
                                         alt={`Generated logo ${index + 1}`}
                                         className="w-96 h-96 object-contain mb-2"
                                     />
