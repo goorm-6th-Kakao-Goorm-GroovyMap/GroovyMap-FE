@@ -4,43 +4,38 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
-import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
-import { useRecoilValue } from 'recoil';
-import { userState } from '@/recoil/state/userState';
-// import KakaoMap from './kakaoMap';
+import { type Post, FieldPositionMapping } from './types';
 import { useRouter } from 'next/navigation';
 import PostList from './PostList';
+import KakaoMap from './kakaoMap';
+import apiClient from '@/api/apiClient';
 
 const Recruit_page: React.FC = () => {
-    const [isMapVisible, setIsMapVisible] = useState(false);
+    const [isMapVisible, setIsMapVisible] = useState(true);
     const [posts, setPosts] = useState<Post[]>([]);
-    const [selectedRegion, setSelectedRegion] = useState<string>('ALL');
-    const [selectedField, setSelectedField] = useState<string>('');
-    const [selectedPosition, setSelectedPosition] = useState<string>('');
+    const [selectedRegion, setSelectedRegion] = useState<string>('SEOUL');
+    const [selectedField, setSelectedField] = useState<string>('ALL');
+    const [selectedPosition, setSelectedPosition] = useState<string>('ALL');
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-    const currentUser = useRecoilValue(userState);
     const router = useRouter();
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const region = e.target.value;
-        setSelectedRegion(region === 'ALL' ? 'ALL' : region);
+        setSelectedRegion(e.target.value);
     };
 
     const handleFieldChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const field = e.target.value;
         setSelectedField(field);
-        setSelectedPosition('');
+        setSelectedPosition('ALL');
     };
-
     const handlePositionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const position = e.target.value;
-        setSelectedPosition(position);
+        setSelectedPosition(e.target.value);
     };
 
     const filterPosts = useCallback(() => {
         let filtered = posts;
 
-        if (selectedRegion !== 'ALL') {
+        if (selectedRegion !== 'SEOUL') {
             filtered = filtered.filter((post) => post.region === selectedRegion);
         }
 
@@ -59,14 +54,26 @@ const Recruit_page: React.FC = () => {
         filterPosts();
     }, [posts, selectedRegion, selectedField, selectedPosition, filterPosts]);
 
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const response = await apiClient.get('/recruitboard');
+            setPosts(response.data);
+        };
+
+        fetchPosts();
+    }, []);
+
     const onWriteClick = () => {
         router.push(`/recruitboard/write`);
+    };
+
+    const onMapClick = () => {
+        setIsMapVisible((prev) => !prev);
     };
 
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">
             <div className="content flex-1 w-full max-w-4xl">
-                {/* 검색창 */}
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full max-w-md">
                         <input
@@ -79,11 +86,9 @@ const Recruit_page: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                {/* 메뉴이름*/}
                 <header className="header mb-6">
                     <h1 className="text-2xl font-bold text-purple-700">팀원모집 게시판</h1>
                 </header>
-                {/* 게시판 필터링부분 */}
                 <section className="mb-6">
                     <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
                         <div className="flex items-center space-x-2">
@@ -93,7 +98,7 @@ const Recruit_page: React.FC = () => {
                             >
                                 <label className="font-bold mr-2">지역</label>
                                 <select className="border-none p-2 bg-white" onChange={handleRegionChange}>
-                                    <option value="ALL">전체</option>
+                                    <option value="SEOUL">전체</option>
                                     <option value="GANGNAMGU">강남구</option>
                                     <option value="GANGDONGGU">강동구</option>
                                     <option value="GANGBUKGU">강북구</option>
@@ -151,7 +156,7 @@ const Recruit_page: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <button className="bg-purple-700 text-white py-2 px-4">
+                            <button className="bg-purple-700 text-white py-2 px-4" onClick={onMapClick}>
                                 <FaMapLocationDot />
                             </button>
                             <button className="bg-purple-700 text-white py-2 px-4" onClick={onWriteClick}>
@@ -159,9 +164,9 @@ const Recruit_page: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    {/* {isMapVisible && <KakaoMap />} */}
+                    {isMapVisible && <KakaoMap />}
                 </section>
-                <PostList />
+                <PostList posts={filteredPosts} />
             </div>
         </main>
     );

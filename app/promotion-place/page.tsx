@@ -1,79 +1,79 @@
-'use client'
+'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { IoMdSearch } from 'react-icons/io'
-import { FaRegEdit } from 'react-icons/fa'
-import { FaMapLocationDot } from 'react-icons/fa6'
-import { useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import PostItem from './post/postItem'
-import Modal from './post/postmodal'
-import apiClient from '@/api/apiClient'
-import axios from 'axios'
-import { areas, parts, markerImages } from '../../components/constants'
-import { useRecoilValue } from 'recoil'
-import { userState } from '@/recoil/state/userState'
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { IoMdSearch } from 'react-icons/io';
+import { FaRegEdit } from 'react-icons/fa';
+import { FaMapLocationDot } from 'react-icons/fa6';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import PostItem from './post/postItem';
+import Modal from './post/postmodal';
+import apiClient from '@/api/apiClient';
+import axios from 'axios';
+import { areas, parts, markerImages } from '../../components/constants';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
 
 //추가사항-낙관적업데이트 적용하기
 
 interface Post {
-    id: number
-    profileImage: string
-    author: string
-    title: string
-    content: string
-    fileNames: string
-    region: string
-    part: string
+    id: number;
+    profileImage: string;
+    author: string;
+    title: string;
+    content: string;
+    fileNames: string;
+    region: string;
+    part: string;
     coordinates: {
-        latitude: number
-        longitude: number
-    }
-    timestamp: string
-    likesCount: number
-    savesCount: number
-    viewCount: number
+        latitude: number;
+        longitude: number;
+    };
+    timestamp: string;
+    likesCount: number;
+    savesCount: number;
+    viewCount: number;
 }
 
 declare global {
     interface Window {
-        kakao: any
+        kakao: any;
     }
 }
 
 export default function PromotionPlace() {
-    const [showMap, setShowMap] = useState(false)
-    const [selectedArea, setSelectedArea] = useState('ALL')
-    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'VOCAL' | 'DANCE'>('ALL')
-    const [showModal, setShowModal] = useState(false)
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null)
-    const [currentPage, setCurrentPage] = useState(1)
-    const postsPerPage = 9
-    const mapRef = useRef<any>(null)
-    const router = useRouter()
-    const currentUser = useRecoilValue(userState)
-    const [likedPosts, setLikedPosts] = useState<number[]>([])
-    const [savedPosts, setSavedPosts] = useState<number[]>([])
+    const [showMap, setShowMap] = useState(false);
+    const [selectedArea, setSelectedArea] = useState('ALL');
+    const [selectedType, setSelectedType] = useState<'ALL' | 'BAND' | 'VOCAL' | 'DANCE'>('ALL');
+    const [showModal, setShowModal] = useState(false);
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const postsPerPage = 9;
+    const mapRef = useRef<any>(null);
+    const router = useRouter();
+    const currentUser = useRecoilValue(userState);
+    const [likedPosts, setLikedPosts] = useState<number[]>([]);
+    const [savedPosts, setSavedPosts] = useState<number[]>([]);
 
     const fetchPosts = async (): Promise<Post[]> => {
         try {
-            const response = await apiClient.get('/promotionboard')
-            let data = response.data
+            const response = await apiClient.get('/promotionboard');
+            let data = response.data;
 
-            const baseUrl = `https://groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com/`
+            const baseUrl = `https://groovymap-s3-bucket.s3.ap-northeast-2.amazonaws.com/`;
             return data.map((post: any) => ({
                 ...post,
                 profileImage: post.profileImage,
                 fileNames: post.fileNames ? `${baseUrl}${post.fileNames}` : '', // fileNames를 절대 경로로 설정
-            }))
+            }));
         } catch (error: any) {
             if (axios.isAxiosError(error)) {
-                throw new Error(`HTTP error! status: ${error.response?.status}`)
+                throw new Error(`HTTP error! status: ${error.response?.status}`);
             } else {
-                throw new Error(`HTTP error! status: ${error.message}`)
+                throw new Error(`HTTP error! status: ${error.message}`);
             }
         }
-    }
+    };
 
     const {
         data: posts,
@@ -82,181 +82,181 @@ export default function PromotionPlace() {
     } = useQuery<Post[], Error>({
         queryKey: ['posts'],
         queryFn: fetchPosts,
-    })
+    });
 
     //지도 버튼 핸들러
     const handleMapButtonClick = () => {
-        setShowMap(!showMap)
-    }
+        setShowMap(!showMap);
+    };
     //지역 드롭다운 핸들러
     const handleAreaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSelectedArea(e.target.value)
-    }
+        setSelectedArea(e.target.value);
+    };
     //파트 드롭다운 핸들러
     const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedValue = e.target.value as 'ALL' | 'BAND' | 'VOCAL' | 'DANCE'
-        setSelectedType(selectedValue)
-    }
+        const selectedValue = e.target.value as 'ALL' | 'BAND' | 'VOCAL' | 'DANCE';
+        setSelectedType(selectedValue);
+    };
     //게시글 조회수
     const handlePostClick = async (post: Post) => {
-        const updatedPost = { ...post, viewCount: post.viewCount + 1 }
-        setSelectedPost(updatedPost)
-        setShowModal(true)
-        setShowMap(false)
+        const updatedPost = { ...post, viewCount: post.viewCount + 1 };
+        setSelectedPost(updatedPost);
+        setShowModal(true);
+        setShowMap(false);
         try {
-            const response = await apiClient.get(`/promotionboard/${post.id}`)
+            const response = await apiClient.get(`/promotionboard/${post.id}`);
             // 서버로부터 받은 최신 조회수로 상태를 업데이트합니다.
-            const freshViewCount = response.data.viewCount
+            const freshViewCount = response.data.viewCount;
             setSelectedPost((prevPost) => ({
                 ...prevPost!,
                 viewCount: freshViewCount,
-            }))
+            }));
         } catch (error: any) {
-            console.error(`Failed to update view count for post ${post.id}:`, error)
-            const revertedPost = { ...post, viewCount: post.viewCount }
-            setSelectedPost(revertedPost)
+            console.error(`Failed to update view count for post ${post.id}:`, error);
+            const revertedPost = { ...post, viewCount: post.viewCount };
+            setSelectedPost(revertedPost);
         }
-    }
+    };
     const handleCloseModal = () => {
-        setShowModal(false)
-        setSelectedPost(null)
-    }
+        setShowModal(false);
+        setSelectedPost(null);
+    };
     //게시글 작성 버튼 핸들러
     const handleWriteButtonClick = () => {
         if (currentUser && currentUser.nickname && currentUser.profileUrl) {
-            router.push('/promotion-place/write')
+            router.push('/promotion-place/write');
         } else {
-            alert('로그인이 필요합니다.')
-            router.push('/login') // 로그인 페이지로 이동
+            alert('로그인이 필요합니다.');
+            router.push('/login'); // 로그인 페이지로 이동
         }
-    }
+    };
     const initializeMap = useCallback((): any => {
         if (!mapRef.current) {
-            const container = document.getElementById('map')
+            const container = document.getElementById('map');
             const options = {
                 center: new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng),
                 level: selectedArea === 'ALL' ? 8 : 4,
-            }
-            const kakaoMap = new window.kakao.maps.Map(container, options)
-            mapRef.current = kakaoMap
-            return kakaoMap
+            };
+            const kakaoMap = new window.kakao.maps.Map(container, options);
+            mapRef.current = kakaoMap;
+            return kakaoMap;
         }
-        return mapRef.current
-    }, [selectedArea])
+        return mapRef.current;
+    }, [selectedArea]);
 
     const addMarkersToMap = useCallback(
         (map: any, posts: Post[]): void => {
             // 기존에 추가된 모든 마커 제거
             if (map.markers) {
-                map.markers.forEach((marker: any) => marker.setMap(null))
+                map.markers.forEach((marker: any) => marker.setMap(null));
             }
 
             // 새로운 마커 배열 초기화
-            map.markers = []
+            map.markers = [];
 
             // 선택된 유형 필터링
-            const filteredPosts = selectedType === 'ALL' ? posts : posts.filter((post) => post.part === selectedType)
+            const filteredPosts = selectedType === 'ALL' ? posts : posts.filter((post) => post.part === selectedType);
 
             filteredPosts.forEach((post) => {
                 const markerPosition = new window.kakao.maps.LatLng(
                     post.coordinates.latitude,
-                    post.coordinates.longitude,
-                )
+                    post.coordinates.longitude
+                );
                 const markerImage = new window.kakao.maps.MarkerImage(
                     markerImages[post.part as 'BAND' | 'VOCAL' | 'DANCE'],
-                    new window.kakao.maps.Size(24, 35),
-                )
+                    new window.kakao.maps.Size(24, 35)
+                );
                 const marker = new window.kakao.maps.Marker({
                     position: markerPosition,
                     image: markerImage,
-                })
-                marker.setMap(map)
-                map.markers.push(marker)
-            })
+                });
+                marker.setMap(map);
+                map.markers.push(marker);
+            });
         },
-        [selectedType],
-    )
+        [selectedType]
+    );
 
     useEffect(() => {
         if (showMap) {
             if (!mapRef.current) {
-                const script = document.createElement('script')
-                script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false&libraries=services`
-                script.async = true
-                document.head.appendChild(script)
+                const script = document.createElement('script');
+                script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&autoload=false&libraries=services`;
+                script.async = true;
+                document.head.appendChild(script);
 
                 script.onload = () => {
                     window.kakao.maps.load(() => {
-                        const map = initializeMap()
-                        addMarkersToMap(map, posts || [])
-                    })
-                }
+                        const map = initializeMap();
+                        addMarkersToMap(map, posts || []);
+                    });
+                };
 
                 return () => {
-                    document.head.removeChild(script)
-                }
+                    document.head.removeChild(script);
+                };
             } else {
-                const map = initializeMap()
-                const moveLatLon = new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng)
-                map.setCenter(moveLatLon)
-                map.setLevel(selectedArea === 'ALL' ? 8 : 4)
-                addMarkersToMap(map, posts || [])
+                const map = initializeMap();
+                const moveLatLon = new window.kakao.maps.LatLng(areas[selectedArea].lat, areas[selectedArea].lng);
+                map.setCenter(moveLatLon);
+                map.setLevel(selectedArea === 'ALL' ? 8 : 4);
+                addMarkersToMap(map, posts || []);
             }
         }
-    }, [showMap, selectedArea, selectedType, posts, initializeMap, addMarkersToMap])
+    }, [showMap, selectedArea, selectedType, posts, initializeMap, addMarkersToMap]);
 
     // 상태 초기화 부분 제거
     useEffect(() => {
         if (mapRef.current && !showMap) {
-            mapRef.current = null
+            mapRef.current = null;
         }
-    }, [showMap])
+    }, [showMap]);
 
     //로그인한 유저가 좋아요와 저장하기 버튼을 누른 흔적(?)
     useEffect(() => {
         const fetchUserActivities = async () => {
-            if (!currentUser) return
+            if (!currentUser) return;
             try {
                 const response = await apiClient.get(`/promotionboard/myList`, {
                     headers: { Authorization: `Bearer ${currentUser.token}` },
-                })
-                const { likePostIds, savePostIds } = response.data
-                setLikedPosts(likePostIds)
-                setSavedPosts(savePostIds)
+                });
+                const { likePostIds, savePostIds } = response.data;
+                setLikedPosts(likePostIds);
+                setSavedPosts(savePostIds);
             } catch (error) {
-                console.error('Failed to fetch user activities:', error)
+                console.error('Failed to fetch user activities:', error);
             }
-        }
+        };
 
-        fetchUserActivities()
-    }, [currentUser])
+        fetchUserActivities();
+    }, [currentUser]);
 
     //api 연결 확인용도
     if (isLoading) {
-        return <div>Loading...</div>
+        return <div>Loading...</div>;
     }
     if (error) {
-        return <div>Error fetching data: {error.message}</div>
+        return <div>Error fetching data: {error.message}</div>;
     }
 
     //최신순으로 게시물 정렬
-    const sortedPosts = (posts || []).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    const sortedPosts = (posts || []).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     const filteredPosts = sortedPosts.filter((post) => {
-        const areaMatch = selectedArea === 'ALL' || post.region === selectedArea
-        const typeMatch = selectedType === 'ALL' || post.part === selectedType
-        return areaMatch && typeMatch
-    })
+        const areaMatch = selectedArea === 'ALL' || post.region === selectedArea;
+        const typeMatch = selectedType === 'ALL' || post.part === selectedType;
+        return areaMatch && typeMatch;
+    });
     //게시글 최대 9개 이후는 페이지 넘어가기
-    const indexOfLastPost = currentPage * postsPerPage
-    const indexOfFirstPost = indexOfLastPost - postsPerPage
-    const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost)
-    const pageNumbers = []
+    const indexOfLastPost = currentPage * postsPerPage;
+    const indexOfFirstPost = indexOfLastPost - postsPerPage;
+    const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+    const pageNumbers = [];
     for (let i = 1; i <= Math.ceil(filteredPosts.length / postsPerPage); i++) {
-        pageNumbers.push(i)
+        pageNumbers.push(i);
     }
     const handlePageChange = (pageNumber: number) => {
-        setCurrentPage(pageNumber)
-    }
+        setCurrentPage(pageNumber);
+    };
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -364,5 +364,5 @@ export default function PromotionPlace() {
                 saved={savedPosts.includes(selectedPost?.id || 0)} // saved 상태 전달
             />
         </div>
-    )
+    );
 }

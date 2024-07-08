@@ -16,7 +16,7 @@ export interface Post {
     part: string;
     region: string;
     recruitNum: number;
-    date: DateTime;
+    timeStamp: string;
     viewCount: number;
 }
 
@@ -77,6 +77,24 @@ export const regionCenters: { [key: string]: { name: string; lat: number; lng: n
     EUNPYEONGGU: { name: '은평구', lat: 37.6176, lng: 126.9227 },
     JUNGGU: { name: '중구', lat: 37.5633, lng: 126.9978 },
     JUNGNANGGU: { name: '중랑구', lat: 37.6063, lng: 127.0924 },
+};
+export const fieldTranslations: { [key: string]: string } = {
+    BAND: '밴드',
+    DANCE: '댄스',
+    VOCAL: '보컬',
+};
+
+export const partTranslations: { [key: string]: string } = {
+    GUITAR: '기타',
+    BASE: '베이스',
+    DRUM: '드럼',
+    VOCAL: '보컬',
+    KEYBOARD: '키보드',
+    ROCKING: '락킹',
+    POPPING: '팝핑',
+    BREAKING: '브레이킹',
+    HIPHOP: '힙합',
+    JAZZ: '재즈',
 };
 
 declare namespace kakao.maps {

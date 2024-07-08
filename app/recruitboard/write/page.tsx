@@ -8,14 +8,7 @@ import { userState } from '@/recoil/state/userState';
 import { HttpStatusCode } from 'axios';
 import { useRouter } from 'next/navigation';
 
-interface WritePostFormProps {
-    postId: string;
-    setPosts: React.Dispatch<React.SetStateAction<Post[]>>;
-    updatePostList: () => void;
-    toggleWriting: () => void;
-}
-
-const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList, toggleWriting }) => {
+const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [region, setRegion] = useState('');
@@ -54,8 +47,6 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
             const newPostId = response.data.id;
             router.push(`/recruitboard/${newPostId}`);
             if (response.status === HttpStatusCode.Ok) {
-                const newPost = response.data;
-                setPosts((prev) => [...prev, newPost]);
                 setTitle('');
                 setContent('');
                 setRegion('');
@@ -63,9 +54,6 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                 setPart('');
                 setMembers(1);
                 setSelectedField('');
-
-                updatePostList();
-                toggleWriting();
             } else {
                 console.error('error', response.statusText);
             }

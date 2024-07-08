@@ -5,12 +5,13 @@ import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 import { DateTime } from 'luxon';
+import { formatDate } from '@/constants/constants';
 
 interface Comment {
     id: number;
     author: string;
     content: string;
-    date: string;
+    timestamp: string;
 }
 
 interface Post {
@@ -21,7 +22,7 @@ interface Post {
     likesCount: number;
     savesCount: number;
     viewCount: number;
-    date: string;
+    timestamp: string;
 }
 
 const PostPage: React.FC = () => {
@@ -68,12 +69,6 @@ const PostPage: React.FC = () => {
             }
         }
     };
-
-    // const handleEditClick = () => {
-    //     if (post) {
-    //         router.push(`/freeboard/edit/${post.id}`);
-    //     }
-    // };
 
     const handleCommentSubmit = async () => {
         const now = DateTime.local().toISO();
@@ -128,13 +123,12 @@ const PostPage: React.FC = () => {
             <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
             <div className="text-sm text-gray-600 mb-4">
                 <p>작성자: {post.author}</p>
-                <p>작성일: {post.date}</p>
+                <p>작성일: {formatDate(post.timestamp)}</p>
             </div>
             <p className="mr-4">조회수: {post.viewCount}</p>
             <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
             {currentUser.nickname === post.author && (
                 <div className="flex space-x-4 mb-4">
-                    {/* <button onClick={handleEditClick} className="flex items-center">수정</button> */}
                     <button onClick={handleDeletePost} className="flex items-center text-red-500 hover:text-red-700">
                         삭제
                     </button>
@@ -165,9 +159,7 @@ const PostPage: React.FC = () => {
                     <div key={comment.id} className="border-b py-2">
                         <p className="font-semibold">{comment.author}</p>
                         <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
-                        <p className="text-xs text-gray-400">
-                            {DateTime.fromISO(comment.date).toLocaleString(DateTime.DATETIME_MED)}
-                        </p>
+                        <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
                     </div>
                 ))}
             </div>

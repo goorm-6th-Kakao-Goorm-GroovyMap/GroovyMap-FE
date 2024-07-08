@@ -1,18 +1,20 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { regionCenters } from '../types';
+import { fieldTranslations, partTranslations, regionCenters } from '../types';
 import { DateTime } from 'luxon';
 import { useParams, useRouter } from 'next/navigation';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
+import { formatDate } from '@/constants/constants';
 
 interface Comment {
     id: number;
     author: string;
     content: string;
     date: string;
+    timestamp: string;
 }
 
 interface Post {
@@ -25,7 +27,7 @@ interface Post {
     part: string;
     recruitNum: number;
     viewCount: number;
-    date: string;
+    timeStamp: string;
 }
 
 const PostContent: React.FC = () => {
@@ -101,7 +103,6 @@ const PostContent: React.FC = () => {
             </button>
             {currentUser.nickname === post.author && (
                 <div className="flex space-x-4 mb-4">
-                    {/* <button onClick={handleEditClick} className="flex items-center">수정</button> */}
                     <button onClick={handleDeletePost} className="flex items-center text-red-500 hover:text-red-700">
                         삭제
                     </button>
@@ -111,24 +112,17 @@ const PostContent: React.FC = () => {
             <div className="flex items-center mb-4 text-sm text-gray-600">
                 <p className="mr-4">작성자: {post.author}</p>
                 <p className="mr-4">조회수: {post.viewCount}</p>
-                {/* <p>작성일: {DateTime.fromISO(post.date).toLocaleString(DateTime.DATE_SHORT)}</p> */}
+                <p className="mr-4">작성일: {formatDate(post.timeStamp)}</p>
             </div>
             <div className="mb-4">
                 <p className="mb-2">
-                    모집장소: {regionCenters[post.region].name} / 모집분야: {post.field} / 모집파트: {post.part} /
-                    모집인원: {post.recruitNum}
+                    모집장소: {regionCenters[post.region].name} / 모집분야: {fieldTranslations[post.field]} / 모집파트:{' '}
+                    {partTranslations[post.part]} / 모집인원: {post.recruitNum}
                 </p>
                 <p className="text-lg mb-4">{post.content}</p>
             </div>
             <h3 className="text-2xl font-bold border-t pt-4 mb-4">댓글</h3>
-            <div className="mb-4">
-                {comments.map((comment) => (
-                    <div key={comment.id} className="border-b py-2">
-                        <p className="font-bold mb-1">{comment.author}</p>
-                        <p className="text-sm">{comment.content}</p>
-                    </div>
-                ))}
-            </div>
+
             <div className="mb-4">
                 <textarea
                     className="border w-full p-2"
@@ -143,6 +137,15 @@ const PostContent: React.FC = () => {
                 >
                     댓글 작성
                 </button>
+                <div className="comments">
+                    {comments.map((comment) => (
+                        <div key={comment.id} className="border-b py-2">
+                            <p className="font-semibold">{comment.author}</p>
+                            <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
+                            <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

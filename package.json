@@ -11,6 +11,7 @@
     "dependencies": {
         "@nextui-org/react": "^2.4.1",
         "@types/luxon": "^3.4.2",
+        "@types/react-modal": "^3.16.3",
         "axios": "^1.7.2",
         "canvas-confetti": "^1.9.3",
         "clsx": "^2.1.1",

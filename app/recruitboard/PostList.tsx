@@ -1,8 +1,8 @@
 'use client';
-import apiClient from '@/api/apiClient';
-import { DateTime } from 'luxon';
+
+import { formatDate } from '@/constants/constants';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 interface Post {
     id: number;
@@ -13,22 +13,14 @@ interface Post {
     part: string;
     region: string;
     recruitNum: number;
-    date: DateTime;
+    timeStamp: string;
     viewCount: number;
 }
-
-const PostList: React.FC = () => {
-    const [posts, setPosts] = useState<Post[]>([]);
+interface PostListProps {
+    posts: Post[];
+}
+const PostList: React.FC<PostListProps> = ({ posts }) => {
     const router = useRouter();
-
-    useEffect(() => {
-        const fetchPosts = async () => {
-            const response = await apiClient.get('/recruitboard');
-            setPosts(response.data);
-        };
-
-        fetchPosts();
-    }, []);
 
     const onPostClick = (postId: number) => {
         router.push(`/recruitboard/${postId}`);
@@ -48,7 +40,7 @@ const PostList: React.FC = () => {
                     <tr key={post.id} onClick={() => onPostClick(post.id)} className="cursor-pointer">
                         <td className="border p-2">{post.title}</td>
                         <td className="border p-2">{post.author}</td>
-                        <td className="border p-2">작성일</td>
+                        <td className="border p-2">{formatDate(post.timeStamp)}</td>
                         <td className="border p-2">{post.viewCount}</td>
                     </tr>
                 ))}
