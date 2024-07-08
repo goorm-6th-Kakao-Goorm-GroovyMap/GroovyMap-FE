@@ -1,6 +1,6 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
@@ -10,6 +10,7 @@ interface Comment {
     id: number;
     author: string;
     content: string;
+    date: string;
 }
 
 interface Post {
@@ -19,6 +20,7 @@ interface Post {
     author: string;
     likesCount: number;
     savesCount: number;
+    viewCount: number;
     date: string;
 }
 
@@ -34,6 +36,7 @@ const PostPage: React.FC = () => {
         const fetchPost = async () => {
             try {
                 const response = await apiClient.get(`/freeboard/${postId}`);
+                console.log('Fetched post:', response.data);
                 setPost(response.data);
             } catch (error) {
                 console.error('Failed to fetch post:', error);
@@ -125,8 +128,9 @@ const PostPage: React.FC = () => {
             <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
             <div className="text-sm text-gray-600 mb-4">
                 <p>작성자: {post.author}</p>
-                {/* <p>작성일: {DateTime.fromISO(post.createdAt).toLocaleString(DateTime.DATE_SHORT)}</p> */}
+                <p>작성일: {post.date}</p>
             </div>
+            <p className="mr-4">조회수: {post.viewCount}</p>
             <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
             {currentUser.nickname === post.author && (
                 <div className="flex space-x-4 mb-4">
@@ -162,7 +166,7 @@ const PostPage: React.FC = () => {
                         <p className="font-semibold">{comment.author}</p>
                         <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
                         <p className="text-xs text-gray-400">
-                            {/* {DateTime.fromISO(comment.createdAt).toLocaleString(DateTime.DATETIME_MED)} */}
+                            {DateTime.fromISO(comment.date).toLocaleString(DateTime.DATETIME_MED)}
                         </p>
                     </div>
                 ))}

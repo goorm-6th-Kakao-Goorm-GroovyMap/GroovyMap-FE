@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'https://3a09-175-223-31-19.ngrok-free.app', // 백엔드 서버 주소
+    baseURL: 'https://842a-175-223-17-199.ngrok-free.app', // 백엔드 서버 주소
     withCredentials: true, // 쿠키를 포함하도록 설정
     headers: {
         //'Content-Type': 'application/json',

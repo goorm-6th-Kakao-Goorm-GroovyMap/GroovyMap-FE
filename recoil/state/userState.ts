@@ -25,3 +25,9 @@ export const activeTabState = atom({
     default: 'posts', // 기본값을 'posts'로 설정
     effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
+
+// 팀원모집 게시글 상태
+export const postState = atom({
+    key: 'postState',
+    default: [],
+});

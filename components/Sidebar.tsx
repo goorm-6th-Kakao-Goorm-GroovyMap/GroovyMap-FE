@@ -66,9 +66,9 @@ const Sidebar = () => {
                     </li>
                     <li>
                         <Link
-                            href="/Recruit"
-                            className={activeLink === '/Recruit' ? 'text-purple-700' : ''}
-                            onClick={() => handleLinkClick('/Recruit')}
+                            href="/recruitboard"
+                            className={activeLink === '/recruitboard' ? 'text-purple-700' : ''}
+                            onClick={() => handleLinkClick('/recruitboard')}
                         >
                             팀원 모집
                         </Link>

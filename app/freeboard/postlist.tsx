@@ -24,7 +24,7 @@ const PostList: React.FC = () => {
         fetchPosts();
     }, []);
 
-    const handlePostClick = (postId: number) => {
+    const onPostClick = (postId: number) => {
         router.push(`/freeboard/${postId}`);
     };
 
@@ -33,7 +33,7 @@ const PostList: React.FC = () => {
             <button onClick={() => router.push('/freeboard/write')}>글쓰기</button>
             <div>
                 {posts.map((post) => (
-                    <div key={post.id} onClick={() => handlePostClick(post.id)}>
+                    <div key={post.id} onClick={() => onPostClick(post.id)}>
                         <h2>{post.title}</h2>
                     </div>
                 ))}

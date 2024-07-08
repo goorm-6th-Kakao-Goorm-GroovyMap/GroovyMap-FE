@@ -4,123 +4,22 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FaRegEdit } from 'react-icons/fa';
 import { FaMapLocationDot } from 'react-icons/fa6';
 import { IoMdSearch } from 'react-icons/io';
-
-import Recruit_post from './PostList';
-import WritePostForm from './write/page';
 import { type Post, type Comment, type Location, regionCenters, FieldPositionMapping } from './types';
-import PostContent from './Post/[postId]/page';
-import { useParams } from 'next/navigation';
-import apiClient from '@/api/apiClient';
-// import KakaoMap from './kakaoMap';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
+// import KakaoMap from './kakaoMap';
+import { useRouter } from 'next/navigation';
+import PostList from './PostList';
 
 const Recruit_page: React.FC = () => {
     const [isMapVisible, setIsMapVisible] = useState(false);
-    const [isWriting, setIsWriting] = useState(false);
-    const [isPosting, setIsPosting] = useState(true);
-    const [selectedPost, setSelectedPost] = useState<number | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
-    const [comments, setComments] = useState<{ [key: number]: Comment[] }>({});
     const [selectedRegion, setSelectedRegion] = useState<string>('ALL');
     const [selectedField, setSelectedField] = useState<string>('');
     const [selectedPosition, setSelectedPosition] = useState<string>('');
-    const { postId } = useParams<{ postId: string }>();
-    const [locations, setLocations] = useState<Location[]>([]);
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const currentUser = useRecoilValue(userState);
-
-    const fetchPosts = async () => {
-        try {
-            const response = await apiClient.get('/recruitboard');
-            console.log(response.data);
-            if (response.status === 200) {
-                const data = Array.isArray(response.data) ? response.data : [];
-                setPosts(data);
-            } else {
-                console.error(response.statusText);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-
-    const fetchComments = async (postId: number) => {
-        try {
-            const response = await apiClient.get(`/recruitboard/${postId}/comment`);
-            if (response.status === 200) {
-                setComments((prev) => ({ ...prev, [postId]: response.data }));
-            } else {
-                console.error(response.statusText);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-
-    useEffect(() => {
-        if (selectedPost !== null) {
-            fetchComments(selectedPost);
-        }
-    }, [selectedPost]);
-
-    useEffect(() => {
-        const locations: Location[] = posts
-            .map((post) => {
-                const center = regionCenters[post.region as keyof typeof regionCenters];
-                if (center) {
-                    return {
-                        name: center.name,
-                        lat: center.lat,
-                        lng: center.lng,
-                    };
-                }
-                return null;
-            })
-            .filter((location): location is Location => location !== null);
-
-        setLocations(locations);
-    }, [posts]);
-
-    const handleAddComment = async (postId: number, authorId: string, content: string, date: string) => {
-        try {
-            const response = await apiClient.post(`/recruitboard/${postId}/comment`, {
-                postId,
-                commentAuthor: currentUser.nickname,
-                content,
-                date,
-            });
-
-            if (response.status === 200) {
-                const newComment = response.data;
-                setComments((prev) => ({
-                    ...prev,
-                    [postId]: [...(prev[postId] || []), newComment],
-                }));
-            } else {
-                console.error(response.statusText);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-
-    const toggleMapVisibility = () => {
-        setIsMapVisible((prev) => !prev);
-    };
-
-    const toggleWriting = () => {
-        setIsWriting((prev) => !prev);
-        setIsPosting((prev) => !prev);
-    };
-
-    const handlePostClick = (postId: number) => {
-        setSelectedPost(postId);
-    };
-
-    const handleGoBack = () => {
-        setSelectedPost(null);
-    };
+    const router = useRouter();
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const region = e.target.value;
@@ -157,12 +56,12 @@ const Recruit_page: React.FC = () => {
     }, [posts, selectedRegion, selectedField, selectedPosition]);
 
     useEffect(() => {
-        fetchPosts();
-    }, []);
-
-    useEffect(() => {
         filterPosts();
     }, [posts, selectedRegion, selectedField, selectedPosition, filterPosts]);
+
+    const onWriteClick = () => {
+        router.push(`/recruitboard/write`);
+    };
 
     return (
         <main className="main-container flex min-h-screen flex-col items-center p-6">
@@ -252,37 +151,17 @@ const Recruit_page: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <button className="bg-purple-700 text-white py-2 px-4" onClick={toggleMapVisibility}>
+                            <button className="bg-purple-700 text-white py-2 px-4">
                                 <FaMapLocationDot />
                             </button>
-                            <button className="bg-purple-700 text-white py-2 px-4" onClick={toggleWriting}>
+                            <button className="bg-purple-700 text-white py-2 px-4" onClick={onWriteClick}>
                                 <FaRegEdit />
                             </button>
                         </div>
                     </div>
-                    {/* {isMapVisible && <KakaoMap isVisible={isMapVisible} posts={posts} />} */}
-                    <div className="border p-4">
-                        {selectedPost
-                            ? isPosting && (
-                                  <PostContent
-                                      post={posts.find((post) => post.id === selectedPost)!}
-                                      comments={comments[selectedPost] || []}
-                                      addComment={handleAddComment}
-                                      goBack={handleGoBack}
-                                      authorId={currentUser.nickname}
-                                  />
-                              )
-                            : isPosting && <Recruit_post posts={filteredPosts} onPostClick={handlePostClick} />}
-                    </div>
-                    {isWriting && (
-                        <WritePostForm
-                            postId={postId}
-                            setPosts={setPosts}
-                            updatePostList={fetchPosts}
-                            toggleWriting={toggleWriting}
-                        />
-                    )}
+                    {/* {isMapVisible && <KakaoMap />} */}
                 </section>
+                <PostList />
             </div>
         </main>
     );

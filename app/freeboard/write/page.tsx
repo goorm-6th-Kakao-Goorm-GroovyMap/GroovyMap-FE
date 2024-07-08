@@ -9,6 +9,7 @@ import { Quill } from 'react-quill';
 import ImageUploader from 'quill-image-uploader';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
+import { DateTime } from 'luxon';
 
 Quill.register('modules/imageUploader', ImageUploader);
 
@@ -16,27 +17,46 @@ const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
-    const [likesCount, setLikesCount] = useState('');
-    const [savesCount, setSavesCount] = useState('');
-    const [viewCount, setViewCount] = useState('');
-    const [timestamp, setTimestamp] = useState('');
     const [content, setContent] = useState('');
     const currentUser = useRecoilValue(userState);
     const router = useRouter();
 
-    const handleImageUpload = async (file: File) => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
         const formData = new FormData();
-        formData.append('fileNames', file);
+        formData.append('title', title);
+        formData.append('author', currentUser.nickname);
+        formData.append('content', content);
+        formData.append('savesCount', '0');
+        formData.append('likesCount', '0');
+        formData.append('viewCount', '0');
+        formData.append('timestamp', new Date().toISOString());
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        const imgTags = doc.querySelectorAll('img');
+
+        imgTags.forEach((imgTag, index) => {
+            fetch(imgTag.src)
+                .then((res) => res.blob())
+                .then((blob) => {
+                    const file = new File([blob], `image${index}.png`, { type: blob.type });
+                    formData.append(`fileNames`, file);
+                });
+        });
+
         try {
-            const response = await apiClient.post('/upload', formData, {
+            const response = await apiClient.post('/freeboard/write', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            return response.data.url;
+
+            const newPostId = response.data.id;
+            router.push(`/freeboard/${newPostId}`);
         } catch (error) {
-            console.error('Image upload failed:', error);
-            throw error;
+            console.error('Failed to write post:', error);
         }
     };
 
@@ -50,9 +70,6 @@ const WritePostForm: React.FC = () => {
                 ['link', 'image', 'video'],
                 ['clean'],
             ],
-            imageUploader: {
-                upload: handleImageUpload,
-            },
         }),
         []
     );
@@ -72,32 +89,6 @@ const WritePostForm: React.FC = () => {
         'image',
         'video',
     ];
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('author', currentUser.nickname);
-        formData.append('content', content);
-        formData.append('likesCount', likesCount);
-        formData.append('savesCount', savesCount);
-        formData.append('viewCount', viewCount);
-        formData.append('timestamp', timestamp);
-
-        try {
-            const response = await apiClient.post('/freeboard/write', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            const newPostId = response.data.id;
-            router.push(`/freeboard/${newPostId}`);
-        } catch (error) {
-            console.error('Failed to write post:', error);
-        }
-    };
 
     return (
         <form onSubmit={handleSubmit} className="border p-4">

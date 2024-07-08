@@ -1,13 +1,38 @@
 'use client';
-import React from 'react';
-import type { Post } from './types';
+import apiClient from '@/api/apiClient';
+import { DateTime } from 'luxon';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
-interface PostListProps {
-    posts: Post[];
-    onPostClick: (postId: number) => void;
+interface Post {
+    id: number;
+    title: string;
+    author: string;
+    content: string;
+    field: string;
+    part: string;
+    region: string;
+    recruitNum: number;
+    date: DateTime;
+    viewCount: number;
 }
 
-const PostList: React.FC<PostListProps> = ({ posts, onPostClick }) => {
+const PostList: React.FC = () => {
+    const [posts, setPosts] = useState<Post[]>([]);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const response = await apiClient.get('/recruitboard');
+            setPosts(response.data);
+        };
+
+        fetchPosts();
+    }, []);
+
+    const onPostClick = (postId: number) => {
+        router.push(`/recruitboard/${postId}`);
+    };
     return (
         <table className="w-full border-collapse border">
             <thead>

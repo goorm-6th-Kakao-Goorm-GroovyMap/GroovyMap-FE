@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { FieldPositionMapping, Post } from '../types';
 import apiClient from '@/api/apiClient';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
+import { HttpStatusCode } from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface WritePostFormProps {
     postId: string;
@@ -12,7 +16,6 @@ interface WritePostFormProps {
 }
 
 const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updatePostList, toggleWriting }) => {
-    const [author] = useState('');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [region, setRegion] = useState('');
@@ -20,16 +23,18 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
     const [part, setPart] = useState('');
     const [members, setMembers] = useState(1);
     const [selectedField, setSelectedField] = useState<string>('');
+    const currentUser = useRecoilValue(userState);
+    const router = useRouter();
 
     const handleMemberChange = (increment: boolean) => {
         setMembers((prev) => (increment ? prev + 1 : prev > 1 ? prev - 1 : 1));
     };
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
 
         const formData = new FormData();
-        formData.append('author', author);
+        formData.append('author', currentUser.nickname);
         formData.append('title', title);
         formData.append('content', content);
         formData.append('region', region);
@@ -46,8 +51,9 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                     'ngrok-skip-browser-warning': '69420',
                 },
             });
-
-            if (response.status === 201) {
+            const newPostId = response.data.id;
+            router.push(`/recruitboard/${newPostId}`);
+            if (response.status === HttpStatusCode.Ok) {
                 const newPost = response.data;
                 setPosts((prev) => [...prev, newPost]);
                 setTitle('');
@@ -101,7 +107,7 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                     onChange={(e) => setRegion(e.target.value)}
                 >
                     <option value="">선택</option>
-                    <option value="ALL">전체</option>
+                    <option value="SEOUL">서울 전체</option>
                     <option value="GANGNAMGU">강남구</option>
                     <option value="GANGDONGGU">강동구</option>
                     <option value="GANGBUKGU">강북구</option>
@@ -147,7 +153,7 @@ const WritePostForm: React.FC<WritePostFormProps> = ({ postId, setPosts, updateP
                     value={part}
                     onChange={(e) => setPart(e.target.value)}
                 >
-                    <option value="">선택 </option>
+                    <option value="">선택</option>
                     {selectedField &&
                         Object.entries(FieldPositionMapping[selectedField]).map(([key, value]) => (
                             <option key={key} value={key}>
