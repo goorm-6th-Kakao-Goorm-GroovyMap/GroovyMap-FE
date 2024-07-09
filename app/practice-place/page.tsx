@@ -1,4 +1,3 @@
-/* eslint-disable react/jsx-no-undef */
 /* eslint-disable @next/next/no-img-element */ // 이미지 src 넣을 때 에러 수정하기 위해 추가
 'use client';
 
@@ -79,8 +78,8 @@ const PracticePlace: React.FC = () => {
     const addPlaceMutation = useMutation<PracticePlace, Error, Omit<PracticePlace, 'id'>>({
         mutationFn: addPracticePlace,
         onSuccess: async (newPlace) => {
-            if (!newPlace.id) {
-                console.error('Returned ID is undefined.');
+            if (!newPlace.id || typeof newPlace.id !== 'number') {
+                // 여기서 newPlace.id가 number 타입인지 확인                console.error('Returned ID is undefined.');
                 toast.error('새로운 장소의 ID를 가져오는 데 실패했습니다.');
                 return;
             }

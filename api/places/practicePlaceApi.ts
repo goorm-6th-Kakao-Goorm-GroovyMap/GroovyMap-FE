@@ -1,8 +1,8 @@
 import apiClient from '../apiClient';
-import type { PracticePlace } from '../../types/types';
+import type { PracticePlace, PracticePlaceResponse } from '../../types/types';
 
 // 전체 연습 장소 정보를 가져오는 함수
-export const getPracticePlaces = async (): Promise<PracticePlace[]> => {
+export const getPracticePlaces = async (): Promise<PracticePlaceResponse> => {
     const response = await apiClient.get('/practiceplace');
     console.log('API 응답 데이터:', response.data); // API 응답 데이터 로그 출력
     return response.data;

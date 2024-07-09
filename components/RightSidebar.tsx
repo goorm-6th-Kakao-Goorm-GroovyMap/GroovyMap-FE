@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,10 +17,19 @@ const RightSidebar = () => {
     const resetUser = useResetRecoilState(userState); // 초기화 함수
     const [showMenu, setShowMenu] = useState(false);
     const [isMounted, setIsMounted] = useState(false); // 클라이언트 측에서만 렌더링하도록 상태 추가
+    const [currentSlide, setCurrentSlide] = useState(0); // 슬라이드 상태
 
     useEffect(() => {
         setIsMounted(true);
     }, []); // 컴포넌트가 마운트되었을 때 상태를 true로 설정
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 10000); // 10초마다 슬라이드 전환시킴
+
+        return () => clearInterval(interval); // 컴포넌트 언마운트 시 인터벌 정리
+    }, []);
 
     // 비로그인 사용자 아이콘 클릭 시, 로그인 페이지로 이동
     const handleUserIconClick = () => {
@@ -49,6 +59,32 @@ const RightSidebar = () => {
         }
     };
 
+    const getProfileImageUrl = (userProfileUrl: string | undefined) => {
+        if (!userProfileUrl) return '';
+        if (typeof userProfileUrl === 'string' && userProfileUrl.startsWith('http')) return userProfileUrl;
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://localhost:8080';
+        return `${backendUrl}${userProfileUrl}`;
+    };
+
+    // 버스킹 장소 이미지 클릭 시 이동하는 함수
+    const handleBuskingLinkClick = () => {
+        window.location.href = 'https://www.mapo.go.kr/site/culture/stage/app_step_01';
+    };
+
+    // 버스킹 장소 슬라이드 내용
+    const slides = [
+        {
+            image: '/busking1.jpg',
+            text: '<br>2024<br>서울 거리공연<br>구석구석 라이브<br> <span>-</span><br>서울 전역 50곳에서<br>펼쳐지는 거리공연',
+            link: 'https://nodeul.org/program/2024-%ec%84%9c%ec%9a%b8%ea%b1%b0%eb%a6%ac%ea%b3%b5%ec%97%b0-%ea%b5%ac%ec%84%9d%ea%b5%ac%ec%84%9d%eb%9d%bc%ec%9d%b4%eb%b8%8c/',
+        },
+        {
+            image: '/busking3.jpg',
+            text: '<br>2024 서울<br>국제댄스페스티벌<br>인 탱크<br> <span>-</span><br>인탱크 서포터즈 <br>4기 모집<br>',
+            link: 'https://ingdance.kr/62/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&bmode=view&idx=26275872&t=board',
+        },
+    ];
+
     if (!isMounted) {
         return null;
     }
@@ -65,17 +101,18 @@ const RightSidebar = () => {
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="w-10 h-10 rounded-full overflow-hidden">
+                                <div className="relative w-8 h-8 rounded-full overflow-hidden">
                                     <Image
-                                        src={user.profileUrl}
+                                        src={getProfileImageUrl(user.profileUrl) || user.profileUrl}
                                         alt="User Profile"
-                                        layout="fill"
-                                        objectFit="cover"
+                                        fill
+                                        priority
+                                        style={{ objectFit: 'cover' }} // objectFit 대체
                                         className="rounded-full"
                                     />
                                 </div>
                             ) : (
-                                <div className="w-10 h-10 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                <div className="w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full">
                                     {user.nickname.charAt(0).toUpperCase()}
                                 </div>
                             )}
@@ -107,8 +144,31 @@ const RightSidebar = () => {
                     )}
                 </div>
             </div>
-            <div className="bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center">
-                <p className="text-gray-700 font-semibold text-xl">버스킹 링크</p>
+            <div className="bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center relative">
+                <Image
+                    src={slides[currentSlide].image}
+                    alt={slides[currentSlide].text}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 50vw" // 필요한 sizes 속성 추가
+                    style={{ objectFit: 'cover' }}
+                    className="cursor-pointer"
+                    onClick={() => (window.location.href = slides[currentSlide].link)}
+                />
+                <p
+                    className="gradient-text z-50 font-medium text-xl mt-4 cursor-pointer"
+                    onClick={() => (window.location.href = slides[currentSlide].link)}
+                    dangerouslySetInnerHTML={{ __html: slides[currentSlide].text }}
+                ></p>
+            </div>
+            <div className="flex justify-center mt-2">
+                {slides.map((_, index) => (
+                    <span
+                        key={index}
+                        onClick={() => setCurrentSlide(index)} // 클릭 시 슬라이드 전환
+                        className={`mx-1 h-2 w-2 rounded-full cursor-pointer ${currentSlide === index ? 'bg-purple-700' : 'bg-gray-300'}`}
+                    ></span>
+                ))}
             </div>
         </div>
     );

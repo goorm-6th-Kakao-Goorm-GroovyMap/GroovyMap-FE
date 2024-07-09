@@ -1,38 +1,39 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { IoMdSearch } from 'react-icons/io'
+import React, { useState } from 'react';
+import { IoMdSearch } from 'react-icons/io';
+import Image from 'next/image';
 
 interface ImageObject {
-    id: string
-    image: string
-    seed: number
-    nsfw_content_detected: any
-    nsfw_score: any
+    id: string;
+    image: string;
+    seed: number;
+    nsfw_content_detected: any;
+    nsfw_score: any;
 }
 
 interface ApiResponse {
-    id: string
-    model_version: string
-    images: ImageObject[]
+    id: string;
+    model_version: string;
+    images: ImageObject[];
 }
 
 const AiLogoGeneration: React.FC = () => {
-    const [prompt, setPrompt] = useState<string>('')
-    const [negativePrompt, setNegativePrompt] = useState<string>('')
-    const [images, setImages] = useState<string[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [prompt, setPrompt] = useState<string>('');
+    const [negativePrompt, setNegativePrompt] = useState<string>('');
+    const [images, setImages] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setPrompt(e.target.value)
-    }
+        setPrompt(e.target.value);
+    };
 
     const handleNegativePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setNegativePrompt(e.target.value)
-    }
+        setNegativePrompt(e.target.value);
+    };
 
     const handleSubmit = async () => {
-        setIsLoading(true)
+        setIsLoading(true);
         try {
             const response = await fetch('https://api.kakaobrain.com/v2/inference/karlo/t2i', {
                 method: 'POST',
@@ -50,22 +51,22 @@ const AiLogoGeneration: React.FC = () => {
                     image_format: 'png',
                     samples: 3,
                 }),
-            })
+            });
 
             if (!response.ok) {
-                console.error('Failed to generate logo')
-                setIsLoading(false)
-                return
+                console.error('Failed to generate logo');
+                setIsLoading(false);
+                return;
             }
-            const result: ApiResponse = await response.json()
-            const imageUrls = result.images.map((image) => image.image)
-            setImages(imageUrls)
+            const result: ApiResponse = await response.json();
+            const imageUrls = result.images.map((image) => image.image);
+            setImages(imageUrls);
         } catch (error) {
-            console.error('Error:', error)
+            console.error('Error:', error);
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
-    }
+    };
 
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
@@ -128,8 +129,11 @@ const AiLogoGeneration: React.FC = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {images.map((image, index) => (
                                 <div key={index} className="flex flex-col items-center">
-                                    <img
+                                    <Image
                                         src={image}
+                                        width={24}
+                                        height={18}
+
                                         alt={`Generated logo ${index + 1}`}
                                         className="w-96 h-96 object-contain mb-2"
                                     />
@@ -149,7 +153,7 @@ const AiLogoGeneration: React.FC = () => {
                 )}
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default AiLogoGeneration
+export default AiLogoGeneration;
