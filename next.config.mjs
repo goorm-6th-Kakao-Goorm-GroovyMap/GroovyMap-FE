@@ -10,6 +10,7 @@ const nextConfig = {
         loader: 'default',
         path: '/_next/image',
     },
+
     webpack: (config) => {
         config.module.rules.push({
             test: /\.(mov|mp4)$/,
