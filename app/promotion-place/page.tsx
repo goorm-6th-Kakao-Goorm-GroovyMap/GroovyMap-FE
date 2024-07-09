@@ -79,6 +79,7 @@ export default function PromotionPlace() {
         data: posts,
         error,
         isLoading,
+        refetch,
     } = useQuery<Post[], Error>({
         queryKey: ['posts'],
         queryFn: fetchPosts,
@@ -117,9 +118,16 @@ export default function PromotionPlace() {
             setSelectedPost(revertedPost);
         }
     };
-    const handleCloseModal = () => {
+    const handleCloseModal = async () => {
         setShowModal(false);
         setSelectedPost(null);
+
+        // 전체 게시물을 다시 가져옴
+        try {
+            await refetch();
+        } catch (error) {
+            console.error('Failed to refetch posts:', error);
+        }
     };
     //게시글 작성 버튼 핸들러
     const handleWriteButtonClick = () => {
@@ -259,30 +267,30 @@ export default function PromotionPlace() {
     };
 
     return (
-        <div className="content p-6 bg-purple-50 min-h-screen">
-            <div className="content flex-1 w-full max-w-4xl mx-auto">
-                <div className="flex justify-center items-center mb-6">
-                    <div className="relative w-full">
+        <div className='content p-6 bg-purple-50 min-h-screen'>
+            <div className='content flex-1 w-full max-w-4xl mx-auto'>
+                <div className='flex justify-center items-center mb-6'>
+                    <div className='relative w-full'>
                         <input
-                            type="text"
-                            className="w-full border rounded p-2 pl-10"
-                            placeholder="검색어를 입력하세요..."
+                            type='text'
+                            className='w-full border rounded p-2 pl-10'
+                            placeholder='검색어를 입력하세요...'
                         />
-                        <div className="absolute left-3 top-3 text-gray-400">
+                        <div className='absolute left-3 top-3 text-gray-400'>
                             <IoMdSearch size={20} />
                         </div>
                     </div>
                 </div>
-                <header className="mb-6">
-                    <h1 className="text-2xl font-bold text-purple-700">홍보게시판</h1>
+                <header className='mb-6'>
+                    <h1 className='text-2xl font-bold text-purple-700'>홍보게시판</h1>
                 </header>
-                <section className="mb-6">
-                    <div className="flex flex-wrap justify-between items-center mb-6 space-x-4">
-                        <div className="flex items-center space-x-2">
-                            <div className="flex items-center border rounded-lg p-2 bg-white">
-                                <label className="font-bold mr-2">지역</label>
+                <section className='mb-6'>
+                    <div className='flex flex-wrap justify-between items-center mb-6 space-x-4'>
+                        <div className='flex items-center space-x-2'>
+                            <div className='flex items-center border rounded-lg p-2 bg-white'>
+                                <label className='font-bold mr-2'>지역</label>
                                 <select
-                                    className="border-none p-2 bg-white"
+                                    className='border-none p-2 bg-white'
                                     value={selectedArea}
                                     onChange={handleAreaChange}
                                 >
@@ -293,10 +301,10 @@ export default function PromotionPlace() {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center border rounded-lg p-2 bg-white">
-                                <label className="font-bold mr-2">유형</label>
+                            <div className='flex items-center border rounded-lg p-2 bg-white'>
+                                <label className='font-bold mr-2'>유형</label>
                                 <select
-                                    className="border-none p-2 bg-white"
+                                    className='border-none p-2 bg-white'
                                     value={selectedType}
                                     onChange={handleTypeChange}
                                 >
@@ -308,23 +316,23 @@ export default function PromotionPlace() {
                                 </select>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className='flex items-center space-x-2'>
                             <button
-                                className="bg-purple-700 rounded-lg text-white py-2 px-4"
+                                className='bg-purple-700 rounded-lg text-white py-2 px-4'
                                 onClick={handleMapButtonClick}
                             >
                                 <FaMapLocationDot />
                             </button>
                             <button
-                                className="bg-purple-700 rounded-lg text-white py-2 px-4"
+                                className='bg-purple-700 rounded-lg text-white py-2 px-4'
                                 onClick={handleWriteButtonClick}
                             >
                                 <FaRegEdit />
                             </button>
                         </div>
                     </div>
-                    {showMap && <div className="w-full h-96 border m-2" id="map"></div>}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {showMap && <div className='w-full h-96 border m-2' id='map'></div>}
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                         {currentPosts.map((post) => (
                             <div key={post.id} onClick={() => handlePostClick(post)}>
                                 <PostItem
@@ -341,7 +349,7 @@ export default function PromotionPlace() {
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-center mt-6">
+                    <div className='flex justify-center mt-6'>
                         {pageNumbers.map((number) => (
                             <button
                                 key={number}
@@ -362,6 +370,16 @@ export default function PromotionPlace() {
                 post={selectedPost}
                 liked={likedPosts.includes(selectedPost?.id || 0)} // liked 상태 전달
                 saved={savedPosts.includes(selectedPost?.id || 0)} // saved 상태 전달
+                setLiked={(liked) =>
+                    setLikedPosts((prev) =>
+                        liked ? [...prev, selectedPost!.id] : prev.filter((id) => id !== selectedPost!.id)
+                    )
+                }
+                setSaved={(saved) =>
+                    setSavedPosts((prev) =>
+                        saved ? [...prev, selectedPost!.id] : prev.filter((id) => id !== selectedPost!.id)
+                    )
+                }
             />
         </div>
     );
