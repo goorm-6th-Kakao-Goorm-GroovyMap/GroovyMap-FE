@@ -37,10 +37,9 @@ const PostPage: React.FC = () => {
         const fetchPost = async () => {
             try {
                 const response = await apiClient.get(`/freeboard/${postId}`);
-                console.log('Fetched post:', response.data);
                 setPost(response.data);
             } catch (error) {
-                console.error('Failed to fetch post:', error);
+                console.log(error);
             }
         };
 
@@ -49,7 +48,7 @@ const PostPage: React.FC = () => {
                 const response = await apiClient.get(`/freeboard/${postId}/comment`);
                 setComments(response.data);
             } catch (error) {
-                console.error('Failed to fetch comments:', error);
+                console.log(error);
             }
         };
 
@@ -65,7 +64,7 @@ const PostPage: React.FC = () => {
                 await apiClient.delete(`/freeboard/${post.id}`);
                 router.push('/freeboard');
             } catch (error) {
-                console.error('Failed to delete post:', error);
+                console.log(error);
             }
         }
     };
@@ -84,7 +83,7 @@ const PostPage: React.FC = () => {
                 const response = await apiClient.get(`/freeboard/${postId}/comment`);
                 setComments(response.data);
             } catch (error) {
-                console.error('Failed to submit comment:', error);
+                console.log(error);
             }
         }
     };
@@ -96,7 +95,7 @@ const PostPage: React.FC = () => {
                 const response = await apiClient.get(`/freeboard/${post.id}`);
                 setPost(response.data);
             } catch (error) {
-                console.error('Failed to like post:', error);
+                console.log(error);
             }
         }
     };
@@ -108,7 +107,7 @@ const PostPage: React.FC = () => {
                 const response = await apiClient.get(`/freeboard/${post.id}`);
                 setPost(response.data);
             } catch (error) {
-                console.error('Failed to like post:', error);
+                console.log(error);
             }
         }
     };

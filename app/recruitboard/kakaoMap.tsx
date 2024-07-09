@@ -35,7 +35,7 @@ const KakaoMap: React.FC = () => {
                 const response = await apiClient.get('/recruitboard');
                 setPosts(response.data);
             } catch (error) {
-                console.error('Error fetching posts:', error);
+                console.log(error);
             }
         };
 

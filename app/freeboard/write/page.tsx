@@ -56,7 +56,7 @@ const WritePostForm: React.FC = () => {
             const newPostId = response.data.id;
             router.push(`/freeboard/${newPostId}`);
         } catch (error) {
-            console.error('Failed to write post:', error);
+            console.log(error);
         }
     };
 

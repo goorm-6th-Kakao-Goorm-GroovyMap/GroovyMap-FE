@@ -45,7 +45,7 @@ const PostContent: React.FC = () => {
                 console.log('Fetched post:', response.data);
                 setPost(response.data);
             } catch (error) {
-                console.error('Failed to fetch post:', error);
+                console.log(error);
             }
         };
 
@@ -54,7 +54,7 @@ const PostContent: React.FC = () => {
                 const response = await apiClient.get(`/recruitboard/${postId}/comment`);
                 setComments(response.data);
             } catch (error) {
-                console.error('Failed to fetch comments:', error);
+                console.log(error);
             }
         };
 
@@ -70,7 +70,7 @@ const PostContent: React.FC = () => {
                 await apiClient.delete(`/recruitboard/${post.id}`);
                 router.push('/recruitboard');
             } catch (error) {
-                console.error('Failed to delete post:', error);
+                console.log(error);
             }
         }
     };
@@ -89,7 +89,7 @@ const PostContent: React.FC = () => {
                 const response = await apiClient.get(`/recruitboard/${postId}/comment`);
                 setComments(response.data);
             } catch (error) {
-                console.error('Failed to submit comment:', error);
+                console.log(error);
             }
         }
     };

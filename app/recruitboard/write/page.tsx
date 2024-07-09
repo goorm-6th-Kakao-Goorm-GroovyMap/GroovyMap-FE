@@ -46,19 +46,8 @@ const WritePostForm: React.FC = () => {
             });
             const newPostId = response.data.id;
             router.push(`/recruitboard/${newPostId}`);
-            if (response.status === HttpStatusCode.Ok) {
-                setTitle('');
-                setContent('');
-                setRegion('');
-                setField('');
-                setPart('');
-                setMembers(1);
-                setSelectedField('');
-            } else {
-                console.error('error', response.statusText);
-            }
         } catch (error) {
-            console.error('Error:', error);
+            console.log(error);
         }
     };
 
