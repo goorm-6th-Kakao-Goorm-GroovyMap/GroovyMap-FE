@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation'; // 라우터 임포트
+import { useRouter } from 'next/navigation';
 
 const Home = () => {
     const router = useRouter();
@@ -250,7 +250,6 @@ const Home = () => {
                         <div className="interactive"></div>
                     </div>
                 </div>
-
                 <div className="relative p-6 rounded-xl text-center flex flex-col items-center mb-12">
                     <p className="text-md md:text-xl lg:text-xl items-center font-medium text-black mb-4">
                         공연 영상을 <span className="text-purple-500">업로드</span> 하고, <br />
@@ -292,6 +291,11 @@ const Home = () => {
                     </div>
                     <div className="mt-6 w-full flex justify-center">{renderContent()}</div>
                 </div>
+                <footer className="footer  text-gray-500 py-4 w-full">
+                    <div className="container mx-auto text-center">
+                        <p className="text-sm">© 2024 GroovyMap. All rights reserved.</p>
+                    </div>
+                </footer>{' '}
             </div>
         </main>
     );
