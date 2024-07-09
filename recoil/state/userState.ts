@@ -10,7 +10,7 @@ export const initialUserState: LoginUser = {
 };
 
 export interface LoginUser {
-    nickname: string; //
+    nickname: string;
     profileUrl: string;
     token?: string; // token 속성 추가
 }
@@ -19,7 +19,7 @@ export interface LoginUser {
 export const userState = atom({
     key: 'userState',
     default: initialUserState,
-    // effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
+    effects_UNSTABLE: [persistAtom], // 새로고침해도 유지되도록
 });
 
 // 마이페이지에서 관리하는 유저 상태
@@ -53,4 +53,16 @@ export const activeTabState = atom({
 export const postState = atom({
     key: 'postState',
     default: [],
+});
+
+//디엠 채팅방 상태
+export const chatRoomsState = atom({
+    key: 'chatRoomsState',
+    default: [],
+});
+
+//선택한 채팅방 상태
+export const selectedChatRoomState = atom<string | null>({
+    key: 'selectedChatRoomState',
+    default: null,
 });

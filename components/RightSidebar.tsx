@@ -59,6 +59,13 @@ const RightSidebar = () => {
         }
     };
 
+    //
+    const handleDMClick = () => {
+        if (user.nickname) {
+            router.push(`/dm/${user.nickname}`);
+        }
+    };
+
     const getProfileImageUrl = (userProfileUrl: string | undefined) => {
         if (!userProfileUrl) return '';
         if (typeof userProfileUrl === 'string' && userProfileUrl.startsWith('http')) return userProfileUrl;
@@ -90,52 +97,52 @@ const RightSidebar = () => {
     }
 
     return (
-        <div className="w-64 bg-purple-50 p-6 flex flex-col justify-between h-full">
-            <div className="flex flex-row items-center justify-around mb-6 mt-6">
-                <FaPaperPlane size={24} className="text-black cursor-pointer" />
-                <FaBell size={24} className="text-black cursor-pointer" />
-                <div className="relative">
+        <div className='w-64 bg-purple-50 p-6 flex flex-col justify-between h-full'>
+            <div className='flex flex-row items-center justify-around mb-6 mt-6'>
+                <FaPaperPlane onClick={handleDMClick} size={24} className='text-black cursor-pointer' />
+                <FaBell size={24} className='text-black cursor-pointer' />
+                <div className='relative'>
                     {user.nickname ? ( // user 객체의 nickname 속성이 있는지 확인하여 로그인 상태인지 판단
                         <div
-                            className="relative bg-purple-700 p-2 rounded-full cursor-pointer"
+                            className='relative bg-purple-700 p-2 rounded-full cursor-pointer'
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             {user.profileUrl ? (
-                                <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                                <div className='relative w-8 h-8 rounded-full overflow-hidden'>
                                     <Image
                                         src={getProfileImageUrl(user.profileUrl) || user.profileUrl}
-                                        alt="User Profile"
+                                        alt='User Profile'
                                         fill
                                         priority
                                         style={{ objectFit: 'cover' }} // objectFit 대체
-                                        className="rounded-full"
+                                        className='rounded-full'
                                     />
                                 </div>
                             ) : (
-                                <div className="w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full">
+                                <div className='w-8 h-8 bg-purple-700 text-white flex items-center justify-center rounded-full'>
                                     {user.nickname.charAt(0).toUpperCase()}
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="bg-purple-700 p-2 rounded-full cursor-pointer" onClick={handleUserIconClick}>
-                            <IoMdPerson size={24} className="text-white" />
+                        <div className='bg-purple-700 p-2 rounded-full cursor-pointer' onClick={handleUserIconClick}>
+                            <IoMdPerson size={24} className='text-white' />
                         </div>
                     )}
                     {showMenu && (
                         <div
-                            className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50"
+                            className='absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50'
                             onMouseEnter={() => setShowMenu(true)}
                             onMouseLeave={() => setShowMenu(false)}
                         >
                             <button
-                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                className='block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100'
                                 onClick={handleMyPageClick}
                             >
                                 마이페이지
                             </button>
                             <button
-                                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                                className='block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100'
                                 onClick={handleLogout}
                             >
                                 로그아웃
@@ -144,24 +151,24 @@ const RightSidebar = () => {
                     )}
                 </div>
             </div>
-            <div className="bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center relative">
+            <div className='bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center relative'>
                 <Image
                     src={slides[currentSlide].image}
                     alt={slides[currentSlide].text}
                     fill
                     priority
-                    sizes="(max-width: 768px) 100vw, 50vw" // 필요한 sizes 속성 추가
+                    sizes='(max-width: 768px) 100vw, 50vw' // 필요한 sizes 속성 추가
                     style={{ objectFit: 'cover' }}
-                    className="cursor-pointer"
+                    className='cursor-pointer'
                     onClick={() => (window.location.href = slides[currentSlide].link)}
                 />
                 <p
-                    className="gradient-text z-50 font-medium text-xl mt-4 cursor-pointer"
+                    className='gradient-text z-50 font-medium text-xl mt-4 cursor-pointer'
                     onClick={() => (window.location.href = slides[currentSlide].link)}
                     dangerouslySetInnerHTML={{ __html: slides[currentSlide].text }}
                 ></p>
             </div>
-            <div className="flex justify-center mt-2">
+            <div className='flex justify-center mt-2'>
                 {slides.map((_, index) => (
                     <span
                         key={index}

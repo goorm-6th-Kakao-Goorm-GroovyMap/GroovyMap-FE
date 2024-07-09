@@ -146,35 +146,53 @@ const MyPage: React.FC = () => {
     if (isError || !userData) {
         return <p>유저를 찾을 수 없습니다</p>;
     }
+    const handleDM = async () => {
+        if (!userData) return; // userData가 없을 경우 처리
+
+        try {
+            const response = await apiClient.get('/message/nickname', {
+                params: { nickname: userData.nickname },
+                withCredentials: true,
+            });
+            if (response.data.success) {
+                router.push(`/dm/${currentUser.nickname}`);
+            }
+        } catch (error) {
+            console.error('메시지 가져오는 중 오류가 발생했습니다:', error);
+            if (!toast.isActive('dmError')) {
+                toast.error('메시지 가져오는 중 오류가 발생했습니다.', { toastId: 'dmError' });
+            }
+        }
+    };
 
     return (
-        <div className="flex flex-col items-center min-h-screen p-4">
-            <div className="w-full max-w-4xl bg-white rounded-lg  p-8">
-                <div className="relative flex items-center mb-6">
+        <div className='flex flex-col items-center min-h-screen p-4'>
+            <div className='w-full max-w-4xl bg-white rounded-lg  p-8'>
+                <div className='relative flex items-center mb-6'>
                     {userData.profileImage ? (
                         <Image
                             src={getProfileImageUrl(userData)}
                             width={96}
                             height={96}
                             priority
-                            alt="Profile"
-                            sizes="(max-width: 600px) 100vw, 50vw"
-                            className="w-24 h-24 rounded-full mr-4"
+                            alt='Profile'
+                            sizes='(max-width: 600px) 100vw, 50vw'
+                            className='w-24 h-24 rounded-full mr-4'
                         />
                     ) : (
-                        <div className="w-24 h-24 bg-purple-700 text-white flex items-center justify-center rounded-full mr-6">
-                            <span className="text-4xl">
+                        <div className='w-24 h-24 bg-purple-700 text-white flex items-center justify-center rounded-full mr-6'>
+                            <span className='text-4xl'>
                                 {userData.nickname ? userData.nickname.charAt(0).toUpperCase() : ''}
                             </span>
                         </div>
                     )}
-                    <div className="flex-grow">
-                        <h1 className="text-2xl font-bold text-purple-500">@{userData.nickname}</h1>
-                        <div className="flex items-center mt-1 text-gray-600 space-x-4">
-                            <span className="font-semibold">
+                    <div className='flex-grow'>
+                        <h1 className='text-2xl font-bold text-purple-500'>@{userData.nickname}</h1>
+                        <div className='flex items-center mt-1 text-gray-600 space-x-4'>
+                            <span className='font-semibold'>
                                 팔로워:
                                 <button
-                                    className="cursor-pointer"
+                                    className='cursor-pointer'
                                     onClick={() => {
                                         setFollowListType('followers');
                                         //팔로워 버튼 클릭시 팔로워 목록 모달 오픈함
@@ -184,10 +202,10 @@ const MyPage: React.FC = () => {
                                     {followersCount}명
                                 </button>
                             </span>
-                            <span className="font-semibold">
+                            <span className='font-semibold'>
                                 팔로잉:
                                 <button
-                                    className="cursor-pointer"
+                                    className='cursor-pointer'
                                     onClick={() => {
                                         //팔로잉 목록 클릭시 팔로잉 모달 오픈
                                         setFollowListType('following');
@@ -198,49 +216,49 @@ const MyPage: React.FC = () => {
                                 </button>
                             </span>
                         </div>
-                        <p className="mt-1">
-                            <div className="flex items-center text-gray-600 space-x-2">
+                        <p className='mt-1'>
+                            <div className='flex items-center text-gray-600 space-x-2'>
                                 <span>활동 지역:</span>
-                                <span className="text-gray-500 bg-gray-100 p-0.5 rounded-sm">
+                                <span className='text-gray-500 bg-gray-100 p-0.5 rounded-sm'>
                                     {areas[userData.region || 'ALL'].name}
                                 </span>
                                 <span>분야:</span>
-                                <span className="text-gray-500 bg-gray-100 p-0.5 rounded-sm">
+                                <span className='text-gray-500 bg-gray-100 p-0.5 rounded-sm'>
                                     {parts[userData.part || 'ALL'].name}
                                 </span>
                                 <span>파트:</span>
-                                <span className="text-gray-500 bg-gray-100 p-0.5 rounded-sm">
+                                <span className='text-gray-500 bg-gray-100 p-0.5 rounded-sm'>
                                     {types[userData.type || 'ALL'].name}
                                 </span>
                             </div>
                         </p>
-                        <p className="mt-1">{userData.introduction}</p>
+                        <p className='mt-1'>{userData.introduction}</p>
                     </div>
                     {isOwner ? (
-                        <div className="flex space-x-2">
+                        <div className='flex space-x-2'>
                             {/* isOwner가 true일 때만 설정 버튼을 보여줌 */}
-                            <button onClick={handleSettings} className="text-gray-500 hover:text-gray-600">
+                            <button onClick={handleSettings} className='text-gray-500 hover:text-gray-600'>
                                 <FaCog size={24} />
                             </button>
                         </div>
                     ) : (
-                        <div className="flex space-x-2">
+                        <div className='flex space-x-2'>
                             <button
                                 onClick={handleFollow}
-                                className="bg-purple-500 hover:bg-purple-700 text-white px-2 py-2 rounded-lg"
+                                className='bg-purple-500 hover:bg-purple-700 text-white px-2 py-2 rounded-lg'
                             >
                                 <FaPlus size={12} />
                             </button>
                             <button
-                                onClick={() => router.push(`/dm/${userData.nickname}`)}
-                                className="bg-purple-500 hover:bg-purple-700 text-white px-2 py-2 rounded-lg"
+                                onClick={handleDM}
+                                className='bg-purple-500 hover:bg-purple-700 text-white px-2 py-2 rounded-lg'
                             >
                                 <FaPaperPlane size={12} />
                             </button>
                         </div>
                     )}
                 </div>
-                <div className="flex justify-around mb-6 border-b pb-2">
+                <div className='flex justify-around mb-6 border-b pb-2'>
                     <button
                         onClick={() => setActiveTab('posts')}
                         className={`px-4 py-2 ${activeTab === 'posts' ? 'border-b-2 border-purple-500 text-purple-500' : 'text-gray-500'}`}
@@ -254,7 +272,7 @@ const MyPage: React.FC = () => {
                         공연 기록
                     </button>
                 </div>
-                <div className="mt-4">{renderContent()}</div>
+                <div className='mt-4'>{renderContent()}</div>
             </div>
             {isWritePostOpen && <WritePostModal onClose={() => setWritePostOpen(false)} onPostCreated={refetch} />}
             {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} onProfileUpdate={refetch} />}
