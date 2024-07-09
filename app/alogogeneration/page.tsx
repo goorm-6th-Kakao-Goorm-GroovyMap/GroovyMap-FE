@@ -71,18 +71,6 @@ const AiLogoGeneration: React.FC = () => {
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
             <div className="content flex-1 w-full max-w-4xl mx-auto">
-                <div className="flex justify-center items-center mb-6">
-                    <div className="relative w-full">
-                        <input
-                            type="text"
-                            className="w-full border rounded p-2 pl-10"
-                            placeholder="검색어를 입력하세요..."
-                        />
-                        <div className="absolute left-3 top-3 text-gray-400">
-                            <IoMdSearch size={20} />
-                        </div>
-                    </div>
-                </div>
                 <header className="mb-6">
                     <h1 className="text-2xl font-bold text-purple-700">AI 로고 생성</h1>
                 </header>
@@ -133,7 +121,6 @@ const AiLogoGeneration: React.FC = () => {
                                         src={image}
                                         width={24}
                                         height={18}
-
                                         alt={`Generated logo ${index + 1}`}
                                         className="w-96 h-96 object-contain mb-2"
                                     />

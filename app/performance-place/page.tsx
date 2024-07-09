@@ -189,7 +189,7 @@ const PerformancePlace: React.FC = () => {
         <div className="content p-6 bg-purple-50 min-h-screen">
             <ToastContainer />
             <div className="content flex-1 w-full max-w-4xl mx-auto">
-                <div className="flex justify-center items-center mb-6">
+                {/* <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full">
                         <input
                             type="text"
@@ -200,7 +200,7 @@ const PerformancePlace: React.FC = () => {
                             <IoMdSearch size={20} />
                         </div>
                     </div>
-                </div>
+                </div> */}
                 <header className="header mb-6">
                     <h1 className="text-3xl font-extrabold text-purple-700">공연 장소</h1>
                 </header>

@@ -28,6 +28,7 @@ const KakaoMap: React.FC = () => {
     const [map, setMap] = useState<any>(null);
     const [clusterer, setClusterer] = useState<any>(null);
     const [customOverlay, setCustomOverlay] = useState<any>(null);
+    const appkey = process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY;
 
     useEffect(() => {
         const fetchPosts = async () => {
