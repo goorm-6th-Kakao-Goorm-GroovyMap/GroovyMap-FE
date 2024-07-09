@@ -102,7 +102,7 @@ const KakaoMap: React.FC = () => {
         return () => {
             document.head.removeChild(script);
         };
-    }, [posts]);
+    }, [appkey, posts]);
 
     const showCustomOverlay = (regionPosts: Post[]) => {
         setCustomOverlay({
