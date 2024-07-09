@@ -45,7 +45,7 @@ const KakaoMap: React.FC = () => {
 
     useEffect(() => {
         const script = document.createElement('script');
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${appkey}&libraries=clusterer,services&autoload=false`;
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY}&libraries=clusterer,services&autoload=false`;
         script.async = true;
         document.head.appendChild(script);
 
