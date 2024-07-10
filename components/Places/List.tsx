@@ -57,10 +57,10 @@ const List = <T extends Place>({
                             </div>
                             <button
                                 onClick={() => {
-                                    if (place.id !== undefined) {
+                                    if (typeof place.id === 'number') {
                                         fetchPlaceDetails(place.id);
                                     } else {
-                                        console.error('Place id is undefined:', place);
+                                        console.error('Place id is not a number:', place.id);
                                     }
                                 }}
                                 className="bg-purple-700 text-white py-2 px-4 rounded-full hover:bg-purple-800 transition-colors duration-300 ease-in-out"
