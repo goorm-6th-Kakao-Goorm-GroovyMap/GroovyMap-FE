@@ -29,7 +29,7 @@ export const areas: Record<string, { name: string; lat: number; lng: number }> =
 export const parts: Record<string, { name: string; types?: string[] }> = {
     ALL: { name: '전체', types: [] },
     VOCAL: { name: '노래', types: [] },
-    BAND: { name: '밴드', types: ['GUITAR', 'KEYBOARD', 'BASSE', 'VOCAL'] },
+    BAND: { name: '밴드', types: ['GUITAR', 'KEYBOARD', 'BASS', 'VOCAL'] },
     DANCE: { name: '댄스', types: ['HIPHOP', 'JAZZ', 'LOCKING'] },
 };
 
@@ -41,7 +41,7 @@ export const types: Record<string, { name: string }> = {
     DANCE: { name: '춤' },
     GUITAR: { name: '기타' },
     DRUM: { name: '드럼' },
-    BASSE: { name: '베이스' },
+    BASS: { name: '베이스' },
     KEYBOARD: { name: '건반' },
     HIPHOP: { name: '힙합' },
     JAZZ: { name: '재즈' },
