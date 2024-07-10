@@ -9,7 +9,6 @@ import { Quill } from 'react-quill';
 import ImageUploader from 'quill-image-uploader';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
-import { DateTime } from 'luxon';
 
 Quill.register('modules/imageUploader', ImageUploader);
 
@@ -32,32 +31,35 @@ const WritePostForm: React.FC = () => {
         formData.append('likesCount', '0');
         formData.append('viewCount', '0');
         formData.append('timestamp', new Date().toISOString());
+        const parseContent = async () => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            const imgTags = doc.querySelectorAll('img');
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(content, 'text/html');
-        const imgTags = doc.querySelectorAll('img');
-
-        imgTags.forEach((imgTag, index) => {
-            fetch(imgTag.src)
-                .then((res) => res.blob())
-                .then((blob) => {
-                    const file = new File([blob], `image${index}.png`, { type: blob.type });
-                    formData.append(`fileNames`, file);
-                });
-        });
-
-        try {
-            const response = await apiClient.post('/freeboard/write', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+            const imageUploadPromises = Array.from(imgTags).map(async (imgTag, index) => {
+                const res = await fetch(imgTag.src);
+                const blob = await res.blob();
+                const file = new File([blob], `image${index}.png`, { type: blob.type });
+                formData.append(`fileNames`, file);
             });
 
-            const newPostId = response.data.id;
-            router.push(`/freeboard/${newPostId}`);
-        } catch (error) {
-            console.log(error);
-        }
+            await Promise.all(imageUploadPromises);
+
+            try {
+                const response = await apiClient.post('/freeboard/write', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                const newPostId = response.data.id;
+                router.push(`/freeboard/${newPostId}`);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        parseContent();
     };
 
     const modules = useMemo(

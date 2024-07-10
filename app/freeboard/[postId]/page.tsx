@@ -6,7 +6,8 @@ import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
 import { DateTime } from 'luxon';
 import { formatDate } from '@/constants/constants';
-
+import { FcLike, FcBookmark } from 'react-icons/fc';
+import { FaRegBookmark, FaRegHeart } from 'react-icons/fa';
 interface Comment {
     id: number;
     author: string;
@@ -29,6 +30,8 @@ const PostPage: React.FC = () => {
     const [post, setPost] = useState<Post | null>(null);
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentContent, setCommentContent] = useState('');
+    const [isLiked, setIsLiked] = useState(false);
+    const [isBookmarked, setIsBookmarked] = useState(false);
     const router = useRouter();
     const { postId } = useParams<{ postId: string }>();
     const currentUser = useRecoilValue(userState);
@@ -92,6 +95,7 @@ const PostPage: React.FC = () => {
         if (post) {
             try {
                 await apiClient.post(`/freeboard/${post.id}/like`);
+                setIsLiked(!isLiked);
                 const response = await apiClient.get(`/freeboard/${post.id}`);
                 setPost(response.data);
             } catch (error) {
@@ -104,6 +108,7 @@ const PostPage: React.FC = () => {
         if (post) {
             try {
                 await apiClient.post(`/freeboard/${post.id}/save`);
+                setIsBookmarked(!isBookmarked);
                 const response = await apiClient.get(`/freeboard/${post.id}`);
                 setPost(response.data);
             } catch (error) {
@@ -119,13 +124,6 @@ const PostPage: React.FC = () => {
             <button onClick={() => router.push('/freeboard')} className="bg-gray-200 py-2 px-4 rounded mb-4">
                 &lt; 뒤로가기
             </button>
-            <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-            <div className="text-sm text-gray-600 mb-4">
-                <p>작성자: {post.author}</p>
-                <p>작성일: {formatDate(post.timestamp)}</p>
-            </div>
-            <p className="mr-4">조회수: {post.viewCount}</p>
-            <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
             {currentUser.nickname === post.author && (
                 <div className="flex space-x-4 mb-4">
                     <button onClick={handleDeletePost} className="flex items-center text-red-500 hover:text-red-700">
@@ -133,12 +131,20 @@ const PostPage: React.FC = () => {
                     </button>
                 </div>
             )}
+            <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
+            <div className="text-sm text-gray-600 mb-4">
+                <p>작성자: {post.author}</p>
+                <p>작성일: {formatDate(post.timestamp)}</p>
+            </div>
+            <p className="mr-4">조회수: {post.viewCount}</p>
+            <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
+
             <div className="flex items-center space-x-4 mb-4">
                 <button onClick={handleLikePost} className="flex items-center text-gray-600 hover:text-purple-700">
-                    좋아요 {post.likesCount}
+                    {isLiked ? <FcLike /> : <FaRegHeart />} {post.likesCount}
                 </button>
                 <button onClick={handleSavePost} className="flex items-center text-gray-600 hover:text-purple-700">
-                    북마크 {post.savesCount}
+                    {isBookmarked ? <FcBookmark /> : <FaRegBookmark />} {post.savesCount}
                 </button>
             </div>
             <div className="mb-4">
