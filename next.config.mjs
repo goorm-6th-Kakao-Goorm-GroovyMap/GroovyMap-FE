@@ -1,5 +1,4 @@
 /** @type {import('next').NextConfig} */
-const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig = {
     env: {
@@ -13,12 +12,6 @@ const nextConfig = {
         path: '/_next/image',
     },
     webpack: (config) => {
-        if (isProd) {
-            config.devtool = false; // 소스 맵 비활성화 (생산 환경)
-        } else {
-            config.devtool = 'source-map'; // 개발 환경에서는 source-map 사용
-        }
-
         config.module.rules.push({
             test: /\.(mov|mp4)$/,
             use: [
