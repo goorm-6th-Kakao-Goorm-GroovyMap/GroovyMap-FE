@@ -119,8 +119,8 @@ const AiLogoGeneration: React.FC = () => {
                                 <div key={index} className="flex flex-col items-center">
                                     <Image
                                         src={image}
-                                        width={24}
-                                        height={18}
+                                        width={400}
+                                        height={400}
                                         alt={`Generated logo ${index + 1}`}
                                         className="w-96 h-96 object-contain mb-2"
                                     />
