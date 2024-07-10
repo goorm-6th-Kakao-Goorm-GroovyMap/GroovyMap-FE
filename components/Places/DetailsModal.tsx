@@ -20,7 +20,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ place, isOpen, onClose }) =
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-lg w-1/3 relative">
-                <div className="relative h-56 w-full sm:h-52">
+                {/* <div className="relative h-56 w-full sm:h-52">
                     {place.part === 'BAND' && (
                         <img src="/band.png" alt="Band" className="object-cover w-full h-full rounded-lg" />
                     )}
@@ -30,14 +30,15 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ place, isOpen, onClose }) =
                     {place.part === 'VOCAL' && (
                         <img src="/vocal.png" alt="Vocal" className="object-cover w-full h-full rounded-lg" />
                     )}
-                    <button
-                        onClick={onClose}
-                        className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
-                        aria-label="닫기"
-                    >
-                        <IoMdClose size={20} />
-                    </button>
-                </div>
+                 
+                </div> */}
+                <button
+                    onClick={onClose}
+                    className="absolute right-2 top-2 text-white bg-purple-700 rounded-full p-2"
+                    aria-label="닫기"
+                >
+                    <IoMdClose size={20} />
+                </button>
                 <div className="p-4">
                     <h2 className="text-xl font-bold mb-4">{place.name}</h2>
                     <span className="break-keep rounded-sm bg-gray-100 px-1 text-gray-500 dark:bg-gray-300 dark:text-gray-600">

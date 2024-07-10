@@ -1,17 +1,17 @@
-'use client'
+'use client';
 
-import React, { useState, ChangeEvent, FormEvent } from 'react'
-import { IoMdSearch } from 'react-icons/io'
-import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import apiClient from '@/api/apiClient'
-import axios from 'axios'
-import { useRecoilValue } from 'recoil'
-import { userState } from '@/recoil/state/userState'
+import React, { useState, ChangeEvent, FormEvent } from 'react';
+import { IoMdSearch } from 'react-icons/io';
+import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import apiClient from '@/api/apiClient';
+import axios from 'axios';
+import { useRecoilValue } from 'recoil';
+import { userState } from '@/recoil/state/userState';
 
 interface Coordinates {
-    latitude: number | null
-    longitude: number | null
+    latitude: number | null;
+    longitude: number | null;
 }
 
 // 백엔드 api post요청 보내기 (글쓰기작성폼데이터)
@@ -19,51 +19,51 @@ const postFormData = async (formData: FormData): Promise<any> => {
     try {
         const response = await apiClient.post('/promotionboard/write', formData, {
             withCredentials: true,
-        })
-        return response.data
+        });
+        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            const errorText = error.response?.data || 'Unknown error'
-            throw new Error(`Form submission failed: ${errorText}`)
+            const errorText = error.response?.data || 'Unknown error';
+            throw new Error(`Form submission failed: ${errorText}`);
         } else {
-            throw new Error(`Form submission failed: ${error}`)
+            throw new Error(`Form submission failed: ${error}`);
         }
     }
-}
+};
 
 export default function Write() {
-    const router = useRouter()
-    const currentUser = useRecoilValue(userState)
-    const [selectedType, setSelectedType] = useState<string>('ALL')
-    const [address, setAddress] = useState<string>('')
-    const [fileNames, setFileNames] = useState<File[]>([])
-    const [coordinates, setCoordinates] = useState<Coordinates>({ latitude: null, longitude: null })
+    const router = useRouter();
+    const currentUser = useRecoilValue(userState);
+    const [selectedType, setSelectedType] = useState<string>('ALL');
+    const [address, setAddress] = useState<string>('');
+    const [fileNames, setFileNames] = useState<File[]>([]);
+    const [coordinates, setCoordinates] = useState<Coordinates>({ latitude: null, longitude: null });
 
     const handleTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        setSelectedType(e.target.value)
-    }
+        setSelectedType(e.target.value);
+    };
 
     const handleAddressChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setAddress(e.target.value)
-    }
+        setAddress(e.target.value);
+    };
 
     const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setFileNames(Array.from(e.target.files))
+            setFileNames(Array.from(e.target.files));
         }
-    }
+    };
 
     // 다음 우편 서비스 이용
     const loadDaumPostcode = () => {
         return new Promise<void>((resolve) => {
-            const script = document.createElement('script')
-            script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'
+            const script = document.createElement('script');
+            script.src = '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
             script.onload = () => {
-                resolve()
-            }
-            document.head.appendChild(script)
-        })
-    }
+                resolve();
+            };
+            document.head.appendChild(script);
+        });
+    };
 
     // 주소를 가져와서 위도 경도로 변환
     const convertAddressToCoordinates = async (address: string) => {
@@ -74,65 +74,65 @@ export default function Write() {
                     headers: {
                         Authorization: `KakaoAK ${process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY}`,
                     },
-                },
-            )
+                }
+            );
 
-            const data = await response.json()
+            const data = await response.json();
 
             if (data.documents && data.documents.length > 0) {
-                const { y, x } = data.documents[0]
-                setCoordinates({ latitude: parseFloat(y), longitude: parseFloat(x) })
+                const { y, x } = data.documents[0];
+                setCoordinates({ latitude: parseFloat(y), longitude: parseFloat(x) });
             } else {
-                console.warn('주소를 찾을 수 없습니다.')
+                console.warn('주소를 찾을 수 없습니다.');
             }
         } catch (error) {
-            console.error('주소 변환 중 오류 발생:', error)
+            console.error('주소 변환 중 오류 발생:', error);
         }
-    }
+    };
 
     const handleAddressSearch = async () => {
-        await loadDaumPostcode()
+        await loadDaumPostcode();
         new (window as any).daum.Postcode({
             oncomplete: async function (data: any) {
-                const addr = data.address
-                setAddress(addr)
-                await convertAddressToCoordinates(addr)
+                const addr = data.address;
+                setAddress(addr);
+                await convertAddressToCoordinates(addr);
             },
-        }).open()
-    }
+        }).open();
+    };
 
     const mutation = useMutation({
         mutationFn: (formData: FormData) => postFormData(formData),
-    })
+    });
 
     // 폼 제출 핸들러
     const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
         if (!coordinates.latitude || !coordinates.longitude) {
-            alert('주소를 입력하고 검색하세요.')
-            return
+            alert('주소를 입력하고 검색하세요.');
+            return;
         }
 
-        const formData = new FormData()
-        formData.append('title', (e.target as any).title.value)
+        const formData = new FormData();
+        formData.append('title', (e.target as any).title.value);
         if (fileNames.length > 0) {
-            fileNames.forEach((file) => formData.append('fileNames', file))
+            fileNames.forEach((file) => formData.append('fileNames', file));
         }
-        formData.append('region', (e.target as any).region.value)
-        formData.append('part', selectedType)
-        formData.append('coordinates', JSON.stringify(coordinates))
-        formData.append('content', (e.target as any).content.value.replace(/\n/g, '<br>'))
-        formData.append('author', currentUser.nickname) // 로그인된 사용자의 닉네임 추가
+        formData.append('region', (e.target as any).region.value);
+        formData.append('part', selectedType);
+        formData.append('coordinates', JSON.stringify(coordinates));
+        formData.append('content', (e.target as any).content.value.replace(/\n/g, '<br>'));
+        formData.append('author', currentUser.nickname); // 로그인된 사용자의 닉네임 추가
 
         try {
-            await mutation.mutateAsync(formData)
-            alert('게시글이 등록되었습니다.')
-            router.push('/promotion-place')
+            await mutation.mutateAsync(formData);
+            alert('게시글이 등록되었습니다.');
+            router.push('/promotion-place');
         } catch (error: any) {
-            alert(`등록되지 않았습니다.: ${error.message}`)
+            alert(`등록되지 않았습니다.: ${error.message}`);
         }
-    }
+    };
     return (
         <div className="content p-6 bg-purple-50 min-h-screen">
             <div className="content flex-1 w-full max-w-4xl mx-auto">
@@ -197,7 +197,7 @@ export default function Write() {
                         <select name="part" className="border-none rounded p-2 bg-white" onChange={handleTypeChange}>
                             <option value="ALL">전체</option>
                             <option value="BAND">밴드</option>
-                            <option value="VOCAL">음악</option>
+                            <option value="VOCAL">보컬</option>
                             <option value="DANCE">춤</option>
                         </select>
                     </div>
@@ -254,5 +254,5 @@ export default function Write() {
                 </form>
             </div>
         </div>
-    )
+    );
 }
