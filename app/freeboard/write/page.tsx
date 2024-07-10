@@ -5,12 +5,8 @@ import apiClient from '@/api/apiClient';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
-import { Quill } from 'react-quill';
-import ImageUploader from 'quill-image-uploader';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
-
-Quill.register('modules/imageUploader', ImageUploader);
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
@@ -32,18 +28,20 @@ const WritePostForm: React.FC = () => {
         formData.append('viewCount', '0');
         formData.append('timestamp', new Date().toISOString());
         const parseContent = async () => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(content, 'text/html');
-            const imgTags = doc.querySelectorAll('img');
+            if (typeof window !== 'undefined') {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                const imgTags = doc.querySelectorAll('img');
 
-            const imageUploadPromises = Array.from(imgTags).map(async (imgTag, index) => {
-                const res = await fetch(imgTag.src);
-                const blob = await res.blob();
-                const file = new File([blob], `image${index}.png`, { type: blob.type });
-                formData.append(`fileNames`, file);
-            });
+                const imageUploadPromises = Array.from(imgTags).map(async (imgTag, index) => {
+                    const res = await fetch(imgTag.src);
+                    const blob = await res.blob();
+                    const file = new File([blob], `image${index}.png`, { type: blob.type });
+                    formData.append(`fileNames`, file);
+                });
 
-            await Promise.all(imageUploadPromises);
+                await Promise.all(imageUploadPromises);
+            }
 
             try {
                 const response = await apiClient.post('/freeboard/write', formData, {
