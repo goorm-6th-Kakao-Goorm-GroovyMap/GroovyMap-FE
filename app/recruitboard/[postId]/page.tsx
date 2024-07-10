@@ -97,7 +97,7 @@ const PostContent: React.FC = () => {
     if (!post) return <div>Loading...</div>;
 
     return (
-        <div className="max-w-4xl mx-auto mt-8 p-4 bg-white shadow-md rounded-lg">
+        <div className="p-4 bg-white rounded-lg shadow-md">
             <button onClick={() => router.push('/recruitboard')} className="bg-gray-200 py-2 px-4 rounded mb-4">
                 &lt; 뒤로가기
             </button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import { regionCenters } from './types';
+import Image from 'next/image';
 
 declare global {
     interface Window {
@@ -163,10 +164,22 @@ const KakaoMap: React.FC = () => {
                         {customOverlay.regionPosts.map((post: Post) => (
                             <li
                                 key={post.id}
-                                style={{ cursor: 'pointer', marginBottom: '5px' }}
+                                style={{
+                                    cursor: 'pointer',
+                                    marginBottom: '5px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                }}
                                 onClick={() => navigateToPost(post.id)}
                             >
-                                {post.title}
+                                <Image
+                                    src={`../../${post.part.toLowerCase()}.svg`}
+                                    alt={post.field}
+                                    width={20}
+                                    height={20}
+                                    style={{ marginRight: '5px' }}
+                                />
+                                <span>{post.title}</span>
                             </li>
                         ))}
                     </ul>

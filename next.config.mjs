@@ -2,6 +2,7 @@
 const isProd = process.env.NODE_ENV === 'production';
 
 const nextConfig = {
+    reactStrictMode: false,
     env: {
         NEXT_PUBLIC_KAKAO_MAP_API_KEY: process.env.NEXT_PUBLIC_KAKAO_MAP_API_KEY,
         NEXT_PUBLIC_KAKAO_REST_API_KEY: process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY,

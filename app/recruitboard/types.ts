@@ -36,14 +36,14 @@ export const FieldPositionMapping: FieldPositionMapping = {
     BAND: {
         ALL: '전체',
         GUITAR: '기타',
-        BASE: '베이스',
+        BASS: '베이스',
         DRUM: '드럼',
         VOCAL: '보컬',
         KEYBOARD: '키보드',
     },
     DANCE: {
         ALL: '전체',
-        ROCKING: '락킹',
+        LOCKING: '락킹',
         POPPING: '팝핑',
         BREAKING: '브레이킹',
     },
@@ -86,11 +86,11 @@ export const fieldTranslations: { [key: string]: string } = {
 
 export const partTranslations: { [key: string]: string } = {
     GUITAR: '기타',
-    BASE: '베이스',
+    BASS: '베이스',
     DRUM: '드럼',
     VOCAL: '보컬',
     KEYBOARD: '키보드',
-    ROCKING: '락킹',
+    LOCKING: '락킹',
     POPPING: '팝핑',
     BREAKING: '브레이킹',
     HIPHOP: '힙합',
