@@ -59,7 +59,7 @@ const parts = Object.keys(partMap);
 const subParts: { [key: string]: string[] } = {
     BAND: ['GUITAR', 'KEYBOARD', 'BASS', 'VOCAL'],
     DANCE: ['HIPHOP', 'JAZZ', 'ROCKING'],
-    VOCAL: [], // VOCAL은 세부 파트 필요 없음.
+    VOCAL: ['VOCAL'],
 };
 
 const Filter: React.FC<FilterProps> = ({
