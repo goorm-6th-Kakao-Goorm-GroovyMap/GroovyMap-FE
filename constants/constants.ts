@@ -50,10 +50,10 @@ export const types: Record<string, { name: string }> = {
 };
 
 export const markerImages: { [key in 'ALL' | 'BAND' | 'VOCAL' | 'DANCE']: string } = {
-    ALL: '/guitar.svg',
-    BAND: '/guitar.svg',
-    VOCAL: '/guitar.svg',
-    DANCE: '/guitar.svg',
+    ALL: '/band.svg',
+    BAND: '/band.svg',
+    VOCAL: '/singing.svg',
+    DANCE: '/dance.svg',
 };
 
 export const formatDate = (dateString: string) => {
