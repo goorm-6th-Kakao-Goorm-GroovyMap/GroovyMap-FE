@@ -10,6 +10,7 @@ import { areas, parts, markerImages } from '../../components/constants';
 import { userState } from '@/recoil/state/userState';
 import apiClient from '@/api/apiClient';
 import { FaRegEdit } from 'react-icons/fa';
+import SkeletonLoader from '@/components/SkeletonLoader';
 
 //추가사항-삭제 1인 1등록만 가능
 
@@ -53,7 +54,7 @@ export default function ProfilePage() {
         }));
     };
 
-    // React Query를 사용하여 프로필 데이터를 가져옴
+    //프로필 데이터
     const {
         data: profiles = [],
         error,
@@ -70,7 +71,6 @@ export default function ProfilePage() {
             return response.data;
         },
         onSuccess: (data) => {
-            // 성공 시 프로필 목록을 갱신하고 확인 메시지 숨김
             queryClient.invalidateQueries({
                 queryKey: ['profiles'],
             });
@@ -229,7 +229,7 @@ export default function ProfilePage() {
 
     // 데이터 로딩 중 상태 표시
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <SkeletonLoader />;
     }
 
     // 데이터 로딩 오류 상태 표시

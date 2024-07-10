@@ -154,9 +154,7 @@ const MyPage: React.FC = () => {
                 params: { nickname: userData.nickname },
                 withCredentials: true,
             });
-            if (response.data.success) {
-                router.push(`/dm/${currentUser.nickname}`);
-            }
+            router.push(`/dm/${currentUser.nickname}`);
         } catch (error) {
             console.error('메시지 가져오는 중 오류가 발생했습니다:', error);
             if (!toast.isActive('dmError')) {

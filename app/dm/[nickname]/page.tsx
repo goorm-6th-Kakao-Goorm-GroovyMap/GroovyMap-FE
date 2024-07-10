@@ -1,6 +1,6 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRecoilState } from 'recoil';
+import { useEffect, useState, useRef } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import ChatRoom from '@/components/DM/ChatRoom';
 import apiClient from '@/api/apiClient';
 import { chatRoomsState, selectedChatRoomState, userState } from '@/recoil/state/userState';
@@ -9,10 +9,10 @@ import { IoMdSearch } from 'react-icons/io';
 import { FaHandSparkles } from 'react-icons/fa';
 
 const DMPage = () => {
-    const [user] = useRecoilState(userState);
-    const [chatRooms, setChatRooms] = useRecoilState(chatRoomsState);
-    const [selectedChatRoom, setSelectedChatRoom] = useRecoilState(selectedChatRoomState);
-    const [receiverId, setReceiverId] = useState<string | null>(null);
+    const [user] = useRecoilState(userState); // 프론트에서 현재 로그인 사용자 관리
+    const [chatRooms, setChatRooms] = useRecoilState(chatRoomsState); // 현재 사용자의 채팅방 내역
+    const [selectedChatRoom, setSelectedChatRoom] = useRecoilState(selectedChatRoomState); // 현재 사용자가 선택한 다른 사용자와의 채팅방
+    const [receiverId, setReceiverId] = useState<string | null>(null); // 상대방의 receiverId
 
     useEffect(() => {
         if (user?.nickname) {
@@ -22,12 +22,20 @@ const DMPage = () => {
                         Authorization: `Bearer ${user.token}`,
                     },
                 })
-                .then((response) => setChatRooms(response.data))
+                .then((response) => {
+                    const sortedChatRooms = response.data.sort(
+                        (a: any, b: any) =>
+                            new Date(b.lastMessageTime).getTime() - new Date(a.lastMessageTime).getTime()
+                    );
+                    setChatRooms(sortedChatRooms);
+                })
                 .catch((error) => console.error('Error fetching chat rooms:', error));
         }
-    }, [user, setChatRooms]);
+    }, [user, setChatRooms, selectedChatRoom]);
 
+    // 상대방과 대화하기 위해서 상대방의 receiverID를 찾기 위해서 /profile에서 조회함 (서로 프로필 등록 안 하면 DM 못 함)
     const handleChatRoomClick = (chatRoomId: string, otherUserNickname: string) => {
+        setSelectedChatRoom(null); // 강제로 상태 변경
         apiClient
             .get('/profile', {
                 headers: {
@@ -63,14 +71,18 @@ const DMPage = () => {
                 </div>
                 <header className='mb-6'>
                     <h1 className='text-2xl text-purple-700'>Messages</h1>
+                    <p className='text-red-700'>!상대방과 자신의 프로필을 등록한 상태에서만 이용가능합니다</p>
                 </header>
             </div>
             <div className='flex-1 flex h-0'>
                 <div className='w-1/3 border-r border-gray-200 overflow-y-auto'>
+                    {/* 현재 사용자의 DM 목록 chatRoom.otherUserNickname (reciverID로 넘어감) */}
                     {chatRooms?.map((chatRoom: any, index: number) => (
                         <div
                             key={chatRoom.id}
-                            className={`flex items-center p-4 cursor-pointer hover:bg-gray-100 ${index !== chatRooms.length - 1 ? 'border-b' : ''}`}
+                            className={`flex items-center p-4 cursor-pointer hover:bg-gray-100 ${
+                                index !== chatRooms.length - 1 ? 'border-b' : ''
+                            }`}
                             onClick={() => handleChatRoomClick(chatRoom.id, chatRoom.otherUserNickname)}
                         >
                             <Image
@@ -93,8 +105,9 @@ const DMPage = () => {
                         </div>
                     ))}
                 </div>
+                {/* 현재 사용자와 선택한 다른 사용자의 채팅창 방 */}
                 <div className='flex-1 overflow-y-auto bg-white'>
-                    {selectedChatRoom ? (
+                    {selectedChatRoom && receiverId ? (
                         <ChatRoom chatRoomId={selectedChatRoom} receiverId={receiverId} />
                     ) : (
                         <div className='flex flex-col items-center justify-center h-full'>
@@ -112,7 +125,7 @@ const DMPage = () => {
     );
 };
 
-// 마지막 채팅 보낸 시점
+// 마지막 채팅 보낸 시점 시간 계산이라서 신경 안 써도 됨
 const formatTime = (time: string) => {
     if (!time) return '';
 
