@@ -1,32 +1,64 @@
 {
-  "name": "groovy-map",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "@tanstack/react-query": "^5.40.0",
-    "next": "14.2.3",
-    "react": "^18",
-    "react-dom": "^18",
-    "react-icons": "^5.2.1",
-    "recoil": "^0.7.7",
-    "use-zustand": "^0.1.0",
-    "zustand": "^4.5.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.3",
-    "postcss": "^8",
-    "prettier": "3.3.0",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5"
-  }
+    "name": "groovy-map",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
+    },
+    "dependencies": {
+        "@nextui-org/react": "^2.4.1",
+        "@stomp/stompjs": "^7.0.0",
+        "@types/luxon": "^3.4.2",
+        "@types/react-modal": "^3.16.3",
+        "axios": "^1.7.2",
+        "canvas-confetti": "^1.9.3",
+        "clsx": "^2.1.1",
+        "js-cookie": "^3.0.5",
+        "luxon": "^3.4.4",
+        "next": "^14.2.4",
+        "quill-image-uploader": "^1.3.0",
+        "react": "^18",
+        "react-confirm-alert": "^3.0.6",
+        "react-dom": "^18",
+        "react-icons": "^5.2.1",
+        "react-kakao-maps-sdk": "^1.1.27",
+        "react-query": "^3.39.3",
+        "react-quill": "^2.0.0",
+        "react-toastify": "^10.0.5",
+        "recoil": "^0.7.7",
+        "recoil-persist": "^5.1.0",
+        "sass": "^1.77.4",
+        "sockjs-client": "^1.6.1",
+        "use-zustand": "^0.1.0",
+        "uuid": "^10.0.0",
+        "zustand": "^4.5.2"
+    },
+    "devDependencies": {
+        "@tanstack/react-query": "^5.48.0",
+        "@tanstack/react-query-devtools": "^5.48.0",
+        "@types/canvas-confetti": "^1.6.4",
+        "@types/js-cookie": "^3.0.6",
+        "@types/next": "^9.0.0",
+        "@types/node": "^20",
+        "@types/react": "^18",
+        "@types/react-dom": "^18",
+        "@types/sockjs-client": "^1.5.4",
+        "@types/stompjs": "^2.3.9",
+        "@types/uuid": "^9.0.8",
+        "eslint": "^8",
+        "eslint-config-next": "14.2.3",
+        "file-loader": "^6.2.0",
+        "msw": "^0.29.0",
+        "npm": "^10.8.1",
+        "postcss": "^8",
+        "prettier": "3.3.0",
+        "tailwindcss": "^3.4.1",
+        "typescript": "^5"
+    },
+    "resolutions": {
+        "clsx": "^2.1.1"
+    }
 }
