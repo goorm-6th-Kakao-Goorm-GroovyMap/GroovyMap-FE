@@ -46,7 +46,7 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
 
         fetchMessages();
 
-        const socket = new SockJS(`${process.env.NEXT_PUBLIC_BACKEND_URL}ws`);
+        const socket = new SockJS(`${process.env.NEXT_PUBLIC_BACKEND_URL}/ws`);
         const stompClient = new Client({
             webSocketFactory: () => socket,
             debug: (str) => {},
@@ -112,38 +112,38 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
     };
 
     return (
-        <div className='flex flex-col h-full'>
-            <div className='flex-1 p-4 overflow-y-auto'>
+        <div className="flex flex-col h-full">
+            <div className="flex-1 p-4 overflow-y-auto">
                 {messages.map((message, index) => (
                     <div key={index} className={`mb-2 flex ${message.sentByMe ? 'justify-end' : 'justify-start'}`}>
                         {!message.sentByMe && (
-                            <div className='flex items-center'>
-                                <img src={message.otherUserProfileImage} className='w-10 h-10 rounded-full mr-2' />
-                                <div className='flex flex-col'>
-                                    <div className='p-2 rounded-lg bg-purple-200 text-black'>{message.content}</div>
+                            <div className="flex items-center">
+                                <img src={message.otherUserProfileImage} className="w-10 h-10 rounded-full mr-2" />
+                                <div className="flex flex-col">
+                                    <div className="p-2 rounded-lg bg-purple-200 text-black">{message.content}</div>
                                 </div>
                             </div>
                         )}
                         {message.sentByMe && (
-                            <div className='flex items-end'>
-                                <div className='p-2 rounded-lg bg-blue-200 text-black'>{message.content}</div>
-                                <img src={user.profileUrl} className='w-10 h-10 rounded-full ml-2' />
+                            <div className="flex items-end">
+                                <div className="p-2 rounded-lg bg-blue-200 text-black">{message.content}</div>
+                                {/* <img src={user.profileUrl} className="w-10 h-10 rounded-full ml-2" /> */}
                             </div>
                         )}
                     </div>
                 ))}
             </div>
-            <div className='p-4 border-t border-gray-200 flex'>
+            <div className="p-4 border-t border-gray-200 flex">
                 <input
-                    type='text'
-                    className='flex-1 p-2 border border-gray-300 rounded-lg mr-2'
-                    placeholder='Type a message...'
+                    type="text"
+                    className="flex-1 p-2 border border-gray-300 rounded-lg mr-2"
+                    placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 />
                 <button
-                    className='p-2 bg-purple-400 text-white rounded-lg hover:bg-purple-200 active:bg-purple-700 focus:outline-none'
+                    className="p-2 bg-purple-400 text-white rounded-lg hover:bg-purple-200 active:bg-purple-700 focus:outline-none"
                     onClick={handleSendMessage}
                 >
                     전송
