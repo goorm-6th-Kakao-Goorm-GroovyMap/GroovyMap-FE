@@ -170,7 +170,7 @@ const Home = () => {
 
                             <div className="absolute bottom-4 right-4">
                                 <button
-                                    onClick={() => handleButtonUrlClick('/Recruit')}
+                                    onClick={() => handleButtonUrlClick('/recruitboard')}
                                     className="cursor-pointer px-4 py-2  rounded-xl bg-gray-200 text-purple-700 hover:bg-purple-700 hover:text-white transition"
                                 >
                                     &rarr;

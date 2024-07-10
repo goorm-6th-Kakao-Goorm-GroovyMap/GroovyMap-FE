@@ -24,9 +24,3 @@ export const signUpState = atom<FormData>({
         subPart: '',
     },
 });
-
-//마이페이지에서 활성화된 창
-export const activeTabState = atom({
-    key: 'activeTabState',
-    default: 'posts', // 기본값을 'posts'로 설정
-});

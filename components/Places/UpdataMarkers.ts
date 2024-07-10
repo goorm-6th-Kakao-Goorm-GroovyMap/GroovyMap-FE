@@ -14,8 +14,8 @@ type UpdateMarkersProps<T extends Place> = {
 
 const markerImages: { [key: string]: string } = {
     BAND: '/guitar.svg',
-    DANCE: '/guitar.svg',
-    VOCAL: '/guitar.svg',
+    DANCE: '/dance.svg',
+    VOCAL: '/singing.svg',
     default: '/guitar.svg',
 };
 
