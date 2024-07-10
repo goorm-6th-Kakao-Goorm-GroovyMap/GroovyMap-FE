@@ -49,7 +49,7 @@ export const types: Record<string, { name: string }> = {
     // 필요한 다른 타입 추가
 };
 
-export const markerImages: { [key in 'ALL' | 'BAND' | 'VOCAL' | 'DANCE']: string } = {
+export const marㄴkerImages: { [key in 'ALL' | 'BAND' | 'VOCAL' | 'DANCE']: string } = {
     ALL: '/band.svg',
     BAND: '/band.svg',
     VOCAL: '/singing.svg',
