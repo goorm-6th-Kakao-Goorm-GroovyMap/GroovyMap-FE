@@ -14,8 +14,8 @@ const Recruit_page: React.FC = () => {
     const [isMapVisible, setIsMapVisible] = useState(true);
     const [posts, setPosts] = useState<Post[]>([]);
     const [selectedRegion, setSelectedRegion] = useState<string>('SEOUL');
-    const [selectedField, setSelectedField] = useState<string>('ALL');
-    const [selectedPosition, setSelectedPosition] = useState<string>('ALL');
+    const [selectedField, setSelectedField] = useState<string>('CHOICE');
+    const [selectedPosition, setSelectedPosition] = useState<string>('CHOICE');
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
     const router = useRouter();
 
@@ -39,11 +39,11 @@ const Recruit_page: React.FC = () => {
             filtered = filtered.filter((post) => post.region === selectedRegion);
         }
 
-        if (selectedField !== 'ALL') {
+        if (selectedField !== 'CHOICE') {
             filtered = filtered.filter((post) => post.field === selectedField);
         }
 
-        if (selectedPosition !== 'ALL') {
+        if (selectedPosition !== 'CHOICE') {
             filtered = filtered.filter((post) => post.part === selectedPosition);
         }
 
@@ -130,7 +130,7 @@ const Recruit_page: React.FC = () => {
                             >
                                 <label className="font-bold mr-2">분야</label>
                                 <select className="border-none p-2 bg-white" onChange={handleFieldChange}>
-                                    <option value="ALL">전체</option>
+                                    <option value="CHOICE">전체</option>
                                     <option value="BAND">밴드</option>
                                     <option value="DANCE">댄스</option>
                                     <option value="VOCAL">노래</option>

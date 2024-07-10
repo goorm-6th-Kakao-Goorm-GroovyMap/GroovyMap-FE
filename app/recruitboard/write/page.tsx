@@ -5,15 +5,14 @@ import { FieldPositionMapping, Post } from '../types';
 import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
-import { HttpStatusCode } from 'axios';
 import { useRouter } from 'next/navigation';
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [region, setRegion] = useState('');
-    const [field, setField] = useState('');
-    const [part, setPart] = useState('');
+    const [region, setRegion] = useState('SEOUL');
+    const [field, setField] = useState('CHOICE');
+    const [part, setPart] = useState('CHOICE');
     const [members, setMembers] = useState(1);
     const [selectedField, setSelectedField] = useState<string>('');
     const currentUser = useRecoilValue(userState);
@@ -87,7 +86,6 @@ const WritePostForm: React.FC = () => {
                         value={region}
                         onChange={(e) => setRegion(e.target.value)}
                     >
-                        <option value="">선택</option>
                         <option value="SEOUL">서울 전체</option>
                         <option value="GANGNAMGU">강남구</option>
                         <option value="GANGDONGGU">강동구</option>
@@ -118,7 +116,7 @@ const WritePostForm: React.FC = () => {
                         유형:
                     </label>
                     <select id="field" className="w-full border rounded p-2" value={field} onChange={handleFieldChange}>
-                        <option value="ALL">전체</option>
+                        <option value="CHOICE">선택</option>
                         <option value="BAND">밴드</option>
                         <option value="DANCE">댄스</option>
                         <option value="VOCAL">노래</option>

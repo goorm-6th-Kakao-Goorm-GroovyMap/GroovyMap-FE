@@ -27,14 +27,14 @@ export interface Location {
 }
 
 export interface FieldPositionMapping {
-    [field: string]: { [position: string]: string };
+    [field: string]: { [part: string]: string };
 }
 export const FieldPositionMapping: FieldPositionMapping = {
-    ALL: {
-        ALL: '전체',
+    CHOICE: {
+        CHOICE: '선택',
     },
     BAND: {
-        ALL: '전체',
+        CHOICE: '선택',
         GUITAR: '기타',
         BASS: '베이스',
         DRUM: '드럼',
@@ -42,15 +42,16 @@ export const FieldPositionMapping: FieldPositionMapping = {
         KEYBOARD: '키보드',
     },
     DANCE: {
-        ALL: '전체',
+        CHOICE: '선택',
         LOCKING: '락킹',
         POPPING: '팝핑',
         BREAKING: '브레이킹',
-    },
-    VOCAL: {
-        ALL: '전체',
         HIPHOP: '힙합',
         JAZZ: '재즈',
+    },
+    VOCAL: {
+        CHOICE: '선택',
+        VOCAL: '보컬',
     },
 };
 export const regionCenters: { [key: string]: { name: string; lat: number; lng: number } } = {
