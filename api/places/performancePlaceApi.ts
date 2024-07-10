@@ -8,7 +8,7 @@ export const getPerformancePlaces = async (): Promise<PerformancePlaceResponse> 
     return response.data;
 };
 
-export const addPerformancePlace = async (place: Omit<PerformancePlace, 'id'>): Promise<number> => {
+export const addPerformancePlace = async (place: Omit<PerformancePlace, 'id'>): Promise<PerformancePlace> => {
     const response = await apiClient.post('/performanceplace', place);
     console.log('Add Performance Place Response:', response.data); // 서버 응답 로그 출력
     return response.data;
