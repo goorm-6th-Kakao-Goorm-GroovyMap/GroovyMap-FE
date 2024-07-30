@@ -253,7 +253,7 @@ const Home = () => {
                 <div className="relative p-6 rounded-xl text-center flex flex-col items-center mb-12">
                     <p className="text-md md:text-xl lg:text-xl items-center font-medium text-black mb-4">
                         공연 영상을 <span className="text-purple-500">업로드</span> 하고, <br />
-                        <span className="text-purple-500">포트폴리오</span>를 쌓으며 사람들과 교류하세요.
+                        <span className="text-purple-500">포트폴리오</span> 를 쌓으며 사람들과 교류하세요.
                     </p>
                     <div className="mt-3 flex flex-row justify-center space-x-4">
                         <button
@@ -291,7 +291,7 @@ const Home = () => {
                     </div>
                     <div className="mt-6 w-full flex justify-center">{renderContent()}</div>
                 </div>
-                <footer className="footer  text-gray-500 py-4 w-full">
+                <footer className=" text-gray-500 py-4 w-full">
                     <div className="container mx-auto text-center">
                         <p className="text-sm">© 2024 GroovyMap. All rights reserved.</p>
                     </div>
