@@ -49,7 +49,7 @@ const PostList: React.FC<PostListProps> = ({ posts }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {currentPosts.map((post) => (
+                    {posts.map((post) => (
                         <tr key={post.id} onClick={() => onPostClick(post.id)} className="cursor-pointer">
                             <td className="border p-2">{post.title}</td>
                             <td className="border p-2">{post.author}</td>
