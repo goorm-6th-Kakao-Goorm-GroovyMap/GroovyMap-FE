@@ -17,6 +17,10 @@ interface Post {
 
 const PostList: React.FC = () => {
     const [posts, setPosts] = useState<Post[]>([]);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const postsPerPage = 15;
+    const totalPages = Math.ceil(posts.length / postsPerPage);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -36,11 +40,20 @@ const PostList: React.FC = () => {
         router.push(`/freeboard/write`);
     };
 
+    const onPageClick = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const startIndex = (currentPage - 1) * postsPerPage;
+    const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
+
     return (
         <div>
-            <button className="bg-purple-700 text-white py-2 px-4" onClick={onWriteClick}>
-                <FaRegEdit />
-            </button>
+            <div className="flex justify-end mb-4">
+                <button className="bg-purple-700 text-white py-2 px-4" onClick={onWriteClick}>
+                    <FaRegEdit />
+                </button>
+            </div>
             <table className="w-full border-collapse border">
                 <thead>
                     <tr>
@@ -51,7 +64,7 @@ const PostList: React.FC = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {posts.map((post) => (
+                    {currentPosts.map((post) => (
                         <tr key={post.id} onClick={() => onPostClick(post.id)} className="cursor-pointer">
                             <td className="border p-2">{post.title}</td>
                             <td className="border p-2">{post.author}</td>
@@ -61,6 +74,17 @@ const PostList: React.FC = () => {
                     ))}
                 </tbody>
             </table>
+            <div className="flex justify-center mt-4">
+                {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                    <button
+                        key={page}
+                        className={`mx-2 px-3 py-1 ${page === currentPage ? 'bg-purple-700 text-white' : 'bg-gray-300 text-black'}`}
+                        onClick={() => onPageClick(page)}
+                    >
+                        {page}
+                    </button>
+                ))}
+            </div>
         </div>
     );
 };
