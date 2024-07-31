@@ -20,6 +20,9 @@ const config: Config = {
             stroke: {
                 current: 'currentColor',
             },
+            screens: {
+                'xs': '390px', // Custom screen for 390px and below
+            },
         },
     },
     plugins: [],
