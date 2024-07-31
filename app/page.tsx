@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -55,7 +54,7 @@ const Home = () => {
                 return (
                     <div className="content-container w-full relative">
                         <div
-                            className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden"
+                            className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden"
                             onMouseEnter={handleMouseEnter}
                             onMouseLeave={handleMouseLeave}
                         >
@@ -68,7 +67,7 @@ const Home = () => {
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
-                            <div className="absolute bottom-40 right-40 bg-purple-500 py-4 px-8 rounded-lg">
+                            <div className="absolute bottom-16 right-16 bg-purple-500 py-2 px-4 sm:py-4 sm:px-8 rounded-lg text-xs sm:text-base">
                                 <p className="text-white">
                                     지도위의 마커를 통해, <br />
                                     분야별, 공연 장소를 찾아보세요{' '}
@@ -89,7 +88,7 @@ const Home = () => {
                         <div className="absolute bottom-4 right-4">
                             <button
                                 onClick={() => handleButtonUrlClick('/performance-place')}
-                                className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                                className="cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition text-xs sm:text-base"
                             >
                                 &rarr;
                             </button>
@@ -100,7 +99,7 @@ const Home = () => {
                 return (
                     <div className="content-container w-full relative">
                         <div
-                            className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden"
+                            className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden"
                             onMouseEnter={handleMouseEnter}
                             onMouseLeave={handleMouseLeave}
                         >
@@ -113,19 +112,20 @@ const Home = () => {
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
-                            <div className="profile-image-wrapper absolute z-50 top-14 right-48">
+                         {/* <div className="profile-image-wrapper absolute z-50 top-10 right-10 sm:top-16 sm:right-48 sm:hidden">
+                            <div className="relative w-16 h-16 rounded-full sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
                                 <Image
                                     src="/profileImage.png"
                                     alt="Profile"
-                                    priority
                                     fill
-                                    sizes="(max-width: 768px) 100vw, 50vw"
+                                    priority
+                                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 50vw, 33vw"
                                     style={{ objectFit: 'cover' }}
-                                    className="profile-image shadow-lg"
+                                    className="profile-image shadow-lg rounded-full"
                                 />
                             </div>
-
-                            <div className="absolute bottom-28 right-40 bg-white py-4 px-6 rounded-lg">
+                        </div> */}
+                            <div className="absolute bottom-16 right-16 bg-white py-2 px-4 sm:py-4 sm:px-6 rounded-lg text-xs sm:text-base">
                                 <p className="text-purple-600">
                                     기타, 건반, 키보드, 드럼, 댄스 등, <br />
                                     다양한 분야의 사람들과 교류하세요.{' '}
@@ -146,7 +146,7 @@ const Home = () => {
                         <div className="absolute bottom-4 right-4">
                             <button
                                 onClick={() => handleButtonUrlClick('/profile')}
-                                className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                                className="cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition text-xs sm:text-base"
                             >
                                 &rarr;
                             </button>
@@ -156,14 +156,14 @@ const Home = () => {
             case '팀원 모집':
                 return (
                     <div className="content-container w-full relative">
-                        <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden">
+                        <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden">
                             <Image
                                 src="/recruitImage.png"
                                 alt="Recruit"
                                 fill
                                 priority
                                 quality={100}
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // 각 화면 크기에 맞는 크기로 설정
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 40vw, 30vw"
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
@@ -171,7 +171,7 @@ const Home = () => {
                             <div className="absolute bottom-4 right-4">
                                 <button
                                     onClick={() => handleButtonUrlClick('/recruitboard')}
-                                    className="cursor-pointer px-4 py-2  rounded-xl bg-gray-200 text-purple-700 hover:bg-purple-700 hover:text-white transition"
+                                    className="cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-xl bg-gray-200 text-purple-700 hover:bg-purple-700 hover:text-white transition text-xs sm:text-base"
                                 >
                                     &rarr;
                                 </button>
@@ -182,21 +182,21 @@ const Home = () => {
             case '공연 홍보':
                 return (
                     <div className="content-container w-full relative">
-                        <div className="relative w-full h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden">
+                        <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden">
                             <Image
                                 src="/promotionImage.png"
                                 alt="Promote"
                                 fill
                                 priority
                                 quality={100}
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // 각 화면 크기에 맞는 크기로 설정
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 style={{ objectFit: 'cover' }}
                                 className="rounded-lg"
                             />
                             <div className="absolute bottom-4 right-4">
                                 <button
                                     onClick={() => handleButtonUrlClick('/promotion-place')}
-                                    className="cursor-pointer px-4 py-2  rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition"
+                                    className="cursor-pointer px-2 py-1 sm:px-4 sm:py-2 rounded-xl bg-purple-500 text-white hover:bg-purple-700 transition text-xs sm:text-base"
                                 >
                                     &rarr;
                                 </button>
@@ -255,9 +255,9 @@ const Home = () => {
                         공연 영상을 <span className="text-purple-500">업로드</span> 하고, <br />
                         <span className="text-purple-500">포트폴리오</span> 를 쌓으며 사람들과 교류하세요.
                     </p>
-                    <div className="mt-3 flex flex-row justify-center space-x-4">
+                    <div className="mt-3 mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <button
-                            className={`button-custom transition-colors duration-300 mr-2 py-2 px-4 rounded-lg shadow-md mb-4 ${
+                            className={`button-custom transition-colors duration-300 py-2 px-4 rounded-lg shadow-md ${
                                 activeButton === '공연/연습장소' ? 'bg-purple-500 text-white' : 'text-black'
                             }`}
                             onClick={() => handleButtonClick('공연/연습장소')}
@@ -265,7 +265,7 @@ const Home = () => {
                             공연/연습장소
                         </button>
                         <button
-                            className={`button-custom transition-colors duration-300 mr-2 py-2 px-4 rounded-lg shadow-md mb-4 ${
+                            className={`button-custom transition-colors duration-300 py-2 px-4 rounded-lg shadow-md ${
                                 activeButton === '프로필' ? 'bg-purple-500 text-white' : 'text-black'
                             }`}
                             onClick={() => handleButtonClick('프로필')}
@@ -273,7 +273,7 @@ const Home = () => {
                             프로필
                         </button>
                         <button
-                            className={`button-custom transition-colors duration-300 mr-2 py-2 px-4 rounded-lg shadow-md mb-4 ${
+                            className={`button-custom transition-colors duration-300 py-2 px-4 rounded-lg shadow-md ${
                                 activeButton === '팀원 모집' ? 'bg-purple-500 text-white' : 'text-black'
                             }`}
                             onClick={() => handleButtonClick('팀원 모집')}
@@ -281,7 +281,7 @@ const Home = () => {
                             팀원 모집
                         </button>
                         <button
-                            className={`button-custom transition-colors duration-300 mr-2 py-2 px-4 rounded-lg shadow-md mb-4 ${
+                            className={`button-custom transition-colors duration-300 py-2 px-4 rounded-lg shadow-md ${
                                 activeButton === '공연 홍보' ? 'bg-purple-500 text-white' : 'text-black'
                             }`}
                             onClick={() => handleButtonClick('공연 홍보')}
@@ -291,11 +291,11 @@ const Home = () => {
                     </div>
                     <div className="mt-6 w-full flex justify-center">{renderContent()}</div>
                 </div>
-                <footer className=" text-gray-500 py-4 w-full">
+                <footer className="text-gray-500 py-4 w-full">
                     <div className="container mx-auto text-center">
                         <p className="text-sm">© 2024 GroovyMap. All rights reserved.</p>
                     </div>
-                </footer>{' '}
+                </footer>
             </div>
         </main>
     );

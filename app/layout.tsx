@@ -4,7 +4,7 @@ import React, { ReactNode, useState } from 'react';
 import './globals.scss';
 import Sidebar from '@/components/Sidebar';
 import RightSidebar from '@/components/RightSidebar';
-import { FaBars, FaHome, FaList, FaUser } from 'react-icons/fa';
+import { FaBars, FaHome, FaPaperPlane, FaList, FaUser } from 'react-icons/fa';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { RecoilRoot, useRecoilValue, useResetRecoilState } from 'recoil';
@@ -32,6 +32,12 @@ function InnerLayout({ children }: { children: ReactNode }) {
             router.push(`/mypage/${user.nickname}`);
         }
     };
+
+    const handleDMClick = () => {
+        if (user.nickname) {
+            router.push(`/dm/${user.nickname}`);
+        }
+    }
 
     const handleLogout = async () => {
         try {
@@ -98,6 +104,11 @@ function InnerLayout({ children }: { children: ReactNode }) {
                         className={activeIcon === 'menu' ? 'active' : ''}
                         onClick={() => handleIconClick('menu', '/menu')}
                     />
+                    <FaPaperPlane 
+                        className={activeIcon === 'dm'? 'active' : ''}
+                        onClick={handleDMClick} 
+                     />
+
                     <FaUser 
                         className={activeIcon === 'user' ? 'active' : ''}
                         onClick={handleUserIconClick}
