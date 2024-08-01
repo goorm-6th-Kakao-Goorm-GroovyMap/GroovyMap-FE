@@ -81,15 +81,15 @@ const RightSidebar = () => {
     // 버스킹 장소 슬라이드 내용
     const slides = [
         {
-            image: '/busking1.jpg',
-            text: '<br>2024<br>서울 거리공연<br>구석구석 라이브<br> <span>-</span><br>서울 전역 50곳에서<br>펼쳐지는 거리공연',
+            image: '/banner.png',
+            // text: '<br>2024<br>서울 거리공연<br>구석구석 라이브<br> <span>-</span><br>서울 전역 50곳에서<br>펼쳐지는 거리공연',
             link: 'https://nodeul.org/program/2024-%ec%84%9c%ec%9a%b8%ea%b1%b0%eb%a6%ac%ea%b3%b5%ec%97%b0-%ea%b5%ac%ec%84%9d%ea%b5%ac%ec%84%9d%eb%9d%bc%ec%9d%b4%eb%b8%8c/',
         },
-        {
-            image: '/busking3.jpg',
-            text: '<br>2024 서울<br>국제댄스페스티벌<br>인 탱크<br> <span>-</span><br>인탱크 서포터즈 <br>4기 모집<br>',
-            link: 'https://ingdance.kr/62/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&bmode=view&idx=26275872&t=board',
-        },
+        // {
+        //     image: '/busking3.jpg',
+        //     text: '<br>2024 서울<br>국제댄스페스티벌<br>인 탱크<br> <span>-</span><br>인탱크 서포터즈 <br>4기 모집<br>',
+        //     link: 'https://ingdance.kr/62/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&bmode=view&idx=26275872&t=board',
+        // },
     ];
 
     if (!isMounted) {
@@ -154,7 +154,7 @@ const RightSidebar = () => {
             <div className='bg-white p-4 rounded-lg text-center flex-grow flex items-center justify-center relative'>
                 <Image
                     src={slides[currentSlide].image}
-                    alt={slides[currentSlide].text}
+                    alt="banner"
                     fill
                     priority
                     sizes='(max-width: 768px) 100vw, 50vw' // 필요한 sizes 속성 추가
@@ -165,7 +165,6 @@ const RightSidebar = () => {
                 <p
                     className='gradient-text z-50 font-medium text-xl mt-4 cursor-pointer'
                     onClick={() => (window.location.href = slides[currentSlide].link)}
-                    dangerouslySetInnerHTML={{ __html: slides[currentSlide].text }}
                 ></p>
             </div>
             <div className='flex justify-center mt-2'>

@@ -27,48 +27,141 @@
     font-family: 'Pretendard', sans-serif;
 }
 
-html,
-body,
-#__next {
-    @apply h-full m-0;
+html, body, #__next {
+    @apply h-full m-0 p-0;
 }
 
 .main-layout {
     @apply flex h-full;
+    @apply pb-28 md:pb-0;
 }
 
-.sidebar {
-    @apply flex-shrink-0 w-64 flex flex-col items-center px-8;
+.mobile-header {
+    @apply flex justify-center items-center py-4 bg-white shadow-md md:hidden; /* 작은 화면에서만 표시 */
 }
 
-.right-sidebar {
-    @apply flex-shrink-0 w-64 p-6 flex flex-col justify-between;
+.desktop-header {
+    @apply hidden md:flex justify-between items-center bg-white fixed top-0 left-0 right-0 z-10; /* 큰 화면에서만 표시 */
+}
+
+h1 {
+    @apply mt-8; /* Tailwind CSS의 mt-8 클래스를 사용하여 위에 마진 추가 */
+}
+
+.logo {
+    @apply text-2xl font-bold md:hidden; /* 작은 화면에서만 표시 */
+}
+
+.nav-icons {
+    @apply flex space-x-4;
+}
+
+.nav-icons svg {
+    @apply w-6 h-6 text-black;
 }
 
 .content {
-    @apply flex-grow p-6 overflow-y-auto;
+    @apply flex-grow overflow-y-auto; /* p-4 패딩 제거 */
 }
 
-button {
-    @apply cursor-pointer;
+.footer {
+    @apply fixed bottom-0 left-0 w-full bg-white shadow-inner flex justify-around items-center p-4 z-50 lg:hidden;
 }
 
-//공연 및 연습 장소 페이지에서 swal 알림창 커스텀 스타일링
-.tailwind-swal-popup {
-    @apply w-64 p-4; /* 너비 및 패딩 조정 */
+.footer-icons {
+    @apply flex justify-around w-full;
 }
 
-.tailwind-swal-title {
-    @apply text-base font-semibold; /* 제목의 글꼴 크기 및 굵기 조정 */
+.footer-icons svg {
+    @apply w-6 h-6 text-gray-700 cursor-pointer;
 }
 
-.tailwind-swal-content {
-    @apply text-sm; /* 내용의 글꼴 크기 조정 */
+.footer-icons svg.active {
+    @apply text-purple-500 cursor-pointer;
 }
 
-.tailwind-swal-button {
-    @apply bg-purple-700 text-white px-4 py-2 rounded-md; /* 버튼 스타일 조정 */
+
+.footer-icons svg.hover {
+    @apply text-purple-500 cursor-pointer;
 }
+
+
+.sidebar {
+    @apply flex-shrink-0 w-64 flex flex-col items-center hidden md:flex; /* 큰 화면에서만 표시 */
+    @apply mt-0; /* 상단 마진 제거 */
+}
+
+.sidebar-logo {
+    @apply w-full flex justify-center mt-16 mb-36; /* 로고와 메뉴 사이 공백 추가 */
+}
+
+.right-sidebar {
+    @apply flex-shrink-0 w-64 flex flex-col justify-between hidden md:flex; /* 큰 화면에서만 표시 */
+    @apply mt-0; /* 상단 마진 제거 */
+    @apply items-center;
+    @apply gap-4;
+}
+
+//작은 화면 메뉴 페이지 스타일링
+.menu-page {
+    @apply flex items-center justify-center h-screen bg-gray-100;
+}
+
+.menu-list {
+    @apply space-y-3;
+}
+
+.menu-item {
+    @apply cursor-pointer text-lg text-gray-800 hover:text-purple-500 active:text-purple-700;
+}
+ㄴ
+.menu-modal {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50;
+}
+
+//
+.menu-content {
+    @apply bg-white p-4 rounded-lg shadow-lg;
+}
+
+.menu ul {
+    @apply space-y-2;
+}
+
+.menu li {
+    @apply cursor-pointer hover:text-purple-700;
+}
+
+.nav-icons {
+    @apply flex justify-between items-center w-24;
+}
+
+@media (max-width: 1024px) {
+    .sidebar, .right-sidebar {
+        @apply fixed inset-y-0 left-0 transform transition-transform duration-300 ease-in-out;
+    }
+
+    .sidebar {
+        @apply w-full -translate-x-full;
+    }
+
+    .right-sidebar {
+        @apply w-full translate-x-full;
+    }
+
+    .sidebar.open, .right-sidebar.open {
+        @apply translate-x-0;
+    }
+    .content {
+        @apply mt-2; /* 작은 화면일 때 컨텐츠가 가리지 않도록 패딩 추가 */
+    }
+
+    h1 {
+        @apply mt-0; /* Tailwind CSS의 mt-8 클래스를 사용하여 위에 마진 추가 */
+    }
+}
+
+
 
 //프로필페이지
 .backface-hidden {
