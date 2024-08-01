@@ -132,11 +132,12 @@ const PostPage: React.FC = () => {
                 </div>
             )}
             <h1 className="text-3xl font-bold mb-4">{post.title}</h1>
-            <div className="text-sm text-gray-600 mb-4">
-                <p>작성자: {post.author}</p>
-                <p>작성일: {formatDate(post.timestamp)}</p>
+            <div className="flex items-center mb-4 text-sm text-gray-600">
+                <p className="mr-4">
+                    작성자: {post.author} | 작성일: {formatDate(post.timestamp)} | 조회수: {post.viewCount}
+                </p>
             </div>
-            <p className="mr-4">조회수: {post.viewCount}</p>
+
             <div className="mb-6" dangerouslySetInnerHTML={{ __html: post.content }} />
 
             <div className="flex items-center space-x-4 mb-4">
@@ -146,6 +147,15 @@ const PostPage: React.FC = () => {
                 <button onClick={handleSavePost} className="flex items-center text-gray-600 hover:text-purple-700">
                     {isBookmarked ? <FcBookmark /> : <FaRegBookmark />} {post.savesCount}
                 </button>
+            </div>
+            <div className="comments">
+                {comments.map((comment) => (
+                    <div key={comment.id} className="border-b py-2">
+                        <p className="font-semibold">{comment.author}</p>
+                        <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
+                        <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
+                    </div>
+                ))}
             </div>
             <div className="mb-4">
                 <textarea
@@ -158,15 +168,6 @@ const PostPage: React.FC = () => {
                 <button onClick={handleCommentSubmit} className="bg-purple-700 text-white py-2 px-4 mt-2">
                     댓글 작성
                 </button>
-            </div>
-            <div className="comments">
-                {comments.map((comment) => (
-                    <div key={comment.id} className="border-b py-2">
-                        <p className="font-semibold">{comment.author}</p>
-                        <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
-                        <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
-                    </div>
-                ))}
             </div>
         </div>
     );

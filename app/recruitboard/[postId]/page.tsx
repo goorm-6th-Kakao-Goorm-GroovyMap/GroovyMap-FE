@@ -110,19 +110,27 @@ const PostContent: React.FC = () => {
             )}
             <h2 className="text-3xl font-bold mb-4">{post.title}</h2>
             <div className="flex items-center mb-4 text-sm text-gray-600">
-                <p className="mr-4">작성자: {post.author}</p>
-                <p className="mr-4">조회수: {post.viewCount}</p>
-                <p className="mr-4">작성일: {formatDate(post.timeStamp)}</p>
+                <p className="mr-4">
+                    작성자: {post.author} | 작성일: {formatDate(post.timeStamp)} | 조회수: {post.viewCount}
+                </p>
             </div>
             <div className="mb-4">
-                <p className="mb-2">
-                    모집장소: {regionCenters[post.region].name} / 모집분야: {fieldTranslations[post.field]} / 모집파트:{' '}
-                    {partTranslations[post.part]} / 모집인원: {post.recruitNum}
+                <p className="mb-2 text-gray-600">
+                    모집장소: {regionCenters[post.region].name} | 모집분야: {fieldTranslations[post.field]} | 모집파트:{' '}
+                    {partTranslations[post.part]} | 모집인원: {post.recruitNum}
                 </p>
                 <p className="text-lg mb-4">{post.content}</p>
             </div>
             <h3 className="text-2xl font-bold border-t pt-4 mb-4">댓글</h3>
-
+            <div className="comments">
+                {comments.map((comment) => (
+                    <div key={comment.id} className="border-b py-2">
+                        <p className="font-semibold">{comment.author}</p>
+                        <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
+                        <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
+                    </div>
+                ))}
+            </div>
             <div className="mb-4">
                 <textarea
                     className="border w-full p-2"
@@ -137,15 +145,6 @@ const PostContent: React.FC = () => {
                 >
                     댓글 작성
                 </button>
-                <div className="comments">
-                    {comments.map((comment) => (
-                        <div key={comment.id} className="border-b py-2">
-                            <p className="font-semibold">{comment.author}</p>
-                            <p className="text-sm text-gray-600 mb-2">{comment.content}</p>
-                            <p className="text-xs text-gray-400">{formatDate(comment.timestamp)}</p>
-                        </div>
-                    ))}
-                </div>
             </div>
         </div>
     );
