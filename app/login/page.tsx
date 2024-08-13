@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import KakaoImg from './SocialLoginLogo/Kakao';
@@ -38,7 +38,6 @@ const Login = () => {
         },
         onSuccess: async (data) => {
             if (!toast.isActive('loginSuccess')) {
-                // toastId를 사용하여 중복 방지
                 toast.success('로그인에 성공했습니다!', { toastId: 'loginSuccess' });
             }
             confetti({
@@ -50,13 +49,12 @@ const Login = () => {
                 const userInfoResponse = await apiClient.get('/memberInfo', { withCredentials: true });
                 setUser({
                     nickname: userInfoResponse.data.nickname,
-                    profileUrl: userInfoResponse.data.profileUrl, // profileUrl로
+                    profileUrl: userInfoResponse.data.profileUrl,
                 });
                 router.push(`/mypage/${userInfoResponse.data.nickname}`);
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
                 if (!toast.isActive('userInfoError')) {
-                    // toastId를 사용하여 중복 방지
                     toast.error('유저 정보를 가져오는 데 실패했습니다.', { toastId: 'userInfoError' });
                 }
             }
@@ -64,7 +62,6 @@ const Login = () => {
         onError: (error) => {
             console.log('Error during login:', error);
             if (!toast.isActive('loginError')) {
-                // toastId를 사용하여 중복 방지
                 toast.error('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.', { toastId: 'loginError' });
             }
         },
@@ -76,14 +73,44 @@ const Login = () => {
     };
 
     const handleKakaoLogin = () => {
-        const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/kakao`;
+        const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/kakao`;
         router.push(kakaoLoginURL);
     };
 
     const handleGoogleLogin = () => {
-        const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/google`;
+        const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/google`;
         router.push(googleLoginURL);
     };
+
+    // OAuth 인증 후 리디렉션된 페이지에서 코드 파싱 및 백엔드로 전송
+    useEffect(() => {
+        const handleOAuthLogin = async () => {
+            const code = new URL(window.location.href).searchParams.get('code');
+            if (code) {
+                try {
+                    // 인증 코드를 백엔드로 전송하여 로그인 상태 확인
+                    const response = await apiClient.post('/oauth2/callback', { code });
+                    const { loginStatus, ...userInfo } = response.data;
+
+                    // 로그인 상태에 따라 적절한 페이지로 리디렉션
+                    if (loginStatus === 'NEED_REGISTER') {
+                        router.push('/signup/complete-profile'); // 추가 정보 입력 페이지로 리디렉션
+                    } else if (loginStatus === 'SAME_EMAIL') {
+                        setUser(userInfo); // 사용자 정보를 전역 상태로 설정
+                        router.push(`/mypage/${userInfo.nickname}`); // 마이페이지로 리디렉션
+                    } else {
+                        throw new Error('Unexpected login status');
+                    }
+                } catch (error) {
+                    console.error('OAuth login failed:', error);
+                    toast.error('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
+                    router.push('/login'); // 로그인 페이지로 리디렉션
+                }
+            }
+        };
+
+        handleOAuthLogin();
+    }, [router, setUser]);
 
     return (
         <>
