@@ -53,12 +53,10 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
             onConnect: (frame: Frame) => {
                 stompClient.subscribe(`/user/queue/messages`, (message: StompMessage) => {
                     const parsedMessage: ChatMessage = JSON.parse(message.body);
-                    if (parsedMessage.chatRoomId === chatRoomId) {
-                        setMessages((prevMessages) => {
-                            const updatedMessages = [...prevMessages, parsedMessage];
-                            return updatedMessages;
-                        });
-                    }
+                    setMessages((prevMessages) => {
+                        const updatedMessages = [...prevMessages, parsedMessage];
+                        return updatedMessages;
+                    });
                 });
             },
             onStompError: (frame: Frame) => {
@@ -104,8 +102,6 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
             });
 
             setNewMessage('');
-
-            setMessages((prevMessages) => [...prevMessages, message]);
         } else {
             console.log('Message not sent. Either client is not connected, message is empty, or receiverId is null.');
         }
