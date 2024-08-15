@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FieldPositionMapping, Post } from '../types';
 import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
@@ -17,6 +17,30 @@ const WritePostForm: React.FC = () => {
     const [selectedField, setSelectedField] = useState<string>('');
     const currentUser = useRecoilValue(userState);
     const router = useRouter();
+    const { postId } = useParams<{ postId?: string }>();
+
+    useEffect(() => {
+        if (postId) {
+            // 기존 게시글을 로드하여 폼에 채워줍니다.
+            const fetchPost = async () => {
+                try {
+                    const response = await apiClient.get(`/recruitboard/${postId}`);
+                    const post = response.data;
+                    setTitle(post.title);
+                    setContent(post.content);
+                    setRegion(post.region);
+                    setField(post.field);
+                    setPart(post.part);
+                    setMembers(post.recruitNum);
+                    setSelectedField(post.field);
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+
+            fetchPost();
+        }
+    }, [postId]);
 
     const handleMemberChange = (increment: boolean) => {
         setMembers((prev) => (increment ? prev + 1 : prev > 1 ? prev - 1 : 1));
@@ -34,17 +58,27 @@ const WritePostForm: React.FC = () => {
         formData.append('part', part);
         formData.append('recruitNum', members.toString());
         formData.append('timestamp', new Date().toISOString());
-        formData.append('viewCount', '0');
 
         try {
-            const response = await apiClient.post(`/recruitboard/write`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'ngrok-skip-browser-warning': '69420',
-                },
-            });
-            const newPostId = response.data.id;
-            router.push(`/recruitboard/${newPostId}`);
+            if (postId) {
+                // 기존 게시글 수정
+                await apiClient.put(`/recruitboard/${postId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+            } else {
+                // 새 게시글 작성
+                const response = await apiClient.post(`/recruitboard/write`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                const newPostId = response.data.id;
+                router.push(`/recruitboard/${newPostId}`);
+            }
+
+            router.push(`/recruitboard/${postId || 'recruitboard'}`);
         } catch (error) {
             console.log(error);
         }
