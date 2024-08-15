@@ -10,7 +10,7 @@ import apiClient from '@/api/apiClient';
 import { useMutation } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
 import confetti from 'canvas-confetti';
-import { userState } from '@/recoil/state/userState'; // 정확한 경로로 임포트
+import { userState } from '@/recoil/state/userState';
 import { toast } from 'react-toastify';
 
 const Login = () => {
@@ -74,44 +74,66 @@ const Login = () => {
 
     const handleKakaoLogin = () => {
         const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/kakao`;
-        router.push(kakaoLoginURL);
+        window.location.href = kakaoLoginURL; 
     };
-
+    
     const handleGoogleLogin = () => {
         const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/google`;
-        router.push(googleLoginURL);
+        window.location.href = googleLoginURL;  
     };
+    
+    
 
-    // OAuth 인증 후 리디렉션된 페이지에서 코드 파싱 및 백엔드로 전송
     useEffect(() => {
         const handleOAuthLogin = async () => {
-            const code = new URL(window.location.href).searchParams.get('code');
+            const url = new URL(window.location.href);
+            const code = url.searchParams.get('code'); //인증 코드
+    
             if (code) {
+                console.log(code);
+                const isKakao = url.pathname.includes('/kakao/callback');
+                const isGoogle = url.pathname.includes('/google/callback');
+    
                 try {
-                    // 인증 코드를 백엔드로 전송하여 로그인 상태 확인
-                    const response = await apiClient.post('/oauth2/callback', { code });
-                    const { loginStatus, ...userInfo } = response.data;
+                    //API 요청
+                    let response;
+                
+                    if (isKakao) {
+                        response = await apiClient.post('/kakao/callback', {code});
+                        console.log(response);
+                    } else if (isGoogle) {
+                        response = await apiClient.post('/google/callback', { code });
+                    }
+    
+                    if (!response) {
+                        throw new Error('No response from the server.');
+                    }
 
-                    // 로그인 상태에 따라 적절한 페이지로 리디렉션
+                
+                    const { loginStatus, ...userInfo } = response.data;
+    
                     if (loginStatus === 'NEED_REGISTER') {
-                        router.push('/signup/complete-profile'); // 추가 정보 입력 페이지로 리디렉션
+                        router.push('/signup/email-password');
                     } else if (loginStatus === 'SAME_EMAIL') {
-                        setUser(userInfo); // 사용자 정보를 전역 상태로 설정
-                        router.push(`/mypage/${userInfo.nickname}`); // 마이페이지로 리디렉션
+                        toast.error('이미 존재하는 이메일입니다. 로그인 페이지로 이동합니다.');
+                        router.push('/login');
+                    } else if (loginStatus === 'LOGIN_SUCCESS') {
+                        setUser(userInfo);
+                        router.push(`/mypage/${userInfo.nickname}`);
                     } else {
                         throw new Error('Unexpected login status');
                     }
                 } catch (error) {
                     console.error('OAuth login failed:', error);
                     toast.error('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
-                    router.push('/login'); // 로그인 페이지로 리디렉션
+                    router.push('/login');
                 }
             }
         };
-
+    
         handleOAuthLogin();
     }, [router, setUser]);
-
+    
     return (
         <>
             <title>그루비 맵 | 로그인</title>
