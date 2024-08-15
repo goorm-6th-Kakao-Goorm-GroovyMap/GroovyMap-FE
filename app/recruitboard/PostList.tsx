@@ -18,13 +18,19 @@ interface Post {
 }
 interface PostListProps {
     posts: Post[];
+    searchWord: string;
 }
-const PostList: React.FC<PostListProps> = ({ posts }) => {
+const PostList: React.FC<PostListProps> = ({ posts, searchWord }) => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const postsPerPage = 15;
-    const totalPages = Math.ceil(posts.length / postsPerPage);
 
     const router = useRouter();
+
+    const filteredPosts = posts.filter((post) => post.title.toLowerCase().includes(searchWord.toLowerCase()));
+
+    const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+    const startIndex = (currentPage - 1) * postsPerPage;
+    const currentPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
 
     const onPostClick = (postId: number) => {
         router.push(`/recruitboard/${postId}`);
@@ -33,9 +39,6 @@ const PostList: React.FC<PostListProps> = ({ posts }) => {
     const onPageClick = (page: number) => {
         setCurrentPage(page);
     };
-
-    const startIndex = (currentPage - 1) * postsPerPage;
-    const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
 
     return (
         <div>

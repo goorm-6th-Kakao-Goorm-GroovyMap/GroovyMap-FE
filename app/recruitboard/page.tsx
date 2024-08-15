@@ -17,7 +17,13 @@ const Recruit_page: React.FC = () => {
     const [selectedField, setSelectedField] = useState<string>('CHOICE');
     const [selectedPosition, setSelectedPosition] = useState<string>('CHOICE');
     const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+    const [searchWord, setSearchWord] = useState('');
+
     const router = useRouter();
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchWord(e.target.value);
+    };
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedRegion(e.target.value);
@@ -47,12 +53,16 @@ const Recruit_page: React.FC = () => {
             filtered = filtered.filter((post) => post.part === selectedPosition);
         }
 
+        if (searchWord.trim() !== '') {
+            filtered = filtered.filter((post) => post.title.toLowerCase().includes(searchWord.toLowerCase()));
+        }
+
         setFilteredPosts(filtered);
-    }, [posts, selectedRegion, selectedField, selectedPosition]);
+    }, [posts, selectedRegion, selectedField, selectedPosition, searchWord]);
 
     useEffect(() => {
         filterPosts();
-    }, [posts, selectedRegion, selectedField, selectedPosition, filterPosts]);
+    }, [posts, selectedRegion, selectedField, selectedPosition, filterPosts, searchWord]);
 
     useEffect(() => {
         const fetchPosts = async () => {
@@ -72,7 +82,7 @@ const Recruit_page: React.FC = () => {
     };
 
     return (
-        <main className="main-container flex min-h-screen flex-col items-center p-6">
+        <main className="main-container flex min-h-screen bg-purple-50 flex-col items-center p-6">
             <div className="content flex-1 w-full max-w-4xl">
                 <div className="flex justify-center items-center mb-6">
                     <div className="relative w-full">
@@ -80,6 +90,8 @@ const Recruit_page: React.FC = () => {
                             type="text"
                             className="w-full border rounded p-2 pl-10"
                             placeholder="검색어를 입력하세요..."
+                            value={searchWord}
+                            onChange={handleSearchChange}
                         />
                         <div className="absolute left-3 top-3 text-gray-400">
                             <IoMdSearch size={20} />
@@ -166,7 +178,7 @@ const Recruit_page: React.FC = () => {
                     </div>
                     {isMapVisible && <KakaoMap />}
                 </section>
-                <PostList posts={filteredPosts} />
+                <PostList posts={filteredPosts} searchWord={searchWord} />
             </div>
         </main>
     );

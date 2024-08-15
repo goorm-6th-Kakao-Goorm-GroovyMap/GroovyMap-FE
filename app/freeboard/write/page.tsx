@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '@/api/apiClient';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { useRecoilValue } from 'recoil';
@@ -15,6 +15,24 @@ const WritePostForm: React.FC = () => {
     const [content, setContent] = useState('');
     const currentUser = useRecoilValue(userState);
     const router = useRouter();
+    const { postId } = useParams<{ postId: string }>();
+    const isEditing = Boolean(postId);
+
+    useEffect(() => {
+        if (isEditing) {
+            const fetchPost = async () => {
+                try {
+                    const response = await apiClient.get(`/freeboard/${postId}`);
+                    setTitle(response.data.title);
+                    setContent(response.data.content);
+                } catch (error) {
+                    console.log(error);
+                }
+            };
+
+            fetchPost();
+        }
+    }, [isEditing, postId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,14 +62,22 @@ const WritePostForm: React.FC = () => {
             }
 
             try {
-                const response = await apiClient.post('/freeboard/write', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                });
+                if (isEditing) {
+                    await apiClient.put(`/freeboard/${postId}`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
+                } else {
+                    const response = await apiClient.post('/freeboard/write', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
 
-                const newPostId = response.data.id;
-                router.push(`/freeboard/${newPostId}`);
+                    const newPostId = response.data.id;
+                    router.push(`/freeboard/${newPostId}`);
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -91,30 +117,42 @@ const WritePostForm: React.FC = () => {
     ];
 
     return (
-        <form onSubmit={handleSubmit} className="border p-4">
-            <div className="mb-4">
-                <label htmlFor="title" className="block font-bold mb-1">
-                    제목:
-                </label>
-                <input
-                    type="text"
-                    id="title"
-                    className="w-full border rounded p-2"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="제목을 입력하세요."
-                />
+        <div className="flex justify-center min-h-screen bg-purple-50 p-6">
+            <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="mb-6">
+                        <label htmlFor="title" className="block font-bold mb-1">
+                            제목:
+                        </label>
+                        <input
+                            type="text"
+                            id="title"
+                            className="w-full border rounded p-2"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="제목을 입력하세요."
+                        />
+                    </div>
+                    <div className="mb-6">
+                        <label htmlFor="content" className="block font-bold mb-1">
+                            내용:
+                        </label>
+                        <div className="relative">
+                            <ReactQuill
+                                value={content}
+                                onChange={setContent}
+                                modules={modules}
+                                formats={formats}
+                                style={{ height: '400px', marginBottom: '2rem' }}
+                            />
+                        </div>
+                    </div>
+                    <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded">
+                        {isEditing ? '수정하기' : '글쓰기'}
+                    </button>
+                </form>
             </div>
-            <div className="mb-4">
-                <label htmlFor="content" className="block font-bold mb-1">
-                    내용:
-                </label>
-                <ReactQuill value={content} onChange={setContent} modules={modules} formats={formats} />
-            </div>
-            <button type="submit" className="w-full bg-purple-700 text-white py-2 px-4 rounded">
-                글쓰기
-            </button>
-        </form>
+        </div>
     );
 };
 

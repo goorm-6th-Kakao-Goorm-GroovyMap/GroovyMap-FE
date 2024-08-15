@@ -15,11 +15,14 @@ interface Post {
     timestamp: string;
 }
 
-const PostList: React.FC = () => {
+interface PostListProps {
+    searchWord: string;
+}
+
+const PostList: React.FC<PostListProps> = ({ searchWord }) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const postsPerPage = 15;
-    const totalPages = Math.ceil(posts.length / postsPerPage);
 
     const router = useRouter();
 
@@ -31,6 +34,10 @@ const PostList: React.FC = () => {
 
         fetchPosts();
     }, []);
+
+    const filteredPosts = posts.filter((post) => post.title.toLowerCase().includes(searchWord.toLowerCase()));
+
+    const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
     const onPostClick = (postId: number) => {
         router.push(`/freeboard/${postId}`);
@@ -45,7 +52,7 @@ const PostList: React.FC = () => {
     };
 
     const startIndex = (currentPage - 1) * postsPerPage;
-    const currentPosts = posts.slice(startIndex, startIndex + postsPerPage);
+    const currentPosts = filteredPosts.slice(startIndex, startIndex + postsPerPage);
 
     return (
         <div>
