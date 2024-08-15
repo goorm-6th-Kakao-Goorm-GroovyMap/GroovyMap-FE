@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-    baseURL: 'groovymap.store',
+    baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
     timeout: 60000,
     withCredentials: true,
 });
