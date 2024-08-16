@@ -72,68 +72,25 @@ const Login = () => {
         loginMutation.mutate(formData);
     };
 
+    // 카카오 로그인에 사용되는 REST API 키와 리다이렉트 URI 설정
+    const KAKAO_LOGIN_API_KEY = process.env.NEXT_PUBLIC_KAKAO_LOGIN_API_KEY;
+    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/kakao/callback`;
+    const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_LOGIN_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+
     const handleKakaoLogin = () => {
-        const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/kakao`;
-        window.location.href = kakaoLoginURL; 
+        window.location.href = KAKAO_AUTH_URL;
     };
-    
+
+    //구글 로그인
+    const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const GOOGLE_REDIRECT_URI = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/google/callback`;
+    const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile`;
+
+
     const handleGoogleLogin = () => {
-        const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/login/google`;
-        window.location.href = googleLoginURL;  
+        window.location.href = GOOGLE_AUTH_URL;
     };
-    
-    
 
-    useEffect(() => {
-        const handleOAuthLogin = async () => {
-            const url = new URL(window.location.href);
-            const code = url.searchParams.get('code'); //인증 코드
-    
-            if (code) {
-                console.log(code);
-                const isKakao = url.pathname.includes('/kakao/callback');
-                const isGoogle = url.pathname.includes('/google/callback');
-    
-                try {
-                    //API 요청
-                    let response;
-                
-                    if (isKakao) {
-                        response = await apiClient.post('/kakao/callback', {code});
-                        console.log(response);
-                    } else if (isGoogle) {
-                        response = await apiClient.post('/google/callback', { code });
-                    }
-    
-                    if (!response) {
-                        throw new Error('No response from the server.');
-                    }
-
-                
-                    const { loginStatus, ...userInfo } = response.data;
-    
-                    if (loginStatus === 'NEED_REGISTER') {
-                        router.push('/signup/email-password');
-                    } else if (loginStatus === 'SAME_EMAIL') {
-                        toast.error('이미 존재하는 이메일입니다. 로그인 페이지로 이동합니다.');
-                        router.push('/login');
-                    } else if (loginStatus === 'LOGIN_SUCCESS') {
-                        setUser(userInfo);
-                        router.push(`/mypage/${userInfo.nickname}`);
-                    } else {
-                        throw new Error('Unexpected login status');
-                    }
-                } catch (error) {
-                    console.error('OAuth login failed:', error);
-                    toast.error('소셜 로그인에 실패했습니다. 다시 시도해주세요.');
-                    router.push('/login');
-                }
-            }
-        };
-    
-        handleOAuthLogin();
-    }, [router, setUser]);
-    
     return (
         <>
             <title>그루비 맵 | 로그인</title>

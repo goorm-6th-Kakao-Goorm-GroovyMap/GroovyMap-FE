@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRecoilState } from 'recoil';
 import { signUpState } from '@/recoil/state/signupState';
 import { useRouter } from 'next/navigation';
@@ -56,11 +56,25 @@ const subPartMap: { [key: string]: string } = {
 const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
     const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
-    const [isEmailChecked, setIsEmailChecked] = useState(false);
     const [nicknameError, setNicknameError] = useState<string | null>(null);
     const router = useRouter();
 
-    //입력값, 닉네임 영어로만
+   // URL에서 email과 nickname을 받아오기
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const email = urlParams.get('email');
+        const nickname = urlParams.get('nickname');
+
+        if (email && nickname) {
+            setFormData((prevState) => ({
+                ...prevState,
+                email,
+                nickname,
+            }));
+        }
+    }, []);
+
+    // 입력값 처리, 닉네임 영어로만 제한
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         if (name === 'nickname') {
@@ -76,32 +90,31 @@ const NicknameRegionPartPage: React.FC = () => {
             ...prevState,
             [name]: value,
         }));
-        console.log('Updated formData:', formData); // 값 저장 확인
     };
 
+    // 지역 선택 처리
     const handleRegionChange = (region: string) => {
         setFormData((prevState) => ({
             ...prevState,
             region,
         }));
-        console.log('Selected region:', region); // 값 저장 확인
     };
 
+    // 파트 선택 처리
     const handlePartChange = (part: string) => {
         setFormData((prevState) => ({
             ...prevState,
             part,
             subPart: '',
         }));
-        console.log('Selected part:', part); // 값 저장 확인
     };
 
+    // 서브 파트 선택 처리
     const handleSubPartChange = (subPart: string) => {
         setFormData((prevState) => ({
             ...prevState,
             subPart,
         }));
-        console.log('Selected subPart:', subPart); // 값 저장 확인
     };
 
     // 닉네임 중복 확인
@@ -111,7 +124,6 @@ const NicknameRegionPartPage: React.FC = () => {
             return response.data;
         },
         onSuccess: (data) => {
-            console.log('응답 데이터:', data); // 응답 데이터를 콘솔에 출력
             setNicknameAvailable(data.available);
             if (data.available) {
                 toast.success('사용 가능한 닉네임입니다.');
@@ -120,13 +132,13 @@ const NicknameRegionPartPage: React.FC = () => {
             }
         },
         onError: (error) => {
-            console.error('닉네임 중복 확인 중 오류가 발생했습니다:', error); // 오류 데이터를 콘솔에 출력
+            console.error('닉네임 중복 확인 중 오류가 발생했습니다:', error);
             toast.error('닉네임 중복 확인 중 오류가 발생했습니다.');
             setNicknameAvailable(false);
         },
     });
 
-    //닉네임 중복 확인 handle
+    // 닉네임 중복 확인 핸들러
     const handleCheckNickname = () => {
         if (!formData.nickname) {
             toast.warning('닉네임을 입력해 주세요.');
@@ -135,7 +147,7 @@ const NicknameRegionPartPage: React.FC = () => {
         checkNicknameAvailabilityMutation.mutate();
     };
 
-    //회원가입
+    // 회원가입 처리
     const signupMutation = useMutation({
         mutationFn: async () => {
             const mappedRegion = regionMap[formData.region] || formData.region;
@@ -153,16 +165,13 @@ const NicknameRegionPartPage: React.FC = () => {
             return response.data;
         },
         onSuccess: (data) => {
-            console.log('회원가입 성공 응답:', data); // 응답 데이터를 콘솔에 출력
             if (data.result) {
                 toast.success('회원가입에 성공했습니다!');
                 confetti({
-                    // 콘페티 효과
                     particleCount: 100,
                     spread: 160,
                 });
                 setTimeout(() => {
-                    // 회원가입 성공 후 로그인 페이지로 이동
                     router.push('/login');
                 }, 2000);
             } else {
@@ -170,7 +179,7 @@ const NicknameRegionPartPage: React.FC = () => {
             }
         },
         onError: (error: any) => {
-            console.error('회원가입 실패 응답:', error); // 오류 데이터를 콘솔에 출력
+            console.error('회원가입 실패 응답:', error);
             toast.error('회원가입에 실패했습니다. 다시 시도해주세요.');
         },
     });
