@@ -38,7 +38,7 @@ const KakaoCallback = () => {
               router.push(`/signup/nickname-region-part?${needRegisterParams}`);
               break;
             default:
-              // 예상치 못한 에러 처리
+              // 에러 처리
               console.error('Login failed:', response.data);
               toast.error('로그인에 실패했습니다. 다시 시도해주세요.');
               router.push('/login');
@@ -54,7 +54,13 @@ const KakaoCallback = () => {
     handleKakaoLogin();
   }, [router]);
 
-  return <div>로그인 중입니다...</div>;
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <div className="skeleton skeleton-text"></div>
+      <div className="skeleton skeleton-text"></div>
+      <div className="skeleton skeleton-circle"></div>
+    </div>
+  );
 };
 
 export default KakaoCallback;

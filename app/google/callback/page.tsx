@@ -54,7 +54,13 @@ const GoogleCallback = () => {
     handleGoogleLogin();
   }, [router]);
 
-  return <div>로그인 중입니다...</div>; //로딩바나 스켈레톤으로 수정하기
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <div className="skeleton skeleton-text"></div>
+      <div className="skeleton skeleton-text"></div>
+      <div className="skeleton skeleton-circle"></div>
+    </div>
+  );
 };
 
 export default GoogleCallback;
