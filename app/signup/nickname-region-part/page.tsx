@@ -57,6 +57,7 @@ const NicknameRegionPartPage: React.FC = () => {
     const [formData, setFormData] = useRecoilState(signUpState);
     const [nicknameAvailable, setNicknameAvailable] = useState<boolean | null>(null);
     const [nicknameError, setNicknameError] = useState<string | null>(null);
+    const [initialNickname, setInitialNickname] = useState<string | null>(null); // 초기 닉네임 저장
     const router = useRouter();
 
    // URL에서 email과 nickname을 받아오기
@@ -71,6 +72,7 @@ const NicknameRegionPartPage: React.FC = () => {
                 email,
                 nickname,
             }));
+            setInitialNickname(nickname); // 소셜 로그인으로 받은 초기 닉네임 저장
         }
     }, []);
 
@@ -153,9 +155,13 @@ const NicknameRegionPartPage: React.FC = () => {
             const mappedRegion = regionMap[formData.region] || formData.region;
             const mappedPart = partMap[formData.part] || formData.part;
             const mappedSubPart = subPartMap[formData.subPart] || formData.subPart;
+            
+            const isSocialLogin = formData.password === '';  // 소셜 로그인 유저 식별
+            const passwordToSend = isSocialLogin ? initialNickname : formData.password;  // 소셜 로그인 유저는 초기 닉네임을 password 필드에 넣음
+            
             const response = await apiClient.post('/register', {
                 email: formData.email,
-                password: formData.password,
+                password: passwordToSend,  // 소셜 로그인 유저의 경우 초기 닉네임을, 일반 유저는 실제 비밀번호를 전송
                 nickname: formData.nickname,
                 region: mappedRegion,
                 part: mappedPart,
