@@ -75,7 +75,7 @@ const Login = () => {
     // 카카오 로그인에 사용되는 REST API 키와 리다이렉트 URI 설정
     const KAKAO_LOGIN_API_KEY = process.env.NEXT_PUBLIC_KAKAO_LOGIN_API_KEY;
     const REDIRECT_URI = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/kakao/callback`;
-    const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_LOGIN_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&prompt=login`;
+    const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_LOGIN_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
 
     const handleKakaoLogin = () => {
         window.location.href = KAKAO_AUTH_URL;

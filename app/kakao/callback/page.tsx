@@ -4,9 +4,12 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/api/apiClient';
 import { toast } from 'react-toastify';
+import { useRecoilState } from 'recoil';
+import { userState } from '@/recoil/state/userState';
 
 const KakaoCallback = () => {
   const router = useRouter();
+  const [user, setUser] = useRecoilState(userState);
 
   useEffect(() => {
     const handleKakaoLogin = async () => {
@@ -20,6 +23,9 @@ const KakaoCallback = () => {
           switch (loginStatus) {
             case 'LOGIN_SUCCESS':
               // 로그인 성공 시, 마이페이지로 이동
+              setUser({
+                nickname : nickname
+              });
               router.push(`/mypage/${nickname}`);
               break;
             case 'SAME_EMAIL':
