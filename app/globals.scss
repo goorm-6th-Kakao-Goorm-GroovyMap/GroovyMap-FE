@@ -533,3 +533,46 @@ button-custom.p-2 {
     background-clip: text;
     color: transparent;
 }
+
+
+//소셜 로딩 스켈레톤
+.skeleton {
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    margin: 10px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .skeleton::before {
+    content: '';
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    animation: skeleton-loading 1.5s infinite;
+  }
+  
+  @keyframes skeleton-loading {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  .skeleton-text {
+    width: 80%;
+    height: 20px;
+  }
+  
+  .skeleton-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+  }
+  

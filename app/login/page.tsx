@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ChangeEvent, useState } from 'react';
+import React, { ChangeEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import KakaoImg from './SocialLoginLogo/Kakao';
@@ -10,7 +10,7 @@ import apiClient from '@/api/apiClient';
 import { useMutation } from '@tanstack/react-query';
 import { useRecoilState } from 'recoil';
 import confetti from 'canvas-confetti';
-import { userState } from '@/recoil/state/userState'; // 정확한 경로로 임포트
+import { userState } from '@/recoil/state/userState';
 import { toast } from 'react-toastify';
 
 const Login = () => {
@@ -38,7 +38,6 @@ const Login = () => {
         },
         onSuccess: async (data) => {
             if (!toast.isActive('loginSuccess')) {
-                // toastId를 사용하여 중복 방지
                 toast.success('로그인에 성공했습니다!', { toastId: 'loginSuccess' });
             }
             confetti({
@@ -50,13 +49,12 @@ const Login = () => {
                 const userInfoResponse = await apiClient.get('/memberInfo', { withCredentials: true });
                 setUser({
                     nickname: userInfoResponse.data.nickname,
-                    profileUrl: userInfoResponse.data.profileUrl, // profileUrl로
+                    profileUrl: userInfoResponse.data.profileUrl,
                 });
                 router.push(`/mypage/${userInfoResponse.data.nickname}`);
             } catch (error) {
                 console.error('Failed to fetch user info:', error);
                 if (!toast.isActive('userInfoError')) {
-                    // toastId를 사용하여 중복 방지
                     toast.error('유저 정보를 가져오는 데 실패했습니다.', { toastId: 'userInfoError' });
                 }
             }
@@ -64,7 +62,6 @@ const Login = () => {
         onError: (error) => {
             console.log('Error during login:', error);
             if (!toast.isActive('loginError')) {
-                // toastId를 사용하여 중복 방지
                 toast.error('로그인에 실패했습니다. 이메일 또는 비밀번호를 확인해주세요.', { toastId: 'loginError' });
             }
         },
@@ -75,14 +72,23 @@ const Login = () => {
         loginMutation.mutate(formData);
     };
 
+    // 카카오 로그인에 사용되는 REST API 키와 리다이렉트 URI 설정
+    const KAKAO_LOGIN_API_KEY = process.env.NEXT_PUBLIC_KAKAO_LOGIN_API_KEY;
+    const REDIRECT_URI = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/kakao/callback`;
+    const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_LOGIN_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code`;
+
     const handleKakaoLogin = () => {
-        const kakaoLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/kakao`;
-        router.push(kakaoLoginURL);
+        window.location.href = KAKAO_AUTH_URL;
     };
 
+    //구글 로그인
+    const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const GOOGLE_REDIRECT_URI = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/google/callback`;
+    const GOOGLE_AUTH_URL = `https://accounts.google.com/o/oauth2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${GOOGLE_REDIRECT_URI}&response_type=code&scope=email%20profile`;
+
+
     const handleGoogleLogin = () => {
-        const googleLoginURL = `${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/google`;
-        router.push(googleLoginURL);
+        window.location.href = GOOGLE_AUTH_URL;
     };
 
     return (

@@ -29,6 +29,7 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [newMessage, setNewMessage] = useState<string>('');
     const stompClientRef = useRef<Client | null>(null);
+    const messageEndRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const fetchMessages = async () => {
@@ -53,12 +54,10 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
             onConnect: (frame: Frame) => {
                 stompClient.subscribe(`/user/queue/messages`, (message: StompMessage) => {
                     const parsedMessage: ChatMessage = JSON.parse(message.body);
-                    if (parsedMessage.chatRoomId === chatRoomId) {
-                        setMessages((prevMessages) => {
-                            const updatedMessages = [...prevMessages, parsedMessage];
-                            return updatedMessages;
-                        });
-                    }
+                    setMessages((prevMessages) => {
+                        const updatedMessages = [...prevMessages, parsedMessage];
+                        return updatedMessages;
+                    });
                 });
             },
             onStompError: (frame: Frame) => {
@@ -104,46 +103,51 @@ const ChatRoom = ({ chatRoomId, receiverId }: ChatRoomProps) => {
             });
 
             setNewMessage('');
-
-            setMessages((prevMessages) => [...prevMessages, message]);
         } else {
             console.log('Message not sent. Either client is not connected, message is empty, or receiverId is null.');
         }
     };
 
+    // 마지막 대화내용으로 이동
+    useEffect(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
     return (
-        <div className="flex flex-col h-full">
-            <div className="flex-1 p-4 overflow-y-auto">
+        <div className='flex flex-col h-full'>
+            <div className='flex-1 p-4 overflow-y-auto'>
                 {messages.map((message, index) => (
                     <div key={index} className={`mb-2 flex ${message.sentByMe ? 'justify-end' : 'justify-start'}`}>
                         {!message.sentByMe && (
-                            <div className="flex items-center">
-                                <img src={message.otherUserProfileImage} className="w-10 h-10 rounded-full mr-2" />
-                                <div className="flex flex-col">
-                                    <div className="p-2 rounded-lg bg-purple-200 text-black">{message.content}</div>
+                            <div className='flex items-center'>
+                                {!message.read && <div className='bg-red-500 w-2 h-2 rounded-full mr-2' />}
+                                <img src={message.otherUserProfileImage} className='w-10 h-10 rounded-full mr-2' />
+                                <div className='flex flex-col'>
+                                    <div className='p-2 rounded-lg bg-purple-200 text-black'>{message.content}</div>
                                 </div>
                             </div>
                         )}
                         {message.sentByMe && (
-                            <div className="flex items-end">
-                                <div className="p-2 rounded-lg bg-blue-200 text-black">{message.content}</div>
+                            <div className='flex items-end'>
+                                <div className='p-2 rounded-lg bg-blue-200 text-black'>{message.content}</div>
                                 {/* <img src={user.profileUrl} className="w-10 h-10 rounded-full ml-2" /> */}
                             </div>
                         )}
                     </div>
                 ))}
+                <div ref={messageEndRef} />
             </div>
-            <div className="p-4 border-t border-gray-200 flex">
+            <div className='p-4 border-t border-gray-200 flex'>
                 <input
-                    type="text"
-                    className="flex-1 p-2 border border-gray-300 rounded-lg mr-2"
-                    placeholder="Type a message..."
+                    type='text'
+                    className='flex-1 p-2 border border-gray-300 rounded-lg mr-2'
+                    placeholder='Type a message...'
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 />
                 <button
-                    className="p-2 bg-purple-400 text-white rounded-lg hover:bg-purple-200 active:bg-purple-700 focus:outline-none"
+                    className='p-2 bg-purple-400 text-white rounded-lg hover:bg-purple-200 active:bg-purple-700 focus:outline-none w-auto'
                     onClick={handleSendMessage}
                 >
                     전송
