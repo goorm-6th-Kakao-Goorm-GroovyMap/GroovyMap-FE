@@ -72,17 +72,6 @@ const PostPage: React.FC = () => {
         }
     };
 
-    const handleEditPost = async () => {
-        if (post) {
-            try {
-                await apiClient.delete(`/freeboard/${post.id}`);
-                router.push('/freeboard');
-            } catch (error) {
-                console.log(error);
-            }
-        }
-    };
-
     const handleCommentSubmit = async () => {
         const now = DateTime.local().toISO();
         if (post) {
@@ -144,7 +133,10 @@ const PostPage: React.FC = () => {
                         >
                             삭제
                         </button>
-                        <button onClick={handleEditPost} className="flex items-center text-red-500 hover:text-red-700">
+                        <button
+                            onClick={() => router.push(`/freeboard/write?postId=${post?.id}`)}
+                            className="flex items-center text-blue-500 hover:text-blue-700"
+                        >
                             수정
                         </button>
                     </div>

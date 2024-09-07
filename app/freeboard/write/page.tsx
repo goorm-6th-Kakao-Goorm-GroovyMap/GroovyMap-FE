@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import apiClient from '@/api/apiClient';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 import { useRecoilValue } from 'recoil';
@@ -15,14 +15,17 @@ const WritePostForm: React.FC = () => {
     const [content, setContent] = useState('');
     const currentUser = useRecoilValue(userState);
     const router = useRouter();
-    const { postId } = useParams<{ postId: string }>();
+    const searchParams = useSearchParams(); // searchParams로 postId를 가져옴
+    const postId = searchParams.get('postId'); // postId를 URL에서 가져옴
     const isEditing = Boolean(postId);
 
     useEffect(() => {
+        console.log('postId:', postId);
         if (isEditing) {
             const fetchPost = async () => {
                 try {
                     const response = await apiClient.get(`/freeboard/${postId}`);
+                    console.log('response data:', response.data);
                     setTitle(response.data.title);
                     setContent(response.data.content);
                 } catch (error) {
@@ -63,11 +66,12 @@ const WritePostForm: React.FC = () => {
 
             try {
                 if (isEditing) {
-                    await apiClient.put(`/freeboard/${postId}`, formData, {
+                    const response = await apiClient.put(`/freeboard/${postId}`, formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data',
                         },
                     });
+                    router.push(`/freeboard/${postId}`);
                 } else {
                     const response = await apiClient.post('/freeboard/write', formData, {
                         headers: {

@@ -34,7 +34,6 @@ export const FieldPositionMapping: FieldPositionMapping = {
         CHOICE: '선택',
     },
     BAND: {
-        CHOICE: '선택',
         GUITAR: '기타',
         BASS: '베이스',
         DRUM: '드럼',
@@ -42,15 +41,13 @@ export const FieldPositionMapping: FieldPositionMapping = {
         KEYBOARD: '키보드',
     },
     DANCE: {
-        CHOICE: '선택',
-        LOCKING: '락킹',
         POPPING: '팝핑',
+        LOCKING: '락킹',
         BREAKING: '브레이킹',
         HIPHOP: '힙합',
         JAZZ: '재즈',
     },
     VOCAL: {
-        CHOICE: '선택',
         VOCAL: '보컬',
     },
 };

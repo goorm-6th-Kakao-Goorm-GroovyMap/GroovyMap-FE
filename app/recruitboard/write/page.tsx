@@ -5,7 +5,7 @@ import { FieldPositionMapping, Post } from '../types';
 import apiClient from '@/api/apiClient';
 import { useRecoilValue } from 'recoil';
 import { userState } from '@/recoil/state/userState';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const WritePostForm: React.FC = () => {
     const [title, setTitle] = useState('');
@@ -17,11 +17,13 @@ const WritePostForm: React.FC = () => {
     const [selectedField, setSelectedField] = useState<string>('');
     const currentUser = useRecoilValue(userState);
     const router = useRouter();
-    const { postId } = useParams<{ postId?: string }>();
+    const searchParams = useSearchParams();
+    const postId = searchParams.get('postId');
+    const isEditing = Boolean(postId);
 
     useEffect(() => {
-        if (postId) {
-            // 기존 게시글을 로드하여 폼에 채워줍니다.
+        if (isEditing) {
+            // 기존 게시글을 로드
             const fetchPost = async () => {
                 try {
                     const response = await apiClient.get(`/recruitboard/${postId}`);
@@ -40,7 +42,7 @@ const WritePostForm: React.FC = () => {
 
             fetchPost();
         }
-    }, [postId]);
+    }, [isEditing, postId]);
 
     const handleMemberChange = (increment: boolean) => {
         setMembers((prev) => (increment ? prev + 1 : prev > 1 ? prev - 1 : 1));
@@ -60,13 +62,14 @@ const WritePostForm: React.FC = () => {
         formData.append('timestamp', new Date().toISOString());
 
         try {
-            if (postId) {
+            if (isEditing) {
                 // 기존 게시글 수정
                 await apiClient.put(`/recruitboard/${postId}`, formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
+                router.push(`/recruitboard/${postId}`);
             } else {
                 // 새 게시글 작성
                 const response = await apiClient.post(`/recruitboard/write`, formData, {
@@ -77,8 +80,6 @@ const WritePostForm: React.FC = () => {
                 const newPostId = response.data.id;
                 router.push(`/recruitboard/${newPostId}`);
             }
-
-            router.push(`/recruitboard/${postId || 'recruitboard'}`);
         } catch (error) {
             console.log(error);
         }
