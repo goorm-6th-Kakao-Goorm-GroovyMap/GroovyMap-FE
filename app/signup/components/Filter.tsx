@@ -51,14 +51,14 @@ const subPartMap: { [key: string]: string } = {
     VOCAL: '보컬',
     HIPHOP: '힙합',
     JAZZ: '재즈',
-    ROCKING: '락킹',
+    LOCKING: '락킹',
 };
 
 const regions = Object.keys(regionMap);
 const parts = Object.keys(partMap);
 const subParts: { [key: string]: string[] } = {
     BAND: ['GUITAR', 'KEYBOARD', 'BASS', 'VOCAL'],
-    DANCE: ['HIPHOP', 'JAZZ', 'ROCKING'],
+    DANCE: ['HIPHOP', 'JAZZ', 'LOCKING'],
     VOCAL: ['VOCAL'],
 };
 

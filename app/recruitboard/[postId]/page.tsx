@@ -106,6 +106,12 @@ const PostContent: React.FC = () => {
                     <button onClick={handleDeletePost} className="flex items-center text-red-500 hover:text-red-700">
                         삭제
                     </button>
+                    <button
+                        onClick={() => router.push(`/recruitboard/write?postId=${post?.id}`)}
+                        className="flex items-center text-blue-500 hover:text-blue-700"
+                    >
+                        수정
+                    </button>
                 </div>
             )}
             <h2 className="text-3xl font-bold mb-4">{post.title}</h2>

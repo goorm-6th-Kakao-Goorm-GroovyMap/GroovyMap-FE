@@ -50,7 +50,7 @@ const subPartMap: { [key: string]: string } = {
     보컬: 'VOCAL',
     힙합: 'HIPHOP',
     재즈: 'JAZZ',
-    락킹: 'ROCKING',
+    락킹: 'LOCKING',
 };
 
 const NicknameRegionPartPage: React.FC = () => {
